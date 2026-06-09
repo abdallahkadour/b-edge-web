@@ -11,6 +11,10 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "experimentalDecorators": true,
+    "paths": {
+      "@bedge/shared": ["./dist/shared"],
+     "@bedge/shared/*": ["./dist/shared/*"]
+     },
     "importHelpers": true,
     "target": "ES2022",
     "module": "preserve"
@@ -21,5 +25,25 @@
     "strictInputAccessModifiers": true,
     "strictTemplates": true
   },
-  "files": []
+  "files": [],
+  "references": [
+    {
+      "path": "./projects/shared/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/shared/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/artist-dashboard/tsconfig.app.json"
+    },
+    {
+      "path": "./projects/artist-dashboard/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/customer-pwa/tsconfig.app.json"
+    },
+    {
+      "path": "./projects/customer-pwa/tsconfig.spec.json"
+    }
+  ]
 }
