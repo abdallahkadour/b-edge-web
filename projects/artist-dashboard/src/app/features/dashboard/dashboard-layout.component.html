@@ -1,0 +1,64 @@
+<div class="min-h-screen bg-gray-50 flex flex-col">
+  <!-- Header -->
+  <header
+    class="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-6 shrink-0"
+  >
+    <span class="text-lg font-semibold tracking-tight text-ink">B-Edge</span>
+
+    <div class="flex items-center gap-3">
+      @if (user(); as u) {
+        <span class="text-sm text-gray-600 hidden sm:inline">{{ u.name }}</span>
+      }
+      <button
+        type="button"
+        (click)="signOut()"
+        class="text-sm text-gray-500 hover:text-ink transition-colors"
+      >
+        Sign out
+      </button>
+    </div>
+  </header>
+
+  <div class="flex flex-1 min-h-0">
+    <!-- Sidebar — desktop only -->
+    <aside
+      class="hidden md:flex w-56 bg-white border-r border-gray-200 flex-col py-4 shrink-0"
+    >
+      <nav class="flex flex-col gap-1 px-3">
+        @for (item of navItems; track item.path) {
+          <a
+            [routerLink]="item.path"
+            routerLinkActive="bg-gray-100 text-ink"
+            [routerLinkActiveOptions]="{ exact: false }"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium
+                   text-gray-600 hover:bg-gray-50 hover:text-ink transition-colors"
+          >
+            {{ item.label }}
+          </a>
+        }
+      </nav>
+    </aside>
+
+    <!-- Main content -->
+    <main class="flex-1 min-w-0 overflow-y-auto p-4 md:p-6 pb-20 md:pb-6">
+      <router-outlet />
+    </main>
+  </div>
+
+  <!-- Bottom tab bar — mobile only -->
+  <nav
+    class="md:hidden fixed bottom-0 inset-x-0 h-16 bg-white border-t border-gray-200
+           flex items-center justify-around px-2"
+  >
+    @for (item of navItems; track item.path) {
+      <a
+        [routerLink]="item.path"
+        routerLinkActive="text-ink"
+        class="flex flex-col items-center gap-1 px-3 py-1 text-xs font-medium
+               text-gray-400 transition-colors"
+      >
+        {{ item.label }}
+      </a>
+    }
+  </nav>
+</div>
