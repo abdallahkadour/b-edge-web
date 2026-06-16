@@ -1,3 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+  .bedge-input {
+    @apply w-full rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-ink placeholder-gray-300 outline-none transition-colors focus:border-gray-400 disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  .bedge-select {
+    @apply bedge-input appearance-none cursor-pointer;
+  }
+
+  .bedge-btn-sm {
+    @apply text-sm font-medium px-3 py-1.5 rounded-lg border border-gray-200 text-ink bg-white hover:border-gray-300 transition-colors disabled:opacity-30 disabled:cursor-not-allowed;
+  }
+
+  .bedge-btn-icon {
+    @apply w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-50 transition-colors disabled:cursor-not-allowed;
+  }
+}

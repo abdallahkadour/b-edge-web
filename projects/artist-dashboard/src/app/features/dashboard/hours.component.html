@@ -1,0 +1,371 @@
+<!-- ─────────────────────────────────────────────────────────────────────────
+     Hours screen
+     projects/artist-dashboard/src/app/features/dashboard/hours.component.html
+     ───────────────────────────────────────────────────────────────────────── -->
+
+<div class="p-6 max-w-2xl mx-auto">
+
+  <!-- ── Page title ─────────────────────────────────────────────────────── -->
+  <h1 class="text-xl font-semibold text-ink mb-6">Hours</h1>
+
+  <!-- ── Stores loading ─────────────────────────────────────────────────── -->
+  @if (storesLoading()) {
+    <div class="flex items-center gap-2 text-sm text-gray-400">
+      <span class="animate-spin inline-block w-4 h-4 border-2 border-gray-300 border-t-ink rounded-full"></span>
+      Loading stores…
+    </div>
+  }
+
+  <!-- ── Stores error ────────────────────────────────────────────────────── -->
+  @if (storesError()) {
+    <p class="text-sm text-danger-dark bg-danger-light rounded-lg px-4 py-3">
+      {{ storesError() }}
+    </p>
+  }
+
+  <!-- ── Main content (stores loaded) ───────────────────────────────────── -->
+  @if (!storesLoading() && !storesError()) {
+
+    <!-- Store tabs — only shown when there are 2+ stores -->
+    @if (stores().length > 1) {
+      <div class="flex border-b border-gray-200 mb-6">
+        @for (store of stores(); track store.id) {
+          <button
+            type="button"
+            class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors"
+            [class.border-ink]="isSelected(store)"
+            [class.text-ink]="isSelected(store)"
+            [class.border-transparent]="!isSelected(store)"
+            [class.text-gray-400]="!isSelected(store)"
+            (click)="selectStore(store)"
+          >
+            {{ store.name }}
+          </button>
+        }
+      </div>
+    }
+
+    <!-- ── Hours grid ────────────────────────────────────────────────────── -->
+    <section aria-label="Weekly schedule">
+
+      <!-- Hours loading -->
+      @if (hoursLoading()) {
+        <div class="flex items-center gap-2 text-sm text-gray-400 mb-6">
+          <span class="animate-spin inline-block w-4 h-4 border-2 border-gray-300 border-t-ink rounded-full"></span>
+          Loading hours…
+        </div>
+      }
+
+      <!-- Hours grid (once loaded) -->
+      @if (!hoursLoading() && dayRows().length > 0) {
+
+        <!-- Column headers -->
+        <div class="hidden sm:grid grid-cols-[110px_100px_1fr_16px_1fr_72px] gap-x-3 px-3 mb-2 text-xs text-gray-400 font-medium uppercase tracking-wide">
+          <span>Day</span>
+          <span>Status</span>
+          <span>Open</span>
+          <span></span>
+          <span>Close</span>
+          <span></span>
+        </div>
+
+        <!-- Day rows -->
+        <div class="flex flex-col gap-2 mb-8">
+          @for (row of dayRows(); track row.dayOfWeek) {
+            <div
+              class="border rounded-xl px-3 py-2.5 transition-colors"
+              [class.border-gray-200]="!row.dirty"
+              [class.border-gray-300]="row.dirty"
+              [class.bg-white]="true"
+            >
+              <!-- Desktop layout: grid -->
+              <div class="hidden sm:grid grid-cols-[110px_100px_1fr_16px_1fr_72px] gap-x-3 items-center">
+
+                <!-- Day name -->
+                <span class="text-sm font-medium text-ink">{{ row.label }}</span>
+
+                <!-- Open / Closed toggle -->
+                <select
+                  class="bedge-select text-sm"
+                  [ngModel]="row.isOpen"
+                  (ngModelChange)="row.isOpen = $event; markDirty(row)"
+                >
+                  <option [ngValue]="true">Open</option>
+                  <option [ngValue]="false">Closed</option>
+                </select>
+
+                <!-- Open time -->
+                <input
+                  type="time"
+                  class="bedge-input text-sm"
+                  [disabled]="!row.isOpen"
+                  [ngModel]="row.openTime"
+                  (ngModelChange)="row.openTime = $event; markDirty(row)"
+                />
+
+                <span class="text-center text-gray-300 text-sm select-none">–</span>
+
+                <!-- Close time -->
+                <input
+                  type="time"
+                  class="bedge-input text-sm"
+                  [disabled]="!row.isOpen"
+                  [ngModel]="row.closeTime"
+                  (ngModelChange)="row.closeTime = $event; markDirty(row)"
+                />
+
+                <!-- Save button -->
+                <button
+                  type="button"
+                  class="bedge-btn-sm transition-opacity"
+                  [disabled]="!row.dirty || row.saving"
+                  [class.opacity-30]="!row.dirty || row.saving"
+                  (click)="saveRow(row)"
+                >
+                  @if (row.saving) {
+                    <span class="animate-spin inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full"></span>
+                  } @else {
+                    Save
+                  }
+                </button>
+              </div>
+
+              <!-- Mobile layout: stacked -->
+              <div class="flex sm:hidden flex-col gap-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-medium text-ink">{{ row.label }}</span>
+                  <select
+                    class="bedge-select text-sm"
+                    [ngModel]="row.isOpen"
+                    (ngModelChange)="row.isOpen = $event; markDirty(row)"
+                  >
+                    <option [ngValue]="true">Open</option>
+                    <option [ngValue]="false">Closed</option>
+                  </select>
+                </div>
+                @if (row.isOpen) {
+                  <div class="flex items-center gap-2">
+                    <input
+                      type="time"
+                      class="bedge-input text-sm flex-1"
+                      [ngModel]="row.openTime"
+                      (ngModelChange)="row.openTime = $event; markDirty(row)"
+                    />
+                    <span class="text-gray-300 text-sm">–</span>
+                    <input
+                      type="time"
+                      class="bedge-input text-sm flex-1"
+                      [ngModel]="row.closeTime"
+                      (ngModelChange)="row.closeTime = $event; markDirty(row)"
+                    />
+                  </div>
+                }
+                @if (row.dirty) {
+                  <button
+                    type="button"
+                    class="bedge-btn-sm w-full"
+                    [disabled]="row.saving"
+                    (click)="saveRow(row)"
+                  >
+                    @if (row.saving) { Saving… } @else { Save }
+                  </button>
+                }
+              </div>
+
+              <!-- Inline save error -->
+              @if (saveErrors()[row.dayOfWeek]) {
+                <p class="text-xs text-danger-dark mt-1.5 pl-1">
+                  {{ saveErrors()[row.dayOfWeek] }}
+                </p>
+              }
+            </div>
+          }
+        </div>
+      }
+
+    </section>
+
+    <!-- ── Special hours (exceptions) ──────────────────────────────────── -->
+    <section aria-label="Special hours">
+      <h2 class="text-base font-semibold text-ink mb-3">Special hours</h2>
+
+      <!-- Exceptions loading -->
+      @if (exceptionsLoading()) {
+        <div class="flex items-center gap-2 text-sm text-gray-400 mb-4">
+          <span class="animate-spin inline-block w-4 h-4 border-2 border-gray-300 border-t-ink rounded-full"></span>
+          Loading…
+        </div>
+      }
+
+      <!-- Exceptions error -->
+      @if (exceptionsError()) {
+        <p class="text-sm text-danger-dark bg-danger-light rounded-lg px-4 py-3 mb-4">
+          {{ exceptionsError() }}
+        </p>
+      }
+
+      <!-- Exception list -->
+      @if (!exceptionsLoading()) {
+        @if (exceptions().length === 0) {
+          <p class="text-sm text-gray-400 mb-4">No special hours set.</p>
+        } @else {
+          <div class="flex flex-col gap-2 mb-4">
+            @for (exc of exceptions(); track exc.id) {
+              <div class="flex items-center justify-between border border-gray-200 rounded-xl px-4 py-3">
+                <div>
+                  <p class="text-sm font-medium text-ink">
+                    {{ formatExceptionDate(exc.exception_date) }}
+                  </p>
+                  <p class="text-xs text-gray-400 mt-0.5">
+                    @if (exc.is_closed) {
+                      Closed
+                    } @else {
+                      {{ exc.open_time?.slice(0, 5) }} – {{ exc.close_time?.slice(0, 5) }}
+                    }
+                    @if (exc.reason) {
+                      · {{ exc.reason }}
+                    }
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  class="bedge-btn-icon text-gray-400 hover:text-danger-dark transition-colors"
+                  [disabled]="deletingExceptionId() === exc.id"
+                  (click)="deleteException(exc)"
+                  aria-label="Remove exception"
+                >
+                  @if (deletingExceptionId() === exc.id) {
+                    <span class="animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full"></span>
+                  } @else {
+                    <!-- X icon (inline SVG, no icon lib dependency) -->
+                    <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                      <path d="M4 4l8 8M12 4l-8 8"/>
+                    </svg>
+                  }
+                </button>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Add exception form row -->
+        <div class="flex flex-col gap-2">
+          <!-- Desktop: single row -->
+          <div class="hidden sm:grid grid-cols-[160px_1fr_140px_72px] gap-3 items-start">
+            <input
+              type="date"
+              class="bedge-input text-sm"
+              placeholder="Date"
+              [ngModel]="newExceptionDate()"
+              (ngModelChange)="newExceptionDate.set($event)"
+            />
+            <input
+              type="text"
+              class="bedge-input text-sm"
+              placeholder="Reason (optional)"
+              maxlength="255"
+              [ngModel]="newExceptionReason()"
+              (ngModelChange)="newExceptionReason.set($event)"
+            />
+            <select
+              class="bedge-select text-sm"
+              [ngModel]="newExceptionIsClosed() ? 'closed' : 'custom'"
+              (ngModelChange)="onIsClosedChange($event)"
+            >
+              <option value="closed">Closed</option>
+              <option value="custom">Custom hours</option>
+            </select>
+            <button
+              type="button"
+              class="bedge-btn-sm"
+              [disabled]="!canAddException() || addingException()"
+              [class.opacity-30]="!canAddException() || addingException()"
+              (click)="addException()"
+            >
+              @if (addingException()) { Adding… } @else { Add }
+            </button>
+          </div>
+
+          <!-- Custom hours sub-row (desktop) — only shown when "Custom hours" is selected -->
+          @if (!newExceptionIsClosed()) {
+            <div class="hidden sm:flex items-center gap-3 pl-0">
+              <span class="text-xs text-gray-400 w-[160px]">Custom hours:</span>
+              <input
+                type="time"
+                class="bedge-input text-sm w-[160px]"
+                [ngModel]="newExceptionOpenTime()"
+                (ngModelChange)="newExceptionOpenTime.set($event)"
+              />
+              <span class="text-gray-300 text-sm">–</span>
+              <input
+                type="time"
+                class="bedge-input text-sm w-[160px]"
+                [ngModel]="newExceptionCloseTime()"
+                (ngModelChange)="newExceptionCloseTime.set($event)"
+              />
+            </div>
+          }
+
+          <!-- Mobile: stacked -->
+          <div class="flex sm:hidden flex-col gap-2">
+            <input
+              type="date"
+              class="bedge-input text-sm"
+              [ngModel]="newExceptionDate()"
+              (ngModelChange)="newExceptionDate.set($event)"
+            />
+            <input
+              type="text"
+              class="bedge-input text-sm"
+              placeholder="Reason (optional)"
+              maxlength="255"
+              [ngModel]="newExceptionReason()"
+              (ngModelChange)="newExceptionReason.set($event)"
+            />
+            <select
+              class="bedge-select text-sm"
+              [ngModel]="newExceptionIsClosed() ? 'closed' : 'custom'"
+              (ngModelChange)="onIsClosedChange($event)"
+            >
+              <option value="closed">Closed</option>
+              <option value="custom">Custom hours</option>
+            </select>
+            @if (!newExceptionIsClosed()) {
+              <div class="flex items-center gap-2">
+                <input
+                  type="time"
+                  class="bedge-input text-sm flex-1"
+                  [ngModel]="newExceptionOpenTime()"
+                  (ngModelChange)="newExceptionOpenTime.set($event)"
+                />
+                <span class="text-gray-300 text-sm">–</span>
+                <input
+                  type="time"
+                  class="bedge-input text-sm flex-1"
+                  [ngModel]="newExceptionCloseTime()"
+                  (ngModelChange)="newExceptionCloseTime.set($event)"
+                />
+              </div>
+            }
+            <button
+              type="button"
+              class="bedge-btn-sm w-full"
+              [disabled]="!canAddException() || addingException()"
+              (click)="addException()"
+            >
+              @if (addingException()) { Adding… } @else { Add special hours }
+            </button>
+          </div>
+
+          <!-- Add exception error -->
+          @if (addExceptionError()) {
+            <p class="text-xs text-danger-dark">{{ addExceptionError() }}</p>
+          }
+        </div>
+
+      }
+    </section>
+
+  }
+
+</div>
