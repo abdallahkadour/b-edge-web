@@ -1,0 +1,314 @@
+<!-- ─────────────────────────────────────────────────────────────────────────
+     Services screen
+     projects/artist-dashboard/src/app/features/dashboard/services.component.html
+     ───────────────────────────────────────────────────────────────────────── -->
+
+<div class="p-6 max-w-2xl mx-auto">
+
+  <!-- ── Page header ────────────────────────────────────────────────────── -->
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-xl font-semibold text-ink">Services</h1>
+    <button
+      type="button"
+      class="bedge-btn-sm flex items-center gap-1.5"
+      (click)="toggleAddForm()"
+    >
+      @if (showAddForm()) {
+        <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+        Cancel
+      } @else {
+        <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
+        Add service
+      }
+    </button>
+  </div>
+
+  <!-- ── Loading ────────────────────────────────────────────────────────── -->
+  @if (loading()) {
+    <div class="flex items-center gap-2 text-sm text-gray-400 mb-6">
+      <span class="animate-spin inline-block w-4 h-4 border-2 border-gray-300 border-t-ink rounded-full"></span>
+      Loading services…
+    </div>
+  }
+
+  <!-- ── Error ──────────────────────────────────────────────────────────── -->
+  @if (error()) {
+    <p class="text-sm text-danger-dark bg-danger-light rounded-lg px-4 py-3 mb-6">
+      {{ error() }}
+    </p>
+  }
+
+  <!-- ── Services list ──────────────────────────────────────────────────── -->
+  @if (!loading() && !error()) {
+
+    @if (services().length === 0) {
+      <div class="flex flex-col items-center justify-center py-20 text-center">
+        <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+          <svg class="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+        </div>
+        <p class="text-sm font-medium text-gray-700">No services yet</p>
+        <p class="text-xs text-gray-400 mt-1">Add your first service using the button above.</p>
+      </div>
+    }
+
+    <div class="flex flex-col gap-2 mb-8">
+      @for (svc of services(); track svc.id) {
+
+        <!-- ── Normal row ────────────────────────────────────────────────── -->
+        @if (editingId() !== svc.id) {
+          <div
+            class="border border-gray-200 rounded-xl px-4 py-3 transition-opacity"
+            [class.opacity-40]="!svc.is_active"
+          >
+            <div class="flex items-center gap-3">
+
+              <!-- Name + meta -->
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-ink truncate">{{ svc.name }}</p>
+                <p class="text-xs text-gray-400 mt-0.5">
+                  {{ svc.duration_min }} min · {{ depositSummary(svc) }}
+                </p>
+              </div>
+
+              <!-- Price -->
+              <span class="text-sm font-medium text-ink tabular-nums whitespace-nowrap">
+                ${{ svc.price }}
+              </span>
+
+              <!-- Active badge -->
+              @if (svc.is_active) {
+                <span class="text-xs px-2 py-0.5 rounded-full bg-success-light text-success-dark">Active</span>
+              } @else {
+                <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Inactive</span>
+              }
+
+              <!-- Edit -->
+              <button
+                type="button"
+                class="bedge-btn-icon text-gray-400 hover:text-ink"
+                aria-label="Edit service"
+                (click)="startEdit(svc)"
+              >
+                <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 2l3 3-8 8H3v-3l8-8z"/>
+                </svg>
+              </button>
+
+              <!-- Delete / deactivate -->
+              @if (svc.is_active) {
+                <button
+                  type="button"
+                  class="bedge-btn-icon text-gray-400 hover:text-danger-dark transition-colors"
+                  aria-label="Deactivate service"
+                  [disabled]="deletingId() === svc.id"
+                  (click)="deleteService(svc)"
+                >
+                  @if (deletingId() === svc.id) {
+                    <span class="animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full"></span>
+                  } @else {
+                    <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M2 4h12M5 4V2h6v2M6 7v5M10 7v5M3 4l1 9a1 1 0 001 1h6a1 1 0 001-1l1-9"/>
+                    </svg>
+                  }
+                </button>
+              }
+
+            </div>
+
+            <!-- Per-row update error -->
+            @if (updateErrors()[svc.id]) {
+              <p class="text-xs text-danger-dark mt-2">{{ updateErrors()[svc.id] }}</p>
+            }
+          </div>
+        }
+
+        <!-- ── Inline edit form ──────────────────────────────────────────── -->
+        @if (editingId() === svc.id) {
+          <div class="border border-gray-300 rounded-xl px-4 py-4 flex flex-col gap-3">
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs text-gray-400 mb-1">Name</label>
+                <input
+                  type="text"
+                  class="bedge-input text-sm"
+                  maxlength="200"
+                  [ngModel]="editForm().name"
+                  (ngModelChange)="editForm.update(f => ({...f, name: $event}))"
+                />
+              </div>
+              <div>
+                <label class="block text-xs text-gray-400 mb-1">Price (USD)</label>
+                <input
+                  type="text"
+                  class="bedge-input text-sm"
+                  placeholder="0.00"
+                  [ngModel]="editForm().price"
+                  (ngModelChange)="editForm.update(f => ({...f, price: $event}))"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs text-gray-400 mb-1">Duration (min)</label>
+                <input
+                  type="number"
+                  class="bedge-input text-sm"
+                  min="15"
+                  max="480"
+                  [ngModel]="editForm().duration_min"
+                  (ngModelChange)="editForm.update(f => ({...f, duration_min: +$event}))"
+                />
+              </div>
+              <div>
+                <label class="block text-xs text-gray-400 mb-1">Deposit (USD)</label>
+                <input
+                  type="text"
+                  class="bedge-input text-sm"
+                  placeholder="0.00"
+                  [ngModel]="editForm().deposit_amount"
+                  (ngModelChange)="editForm.update(f => ({...f, deposit_amount: $event}))"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs text-gray-400 mb-1">Description (optional)</label>
+              <textarea
+                class="bedge-input text-sm resize-none"
+                rows="2"
+                maxlength="500"
+                [ngModel]="editForm().description"
+                (ngModelChange)="editForm.update(f => ({...f, description: $event}))"
+              ></textarea>
+            </div>
+
+            <div class="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                class="bedge-btn-sm text-gray-500"
+                (click)="cancelEdit()"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                class="bedge-btn-sm font-medium"
+                [disabled]="updating()"
+                (click)="saveEdit(svc)"
+              >
+                @if (updating()) { Saving… } @else { Save }
+              </button>
+            </div>
+
+            @if (updateErrors()[svc.id]) {
+              <p class="text-xs text-danger-dark">{{ updateErrors()[svc.id] }}</p>
+            }
+
+          </div>
+        }
+
+      }
+    </div>
+
+  }
+
+  <!-- ── Add service form ───────────────────────────────────────────────── -->
+  @if (showAddForm()) {
+    <section aria-label="Add a new service">
+      <h2 class="text-base font-semibold text-ink mb-3">Add service</h2>
+
+      <div class="border border-gray-200 rounded-xl px-4 py-4 flex flex-col gap-3">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Name</label>
+            <input
+              type="text"
+              class="bedge-input text-sm"
+              placeholder="e.g. Bridal Makeup"
+              maxlength="200"
+              [ngModel]="addForm().name"
+              (ngModelChange)="addForm.update(f => ({...f, name: $event}))"
+            />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Price (USD)</label>
+            <input
+              type="text"
+              class="bedge-input text-sm"
+              placeholder="0.00"
+              [ngModel]="addForm().price"
+              (ngModelChange)="addForm.update(f => ({...f, price: $event}))"
+            />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Duration (min)</label>
+            <input
+              type="number"
+              class="bedge-input text-sm"
+              placeholder="60"
+              min="15"
+              max="480"
+              [ngModel]="addForm().duration_min"
+              (ngModelChange)="addForm.update(f => ({...f, duration_min: +$event}))"
+            />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Deposit (USD)</label>
+            <input
+              type="text"
+              class="bedge-input text-sm"
+              placeholder="0.00"
+              [ngModel]="addForm().deposit_amount"
+              (ngModelChange)="addForm.update(f => ({...f, deposit_amount: $event}))"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs text-gray-400 mb-1">Description (optional)</label>
+          <textarea
+            class="bedge-input text-sm resize-none"
+            rows="2"
+            maxlength="500"
+            placeholder="Short description of the service…"
+            [ngModel]="addForm().description"
+            (ngModelChange)="addForm.update(f => ({...f, description: $event}))"
+          ></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-2">
+          <button
+            type="button"
+            class="bedge-btn-sm text-gray-500"
+            (click)="toggleAddForm()"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="bedge-btn-sm font-medium"
+            [disabled]="!canCreate() || creating()"
+            [class.opacity-30]="!canCreate() || creating()"
+            (click)="createService()"
+          >
+            @if (creating()) { Saving… } @else { Save service }
+          </button>
+        </div>
+
+        @if (addError()) {
+          <p class="text-xs text-danger-dark">{{ addError() }}</p>
+        }
+
+      </div>
+    </section>
+  }
+
+</div>

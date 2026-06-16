@@ -1,0 +1,146 @@
+<!-- ─────────────────────────────────────────────────────────────────────────
+     Profile screen
+     projects/artist-dashboard/src/app/features/dashboard/profile.component.html
+     ───────────────────────────────────────────────────────────────────────── -->
+
+<div class="p-6 max-w-lg mx-auto">
+
+  <h1 class="text-xl font-semibold text-ink mb-6">Profile</h1>
+
+  <!-- ── Loading ────────────────────────────────────────────────────────── -->
+  @if (loading()) {
+    <div class="flex items-center gap-2 text-sm text-gray-400">
+      <span class="animate-spin inline-block w-4 h-4 border-2 border-gray-300 border-t-ink rounded-full"></span>
+      Loading profile…
+    </div>
+  }
+
+  <!-- ── Load error ─────────────────────────────────────────────────────── -->
+  @if (loadError()) {
+    <p class="text-sm text-danger-dark bg-danger-light rounded-lg px-4 py-3">
+      {{ loadError() }}
+    </p>
+  }
+
+  <!-- ── Profile content ────────────────────────────────────────────────── -->
+  @if (!loading() && !loadError() && profile()) {
+
+    <!-- Avatar + name -->
+    <div class="flex items-center gap-4 mb-8">
+      <div class="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center text-base font-medium text-gray-600 shrink-0 select-none">
+        {{ initials }}
+      </div>
+      <div>
+        <p class="text-base font-medium text-ink">{{ profile()!.name }}</p>
+        <p class="text-sm text-gray-400">{{ profile()!.email }}</p>
+      </div>
+    </div>
+
+    <!-- ── Read-only fields ──────────────────────────────────────────────── -->
+    <div class="mb-6">
+      <h2 class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Account info</h2>
+      <div class="flex flex-col gap-3">
+
+        <div class="flex items-center justify-between py-2 border-b border-gray-100">
+          <span class="text-sm text-gray-500">Name</span>
+          <span class="text-sm text-ink">{{ profile()!.name }}</span>
+        </div>
+
+        <div class="flex items-center justify-between py-2 border-b border-gray-100">
+          <span class="text-sm text-gray-500">Email</span>
+          <span class="text-sm text-ink">{{ profile()!.email }}</span>
+        </div>
+
+        @if (profile()!.phone) {
+          <div class="flex items-center justify-between py-2 border-b border-gray-100">
+            <span class="text-sm text-gray-500">Phone</span>
+            <span class="text-sm text-ink">{{ profile()!.phone }}</span>
+          </div>
+        }
+
+        <div class="flex items-center justify-between py-2 border-b border-gray-100">
+          <span class="text-sm text-gray-500">Verified</span>
+          @if (profile()!.is_verified) {
+            <span class="text-xs px-2 py-0.5 rounded-full bg-success-light text-success-dark">Verified</span>
+          } @else {
+            <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Not verified</span>
+          }
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Editable fields ───────────────────────────────────────────────── -->
+    <div class="mb-6">
+      <h2 class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Public profile</h2>
+
+      <div class="flex flex-col gap-4">
+
+        <!-- Bio -->
+        <div>
+          <label class="block text-sm text-gray-500 mb-1.5" for="profile-bio">Bio</label>
+          <textarea
+            id="profile-bio"
+            class="bedge-input text-sm resize-none"
+            rows="4"
+            maxlength="500"
+            placeholder="Tell clients a bit about you and your work…"
+            [ngModel]="bio()"
+            (ngModelChange)="bio.set($event)"
+          ></textarea>
+          <p class="text-xs text-gray-300 mt-1 text-right">{{ bio().length }}/500</p>
+        </div>
+
+        <!-- Instagram -->
+        <div>
+          <label class="block text-sm text-gray-500 mb-1.5" for="profile-instagram">Instagram</label>
+          <div class="flex items-center border border-gray-200 rounded-lg overflow-hidden focus-within:border-gray-400 transition-colors">
+            <span class="px-3 text-sm text-gray-400 bg-gray-50 border-r border-gray-200 h-full flex items-center py-2 select-none">
+              @
+            </span>
+            <input
+              id="profile-instagram"
+              type="text"
+              class="flex-1 px-3 py-2 text-sm text-ink bg-white outline-none placeholder-gray-300"
+              placeholder="yourhandle"
+              maxlength="255"
+              [ngModel]="instagram()"
+              (ngModelChange)="instagram.set($event)"
+            />
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Success banner ────────────────────────────────────────────────── -->
+    @if (saved()) {
+      <div class="flex items-center gap-2 text-sm text-success-dark bg-success-light rounded-lg px-4 py-3 mb-4">
+        <svg class="w-4 h-4 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 8l3.5 3.5L13 5"/>
+        </svg>
+        Profile saved.
+      </div>
+    }
+
+    <!-- ── Save error ─────────────────────────────────────────────────────── -->
+    @if (saveError()) {
+      <p class="text-sm text-danger-dark bg-danger-light rounded-lg px-4 py-3 mb-4">
+        {{ saveError() }}
+      </p>
+    }
+
+    <!-- ── Save button ───────────────────────────────────────────────────── -->
+    <button
+      type="button"
+      class="bedge-btn-sm font-medium w-full sm:w-auto"
+      [disabled]="!isDirty || saving()"
+      [class.opacity-30]="!isDirty || saving()"
+      (click)="save()"
+    >
+      @if (saving()) { Saving… } @else { Save changes }
+    </button>
+
+  }
+
+</div>
