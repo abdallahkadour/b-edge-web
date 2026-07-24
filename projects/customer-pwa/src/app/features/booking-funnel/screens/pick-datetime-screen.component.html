@@ -1,0 +1,121 @@
+<div class="relative flex flex-col min-h-full bg-gray-50 text-ink pb-[92px]">
+  <div class="sticky top-0 bg-white border-b border-gray-200 h-14 flex items-center justify-between px-6 z-40">
+    <button
+      (click)="back.emit()"
+      class="text-ink p-1 -ml-1 rounded-full hover:bg-gray-100 active:scale-95 transition-all"
+      aria-label="Back"
+    >
+      <lucide-icon name="arrow-left" [size]="20" [strokeWidth]="2" />
+    </button>
+    <span class="text-[16px] font-semibold leading-[24px] tracking-[-0.01em]">Choose a date &amp; time</span>
+    <div class="w-6"></div>
+  </div>
+
+  <div class="px-6 pt-6 flex flex-col gap-6">
+    @if (stores().length > 1) {
+      <div class="flex flex-col gap-3">
+        <h2 class="text-[12px] font-bold leading-[16px] tracking-[0.05em] uppercase text-gray-500">Select location</h2>
+        <div class="flex bg-gray-100 p-1 rounded-full border border-gray-200">
+          @for (store of stores(); track store.id) {
+            <button
+              (click)="onStoreSelect(store.id)"
+              class="flex-1 h-9 rounded-full text-[14px] font-medium leading-[20px] transition-all cursor-pointer"
+              [class]="selectedStoreId() === store.id ? 'bg-ink text-white shadow-sm' : 'text-gray-500 hover:text-ink'"
+            >
+              {{ store.name }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    <div class="flex flex-col gap-3">
+      <div class="flex justify-between items-center">
+        <h2 class="text-[12px] font-bold leading-[16px] tracking-[0.05em] uppercase text-gray-500">Select date</h2>
+        <span class="text-[14px] font-medium text-gray-500">{{ activeMonthLabel() }}</span>
+      </div>
+      <div class="flex gap-2 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        @for (cell of dateCells(); track cell.iso) {
+          @let isSelected = selectedDate() === cell.iso;
+          <button
+            (click)="onDateSelect(cell.iso)"
+            class="w-[60px] h-[72px] rounded-lg flex flex-col items-center justify-center shrink-0 border transition-all cursor-pointer"
+            [class]="isSelected ? 'bg-ink border-ink text-white shadow' : 'bg-white border-gray-200 hover:border-gray-400 text-ink'"
+          >
+            <span
+              class="text-[11px] font-bold tracking-[0.05em] leading-[16px]"
+              [class]="isSelected ? 'text-white/80' : 'text-gray-500'"
+            >{{ cell.weekday }}</span>
+            <span class="text-[18px] font-semibold leading-[24px] mt-1">{{ cell.dayNum }}</span>
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-6 pt-2 border-t border-gray-200">
+      @if (slotsLoading()) {
+        <p class="text-[14px] text-gray-400 leading-[20px] pt-4">Checking availability…</p>
+      } @else if (slotsError()) {
+        <p class="text-[14px] text-gray-400 leading-[20px] pt-4">Couldn't load times. Try another date.</p>
+      } @else if (slots().length === 0) {
+        <p class="text-[14px] text-gray-400 leading-[20px] pt-4">No availability on this date. Try another day.</p>
+      } @else {
+        @if (morningSlots().length > 0) {
+          <div class="flex flex-col gap-3">
+            <h3 class="text-[12px] font-bold leading-[16px] tracking-[0.05em] uppercase text-gray-500">Morning</h3>
+            <div class="grid grid-cols-3 gap-2">
+              @for (slot of morningSlots(); track slot.start_time) {
+                @let isSelected = selectedSlot() === slot.start_time;
+                <button
+                  (click)="selectedSlot.set(slot.start_time)"
+                  class="h-[44px] rounded border text-[14px] font-medium leading-[20px] flex items-center justify-center gap-1 transition-all cursor-pointer"
+                  [class]="isSelected
+                    ? 'bg-ink border-ink text-white'
+                    : slot.is_early_bird
+                      ? 'bg-warning-light border-warning-light text-warning-dark hover:border-warning'
+                      : 'bg-white border-gray-200 text-ink hover:border-gray-400'"
+                >
+                  @if (slot.is_early_bird && !isSelected) {
+                    <lucide-icon name="zap" [size]="14" class="fill-warning text-warning shrink-0" />
+                  }
+                  {{ formatTime(slot.start_time) }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        @if (afternoonSlots().length > 0) {
+          <div class="flex flex-col gap-3">
+            <h3 class="text-[12px] font-bold leading-[16px] tracking-[0.05em] uppercase text-gray-500">Afternoon</h3>
+            <div class="grid grid-cols-3 gap-2">
+              @for (slot of afternoonSlots(); track slot.start_time) {
+                @let isSelected = selectedSlot() === slot.start_time;
+                <button
+                  (click)="selectedSlot.set(slot.start_time)"
+                  class="h-[44px] rounded border text-[14px] font-medium leading-[20px] flex items-center justify-center transition-all cursor-pointer"
+                  [class]="isSelected ? 'bg-ink border-ink text-white' : 'bg-white border-gray-200 text-ink hover:border-gray-400'"
+                >
+                  {{ formatTime(slot.start_time) }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-50 flex justify-center">
+    <div class="w-full max-w-[390px] px-2">
+      <button
+        [disabled]="!canContinue()"
+        (click)="onContinue()"
+        class="w-full h-[52px] rounded text-[15px] font-medium leading-[20px] flex items-center justify-center px-4 transition-all overflow-hidden text-ellipsis whitespace-nowrap"
+        [class]="canContinue() ? 'bg-ink text-white hover:opacity-90 active:opacity-[85%] cursor-pointer' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
+      >
+        {{ ctaLabel() }}
+      </button>
+    </div>
+  </div>
+</div>

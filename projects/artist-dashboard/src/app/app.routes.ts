@@ -6,10 +6,13 @@ import { authGuard } from '@bedge/shared';
  *
  * /login           — public, the sign-in screen
  * /dashboard       — protected (artist or admin), the shell with child sections
- *   /bookings, /services, /hours, /profile
- *
- * Everything else redirects to /dashboard; the guard bounces unauthenticated
- * users to /login with a returnUrl.
+ *   /bookings      — upcoming and past bookings
+ *   /clients       — CRM client list
+ *   /clients/:id   — single client detail + notes
+ *   /earnings      — revenue summary
+ *   /services      — service catalogue management
+ *   /hours         — business hours + block dates
+ *   /profile       — artist profile + portfolio
  */
 export const routes: Routes = [
   {
@@ -33,6 +36,27 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/dashboard/bookings.component').then(
             (m) => m.BookingsComponent,
+          ),
+      },
+      {
+        path: 'clients',
+        loadComponent: () =>
+          import('./features/dashboard/clients.component').then(
+            (m) => m.ClientsComponent,
+          ),
+      },
+      {
+        path: 'clients/:id',
+        loadComponent: () =>
+          import('./features/dashboard/client-detail.component').then(
+            (m) => m.ClientDetailComponent,
+          ),
+      },
+      {
+        path: 'earnings',
+        loadComponent: () =>
+          import('./features/dashboard/earnings.component').then(
+            (m) => m.EarningsComponent,
           ),
       },
       {

@@ -2,30 +2,31 @@ import {
   ChangeDetectionStrategy,
   Component,
   OnInit,
-  computed,
   inject,
   signal,
+  computed,
 } from '@angular/core';
-import { Observable } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 
-import {
-  ArtistDataService,
-  BookingDataService,
-} from '@bedge/shared';
-import type { Booking, BookingStatus } from '@bedge/shared';
+import { AuthStore, ArtistDataService, BookingDataService } from '@bedge/shared';
+import type { EnrichedBooking, BookingStatus } from '@bedge/shared';
 
-/** The four filter tabs shown above the booking list. */
-type FilterTab = 'all' | 'pending' | 'confirmed' | 'completed' | 'cancelled';
+/** Status filter tab shown in the UI. '' means all statuses. */
+interface StatusTab {
+  label: string;
+  value: string;
+}
 
 /**
  * Bookings screen for the artist dashboard.
  *
- * On init it fetches the artist's own profile (for the artist ID), then loads
- * all bookings. Client-side filtering is used for the tab bar — the full list
- * is loaded once and filtered in memory so switching tabs is instant.
+ * Flow:
+ *  1. On init, fetch the artist's profile to get their artist_id.
+ *  2. Fetch bookings for that artist_id (optionally filtered by status).
+ *  3. The artist can switch status tabs to filter bookings.
  *
- * Each booking card shows the relevant action buttons based on the current
- * status, mirroring the state machine in the Go service layer.
+ * Uses OnPush change detection + signals throughout — no manual
+ * change detection calls needed.
  */
 @Component({
   selector: 'bedge-bookings',
@@ -34,180 +35,216 @@ type FilterTab = 'all' | 'pending' | 'confirmed' | 'completed' | 'cancelled';
   templateUrl: './bookings.component.html',
 })
 export class BookingsComponent implements OnInit {
-  private readonly artistService = inject(ArtistDataService);
-  private readonly bookingService = inject(BookingDataService);
+  private readonly auth = inject(AuthStore);
+  private readonly artistSvc = inject(ArtistDataService);
+  private readonly bookingSvc = inject(BookingDataService);
 
-  /** True while the initial bookings list is loading. */
+  // ── State ────────────────────────────────────────────────────────────────
+
+  /** True while loading the initial artist profile or bookings. */
   readonly loading = signal(true);
 
-  /** A top-level error message, or null. */
-  readonly error = signal<string | null>(null);
+  /** Error message to display, or null. */
+  readonly errorMessage = signal<string | null>(null);
 
-  /** The ID of the booking currently being actioned (to show per-card loading). */
-  readonly actionLoading = signal<string | null>(null);
+  /** The resolved artist UUID, fetched on init. */
+  private readonly artistId = signal<string | null>(null);
 
-  /** Full unfiltered list from the API. */
-  private readonly allBookings = signal<Booking[]>([]);
+  /** All bookings currently loaded. */
+  readonly bookings = signal<EnrichedBooking[]>([]);
 
-  /** Active filter tab. */
-  readonly activeFilter = signal<FilterTab>('all');
+  /** Currently active status filter. '' = all. */
+  readonly activeStatus = signal<string>('');
 
-  /** Filtered view shown in the template. */
-  readonly bookings = computed(() => {
-    const filter = this.activeFilter();
-    const all = this.allBookings();
-    switch (filter) {
-      case 'pending':
-        return all.filter((b) =>
-          ['pending', 'approved', 'deposit_pending', 'deposit_paid'].includes(b.status),
-        );
-      case 'confirmed':
-        return all.filter((b) => b.status === 'confirmed');
-      case 'completed':
-        return all.filter((b) => b.status === 'completed');
-      case 'cancelled':
-        return all.filter((b) =>
-          ['cancelled', 'expired', 'no_show', 'refund_due', 'refunded'].includes(b.status),
-        );
-      default:
-        return all;
-    }
-  });
+  /** True when there are more pages to load. */
+  readonly hasMore = signal(false);
 
-  readonly filterTabs: { label: string; value: FilterTab }[] = [
-    { label: 'All', value: 'all' },
+  /** Pagination cursor for the next page. */
+  private nextCursor = signal<string | undefined>(undefined);
+
+  // ── Computed ─────────────────────────────────────────────────────────────
+
+  /** Count of bookings needing attention (pending). */
+  readonly pendingCount = computed(
+    () => this.bookings().filter((b) => b.status === 'pending').length,
+  );
+
+  // ── Status tabs ───────────────────────────────────────────────────────────
+
+  /** Tabs shown at the top of the bookings list. */
+  readonly tabs: StatusTab[] = [
+    { label: 'All', value: '' },
+    { label: 'Held', value: 'held' },
     { label: 'Pending', value: 'pending' },
     { label: 'Confirmed', value: 'confirmed' },
     { label: 'Completed', value: 'completed' },
+    { label: 'No show', value: 'no_show' },
     { label: 'Cancelled', value: 'cancelled' },
   ];
 
+  // ── Lifecycle ─────────────────────────────────────────────────────────────
+
   ngOnInit(): void {
-    // First get the artist profile to obtain the artist ID.
-    this.artistService.getMyProfile().subscribe({
-      next: (profile) => this.loadBookings(profile.id),
-      error: () => {
-        this.error.set('Could not load your artist profile. Please refresh.');
+    this.loadArtistThenBookings();
+  }
+
+  // ── Actions ───────────────────────────────────────────────────────────────
+
+  /** Switch the status filter tab and reload bookings. */
+  selectTab(status: string): void {
+    if (this.activeStatus() === status) return;
+    this.activeStatus.set(status);
+    this.nextCursor.set(undefined);
+    this.loadBookings();
+  }
+
+  /** Load the next page of bookings (infinite scroll). */
+  loadMore(): void {
+    if (!this.hasMore() || this.loading()) return;
+    this.loadBookings(true);
+  }
+
+  /** Approve a booking (pending → approved). */
+  approve(bookingId: string): void {
+    this.bookingSvc.approve(bookingId).subscribe({
+      next: () => this.loadBookings(),
+      error: () => this.errorMessage.set('Failed to approve booking.'),
+    });
+  }
+
+  /** Mark a booking complete. */
+  complete(bookingId: string): void {
+    this.bookingSvc.complete(bookingId).subscribe({
+      next: () => this.loadBookings(),
+      error: () => this.errorMessage.set('Failed to mark booking as completed.'),
+    });
+  }
+
+  /** Mark no-show. */
+  markNoShow(bookingId: string): void {
+    this.bookingSvc.markNoShow(bookingId).subscribe({
+      next: () => this.loadBookings(),
+      error: () => this.errorMessage.set('Failed to mark no-show.'),
+    });
+  }
+
+  // ── Private helpers ───────────────────────────────────────────────────────
+
+  /** Step 1: fetch artist profile to resolve artist_id, then load bookings. */
+  private loadArtistThenBookings(): void {
+    this.loading.set(true);
+    this.errorMessage.set(null);
+
+    this.artistSvc.getMyProfile().subscribe({
+      next: (profile) => {
+        this.artistId.set(profile.id);
+        this.loadBookings();
+      },
+      error: (err: HttpErrorResponse) => {
         this.loading.set(false);
+        this.errorMessage.set(this.readableError(err));
       },
     });
   }
 
-  setFilter(tab: FilterTab): void {
-    this.activeFilter.set(tab);
+  /** Step 2: fetch bookings for the resolved artist, filtered by active status. */
+  private loadBookings(append = false): void {
+    const id = this.artistId();
+    if (!id) return;
+
+    this.loading.set(true);
+    this.errorMessage.set(null);
+
+    const cursor = append ? this.nextCursor() : undefined;
+    const status = this.activeStatus() || undefined;
+
+    this.bookingSvc.getArtistBookings(id, cursor, 20, status).subscribe({
+      next: (result) => {
+        const incoming = result.items as unknown as EnrichedBooking[];
+        this.bookings.update((prev) =>
+          append ? [...prev, ...incoming] : incoming,
+        );
+        this.hasMore.set(result.meta?.has_more ?? false);
+        this.nextCursor.set(result.meta?.next_cursor ?? undefined);
+        this.loading.set(false);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.loading.set(false);
+        this.errorMessage.set(this.readableError(err));
+      },
+    });
   }
 
-  approve(booking: Booking): void {
-    this.runAction(booking.id, () => this.bookingService.approve(booking.id));
+  /** Format a date string for display. */
+  formatDate(iso: string): string {
+    return new Date(iso).toLocaleDateString('en-GB', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
   }
 
-  confirmDeposit(booking: Booking): void {
-    this.runAction(booking.id, () => this.bookingService.confirmDeposit(booking.id));
+  /** Format a time string for display. */
+  formatTime(iso: string): string {
+    return new Date(iso).toLocaleTimeString('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   }
 
-  complete(booking: Booking): void {
-    this.runAction(booking.id, () => this.bookingService.complete(booking.id));
+  /** Map an HTTP error to a message the artist can act on. */
+  private readableError(err: HttpErrorResponse): string {
+    if (err.status === 0) return 'Cannot reach the server. Check your connection.';
+    if (err.status === 401) return 'Your session expired. Please sign in again.';
+    return 'Something went wrong. Please try again.';
   }
 
-  markNoShow(booking: Booking): void {
-    this.runAction(booking.id, () => this.bookingService.markNoShow(booking.id));
+  /** Returns a Tailwind colour class for a booking status badge. */
+  statusClass(status: BookingStatus | string): string {
+    switch (status) {
+      case 'pending':      return 'bg-amber-100 text-amber-800';
+      case 'approved':     return 'bg-blue-100 text-blue-800';
+      case 'deposit_paid': return 'bg-blue-100 text-blue-800';
+      case 'confirmed':    return 'bg-green-100 text-green-800';
+      case 'completed':    return 'bg-gray-100 text-gray-600';
+      case 'cancelled':    return 'bg-red-100 text-red-700';
+      case 'no_show':      return 'bg-red-100 text-red-700';
+      case 'refund_due':   return 'bg-orange-100 text-orange-800';
+      default:             return 'bg-gray-100 text-gray-500';
+    }
   }
 
-  cancel(booking: Booking): void {
-    this.runAction(booking.id, () => this.bookingService.cancel(booking.id));
-  }
-
-  /** Human-readable label for each status. */
-  statusLabel(status: BookingStatus): string {
-    const labels: Record<BookingStatus, string> = {
-      held:            'Held',
-      pending:         'Pending',
-      approved:        'Approved',
-      deposit_pending: 'Deposit Pending',
-      deposit_paid:    'Deposit Paid',
-      confirmed:       'Confirmed',
-      completed:       'Completed',
-      cancelled:       'Cancelled',
-      expired:         'Expired',
-      no_show:         'No Show',
-      refund_due:      'Refund Due',
-      refunded:        'Refunded',
+  /** Human-readable label for a booking status. */
+  statusLabel(status: string): string {
+    const labels: Record<string, string> = {
+      held:          'Held',
+      pending:       'Pending',
+      approved:      'Approved',
+      deposit_paid:  'Deposit paid',
+      confirmed:     'Confirmed',
+      completed:     'Completed',
+      cancelled:     'Cancelled',
+      no_show:       'No show',
+      refund_due:    'Refund due',
+      refunded:      'Refunded',
+      expired:       'Expired',
     };
     return labels[status] ?? status;
   }
 
-  /** Tailwind classes for the status badge, using the B-Edge design tokens. */
-  statusClasses(status: BookingStatus): string {
-    switch (status) {
-      case 'pending':
-      case 'approved':
-      case 'deposit_pending':
-      case 'refund_due':
-        return 'bg-warning-light text-warning-dark';
-      case 'deposit_paid':
-      case 'confirmed':
-        return 'bg-success-light text-success-dark';
-      case 'completed':
-        return 'bg-gray-100 text-gray-600';
-      case 'cancelled':
-      case 'no_show':
-        return 'bg-danger-light text-danger-dark';
-      case 'held':
-      case 'expired':
-      case 'refunded':
-      default:
-        return 'bg-gray-100 text-gray-500';
-    }
+  /** Returns true if the approve action is valid for this booking. */
+  canApprove(booking: EnrichedBooking): boolean {
+    return booking.status === 'pending';
   }
 
-  /** Format an ISO timestamp for display: "Sat 14 Jun · 10:00 AM". */
-  formatDate(isoString: string): string {
-    return new Intl.DateTimeFormat('en-GB', {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'short',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    }).format(new Date(isoString));
+  /** Returns true if the complete action is valid. */
+  canComplete(booking: EnrichedBooking): boolean {
+    return booking.status === 'confirmed';
   }
 
-  // ── Private helpers ─────────────────────────────────────────────────────────
-
-  private loadBookings(artistId: string): void {
-    this.loading.set(true);
-    this.bookingService.getArtistBookings(artistId).subscribe({
-      next: (result) => {
-        this.allBookings.set(result.items);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.error.set('Could not load bookings. Please refresh.');
-        this.loading.set(false);
-      },
-    });
-  }
-
-  /**
-   * Runs a single booking action, shows per-card loading, and updates the
-   * booking in place when the server responds — no full list reload needed.
-   */
-  private runAction(
-    bookingId: string,
-    action: () => Observable<Booking>,
-  ): void {
-    this.actionLoading.set(bookingId);
-    action().subscribe({
-      next: (updated) => {
-        this.allBookings.update((list) =>
-          list.map((b) => (b.id === updated.id ? updated : b)),
-        );
-        this.actionLoading.set(null);
-      },
-      error: () => {
-        // On error just clear the loading state — the booking stays unchanged.
-        this.actionLoading.set(null);
-      },
-    });
+  /** Returns true if no-show can be marked. */
+  canMarkNoShow(booking: EnrichedBooking): boolean {
+    return booking.status === 'confirmed';
   }
 }

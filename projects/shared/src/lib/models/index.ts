@@ -4,3 +4,7 @@ export * from './auth.model';
 export * from './booking.model';
 export * from './artist.model';
 export * from './review.model';
+export * from './enriched-booking.model';
+export * from './earnings.model';
+export * from './client.model';
+export * from './media.model';

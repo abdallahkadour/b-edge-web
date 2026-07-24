@@ -26,15 +26,72 @@
   @if (!loading() && !loadError() && profile()) {
 
     <!-- Avatar + name -->
-    <div class="flex items-center gap-4 mb-8">
-      <div class="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center text-base font-medium text-gray-600 shrink-0 select-none">
-        {{ initials }}
-      </div>
-      <div>
-        <p class="text-base font-medium text-ink">{{ profile()!.name }}</p>
-        <p class="text-sm text-gray-400">{{ profile()!.email }}</p>
+    <div class="flex items-center gap-4 mb-3">
+
+      <!-- Avatar (photo, or default placeholder when none set) -->
+      <label class="relative w-16 h-16 rounded-full shrink-0 cursor-pointer group">
+        @if (hasAvatar) {
+          <img
+            [src]="profile()!.avatar_url"
+            alt="Profile photo"
+            class="w-16 h-16 rounded-full object-cover border border-gray-200"
+          />
+        } @else {
+          <div class="w-16 h-16 rounded-full bg-gray-100 border border-gray-200
+                      flex items-center justify-center text-gray-400">
+            <lucide-icon name="user" [size]="28" [strokeWidth]="1.5" />
+          </div>
+        }
+
+        <!-- Hover / busy overlay -->
+        <div class="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/45
+                    transition-colors flex items-center justify-center text-white">
+          @if (avatarBusy()) {
+            <span class="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
+          } @else {
+            <span class="opacity-0 group-hover:opacity-100 transition-opacity">
+              <lucide-icon name="camera" [size]="18" [strokeWidth]="2" />
+            </span>
+          }
+        </div>
+
+        <input
+          type="file"
+          accept="image/*"
+          class="hidden"
+          [disabled]="avatarBusy()"
+          (change)="onAvatarSelected($event)"
+        />
+      </label>
+
+      <div class="min-w-0">
+        <p class="text-base font-medium text-ink truncate">{{ profile()!.name }}</p>
+        <p class="text-sm text-gray-400 truncate">{{ profile()!.email }}</p>
+
+        <!-- Remove photo (only when one is set) -->
+        @if (hasAvatar) {
+          <button
+            type="button"
+            class="mt-1 inline-flex items-center gap-1 text-xs text-gray-400
+                   hover:text-danger-dark transition-colors disabled:opacity-40"
+            [disabled]="avatarBusy()"
+            (click)="removeAvatar()"
+          >
+            <lucide-icon name="trash-2" [size]="13" [strokeWidth]="2" />
+            Remove photo
+          </button>
+        }
       </div>
     </div>
+
+    <!-- Avatar upload/remove error -->
+    @if (avatarError(); as msg) {
+      <p class="text-sm text-danger-dark bg-danger-light rounded-lg px-4 py-3 mb-4">
+        {{ msg }}
+      </p>
+    }
+
+    <div class="mb-8"></div>
 
     <!-- ── Read-only fields ──────────────────────────────────────────────── -->
     <div class="mb-6">
@@ -96,7 +153,7 @@
           <label class="block text-sm text-gray-500 mb-1.5" for="profile-instagram">Instagram</label>
           <div class="flex items-center border border-gray-200 rounded-lg overflow-hidden focus-within:border-gray-400 transition-colors">
             <span class="px-3 text-sm text-gray-400 bg-gray-50 border-r border-gray-200 h-full flex items-center py-2 select-none">
-              @
+              &#64;
             </span>
             <input
               id="profile-instagram"
@@ -133,13 +190,16 @@
     <!-- ── Save button ───────────────────────────────────────────────────── -->
     <button
       type="button"
-      class="bedge-btn-sm font-medium w-full sm:w-auto"
+      class="bedge-btn-sm font-medium w-full sm:w-auto mb-8"
       [disabled]="!isDirty || saving()"
       [class.opacity-30]="!isDirty || saving()"
       (click)="save()"
     >
       @if (saving()) { Saving… } @else { Save changes }
     </button>
+
+    <!-- ── Portfolio manager ─────────────────────────────────────────────── -->
+    <bedge-portfolio />
 
   }
 

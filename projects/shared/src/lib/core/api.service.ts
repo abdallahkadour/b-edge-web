@@ -19,17 +19,37 @@ export interface ListResult<T> {
  *
  * The auth interceptor attaches the JWT and `withCredentials`, so this service
  * stays focused purely on shape, not on auth concerns.
+ *
+ * Note on empty collections: Go marshals a nil slice as JSON `null`, not `[]`.
+ * That null arrives typed as `T[]` and detonates on the first `.length`,
+ * spread, or `@for`. Anything returning a collection must go through
+ * `getArray()` or `getList()`, both of which coalesce. `get()` is for single
+ * resources only.
  */
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = inject(API_CONFIG).baseUrl;
 
-  /** GET a single resource, unwrapping the envelope's `data`. */
+  /**
+   * GET a single resource, unwrapping the envelope's `data`.
+   * Do NOT use for arrays — see `getArray()`.
+   */
   get<T>(path: string, params?: Record<string, string | number>): Observable<T> {
     return this.http
       .get<ApiResponse<T>>(this.url(path), { params: this.toParams(params) })
       .pipe(map((res) => res.data));
+  }
+
+  /**
+   * GET a collection that has no pagination envelope, coalescing the API's
+   * `null`-for-empty into `[]` so callers can treat the result as an array
+   * unconditionally.
+   */
+  getArray<T>(path: string, params?: Record<string, string | number>): Observable<T[]> {
+    return this.http
+      .get<ApiResponse<T[]>>(this.url(path), { params: this.toParams(params) })
+      .pipe(map((res) => res.data ?? []));
   }
 
   /** GET a list, returning items plus pagination meta. */
@@ -43,6 +63,17 @@ export class ApiService {
   post<T>(path: string, body: unknown): Observable<T> {
     return this.http
       .post<ApiResponse<T>>(this.url(path), body)
+      .pipe(map((res) => res.data));
+  }
+
+  /**
+   * PUT a body, unwrapping the envelope's `data`.
+   * Used by endpoints that fully replace a resource — e.g. the client note
+   * upsert (PUT /clients/:id/notes), which is NOT a PATCH server-side.
+   */
+  put<T>(path: string, body: unknown): Observable<T> {
+    return this.http
+      .put<ApiResponse<T>>(this.url(path), body)
       .pipe(map((res) => res.data));
   }
 

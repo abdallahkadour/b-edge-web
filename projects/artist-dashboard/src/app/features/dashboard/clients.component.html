@@ -1,0 +1,112 @@
+<!-- Clients list screen -->
+<div>
+
+  <!-- Header -->
+  <div class="mb-5 flex items-center justify-between">
+    <div>
+      <h1 class="text-xl font-semibold text-ink">Clients</h1>
+      <p class="text-sm text-gray-500 mt-0.5">
+        @if (clients().length > 0) {
+          {{ clients().length }} client{{ clients().length === 1 ? '' : 's' }}
+        } @else {
+          Your client list
+        }
+      </p>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="mb-5">
+    <input
+      type="search"
+      [ngModel]="searchQuery()"
+      (ngModelChange)="onSearch($event)"
+      placeholder="Search by name or service…"
+      class="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm
+             text-ink placeholder:text-gray-400 focus:border-ink focus:bg-white
+             focus:outline-none focus:ring-1 focus:ring-ink"
+    />
+  </div>
+
+  <!-- Error -->
+  @if (errorMessage(); as msg) {
+    <div class="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+      {{ msg }}
+    </div>
+  }
+
+  <!-- Loading skeleton -->
+  @if (loading()) {
+    <div class="space-y-2">
+      @for (i of [1,2,3,4,5]; track i) {
+        <div class="h-16 rounded-lg bg-gray-100 animate-pulse"></div>
+      }
+    </div>
+  }
+
+  <!-- Empty state -->
+  @if (!loading() && clients().length === 0) {
+    <div class="rounded-lg border border-gray-200 bg-white p-10 text-center">
+      <p class="text-3xl mb-3">👥</p>
+      @if (searchQuery()) {
+        <p class="text-sm font-medium text-ink">No clients found</p>
+        <p class="text-xs text-gray-400 mt-1">Try a different name or service.</p>
+      } @else {
+        <p class="text-sm font-medium text-ink">No clients yet</p>
+        <p class="text-xs text-gray-400 mt-1">Clients appear here once they complete a booking.</p>
+      }
+    </div>
+  }
+
+  <!-- Client list -->
+  @if (!loading() && clients().length > 0) {
+    <div class="space-y-2">
+      @for (client of clients(); track client.customer_id) {
+        <button
+          (click)="openClient(client)"
+          class="w-full rounded-lg border border-gray-200 bg-white px-4 py-3.5
+                 flex items-center gap-3 hover:bg-gray-50 transition-colors text-left"
+        >
+          <!-- Avatar -->
+          <div class="w-10 h-10 rounded-full bg-ink flex items-center justify-center
+                      text-white text-xs font-semibold flex-shrink-0">
+            {{ initials(client.name) }}
+          </div>
+
+          <!-- Info -->
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-1.5">
+              <p class="text-sm font-semibold text-ink truncate">{{ client.name }}</p>
+              @if (client.is_vip) {
+                <span class="text-xs">👑</span>
+              }
+            </div>
+            <p class="text-xs text-gray-400 mt-0.5 truncate">
+              @if (client.last_service) {
+                {{ client.last_service }}
+                @if (client.last_visit) {
+                  · {{ formatDate(client.last_visit) }}
+                }
+              }
+            </p>
+          </div>
+
+          <!-- Stats -->
+          <div class="text-right flex-shrink-0">
+            <p class="text-sm font-semibold text-ink">${{ formatMoney(client.total_spent) }}</p>
+            <p class="text-xs text-gray-400">
+              {{ client.bookings_count }} booking{{ client.bookings_count === 1 ? '' : 's' }}
+              @if (client.average_rating) {
+                · {{ formatRating(client.average_rating) }}
+              }
+            </p>
+          </div>
+
+          <!-- Chevron -->
+          <span class="text-gray-300 flex-shrink-0">›</span>
+        </button>
+      }
+    </div>
+  }
+
+</div>

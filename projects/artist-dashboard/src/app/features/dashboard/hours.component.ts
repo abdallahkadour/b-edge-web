@@ -77,12 +77,10 @@ function toApiTime(inputTime: string): string {
  * Build a full 7-day row array, merging API data where it exists.
  * Days with no API record default to closed with 09:00–18:00 placeholders.
  */
-function buildDayRows(apiHours: BusinessHours[] | null | undefined): DayRow[] {
-  // Guard against null — Go serializes empty slices as null, not [].
-  const hours = apiHours ?? [];
+function buildDayRows(apiHours: BusinessHours[]): DayRow[] {
   // Index by day_of_week for O(1) lookup
   const byDay = new Map<number, BusinessHours>(
-    hours.map((h) => [h.day_of_week, h]),
+    apiHours.map((h) => [h.day_of_week, h]),
   );
 
   return DAY_NAMES.map((label, i) => {
@@ -349,7 +347,7 @@ export class HoursComponent implements OnInit {
 
     this.artistService.getBusinessHours(storeId).subscribe({
       next: (hours) => {
-        this.dayRows.set(buildDayRows(hours));
+        this.dayRows.set(buildDayRows(hours ?? []));
         this.hoursLoading.set(false);
       },
       error: () => {
@@ -369,7 +367,6 @@ export class HoursComponent implements OnInit {
     this.artistService.getExceptions(storeId).subscribe({
       next: (exceptions) => {
         // Sort chronologically so the nearest date is first.
-        // Guard against null — Go serializes empty slices as null, not [].
         const sorted = [...(exceptions ?? [])].sort((a, b) =>
           a.exception_date.localeCompare(b.exception_date),
         );

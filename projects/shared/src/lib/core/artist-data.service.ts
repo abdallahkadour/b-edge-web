@@ -19,6 +19,10 @@ import type {
 /**
  * Data-access service for the artist domain.
  * Thin wrappers over ApiService — one method per endpoint.
+ *
+ * Collection endpoints use `getArray`, which coalesces the API's `null`-for-
+ * empty into `[]`. Components must not have to defend against a null that the
+ * type system claims is an array.
  */
 @Injectable({ providedIn: 'root' })
 export class ArtistDataService {
@@ -41,23 +45,36 @@ export class ArtistDataService {
     return this.api.patch<Artist>(`/artists/${artistId}`, req);
   }
 
+  // ── Public booking data ───────────────────────────────────────────────────
+  // No auth — this is what the guest booking funnel reads from an artist's
+  // shared profile link.
+
+  /**
+   * GET /artists/:id/services — active, bookable services for this artist.
+   * NOT YET IMPLEMENTED SERVER-SIDE. Modeled on getStoresByArtist below for
+   * consistency; needs a matching public Go handler before this resolves.
+   */
+  getServicesByArtist(artistId: string): Observable<Service[]> {
+    return this.api.getArray<Service>(`/artists/${artistId}/services`);
+  }
+
   // ── Stores ─────────────────────────────────────────────────────────────────
 
   /** GET /artists/salon/stores — stores for the authenticated artist's salon. */
   getStoresBySalon(): Observable<Store[]> {
-    return this.api.get<Store[]>('/artists/salon/stores');
+    return this.api.getArray<Store>('/artists/salon/stores');
   }
 
   /** GET /artists/:id/stores — stores an artist is assigned to. */
   getStoresByArtist(artistId: string): Observable<Store[]> {
-    return this.api.get<Store[]>(`/artists/${artistId}/stores`);
+    return this.api.getArray<Store>(`/artists/${artistId}/stores`);
   }
 
   // ── Services ───────────────────────────────────────────────────────────────
 
   /** GET /artists/salon/services — all active services for the salon. */
   getServicesBySalon(): Observable<Service[]> {
-    return this.api.get<Service[]>('/artists/salon/services');
+    return this.api.getArray<Service>('/artists/salon/services');
   }
 
   /** POST /artists/salon/services — add a new service. */
@@ -79,7 +96,7 @@ export class ArtistDataService {
 
   /** GET /artists/stores/:id/hours — 7-day schedule for a store. */
   getBusinessHours(storeId: string): Observable<BusinessHours[]> {
-    return this.api.get<BusinessHours[]>(`/artists/stores/${storeId}/hours`);
+    return this.api.getArray<BusinessHours>(`/artists/stores/${storeId}/hours`);
   }
 
   /** POST /artists/stores/:id/hours — upsert hours for a day. */
@@ -87,9 +104,15 @@ export class ArtistDataService {
     return this.api.command(`/artists/stores/${storeId}/hours`, 'POST', req);
   }
 
-  /** GET /artists/stores/:id/exceptions — holiday / special hours. */
+  /**
+   * GET /artists/stores/:id/exceptions — holiday / special hours.
+   *
+   * A store with no exceptions is the common case, and that is exactly when
+   * the API returns null. Coalescing here is what keeps the Hours screen's
+   * sort from throwing on a fresh store.
+   */
   getExceptions(storeId: string): Observable<BusinessHoursException[]> {
-    return this.api.get<BusinessHoursException[]>(`/artists/stores/${storeId}/exceptions`);
+    return this.api.getArray<BusinessHoursException>(`/artists/stores/${storeId}/exceptions`);
   }
 
   /** POST /artists/stores/:id/exceptions — add a holiday. */

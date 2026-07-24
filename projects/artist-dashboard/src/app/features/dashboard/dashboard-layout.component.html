@@ -1,64 +1,99 @@
-<div class="min-h-screen bg-gray-50 flex flex-col">
-  <!-- Header -->
-  <header
-    class="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-6 shrink-0"
-  >
-    <span class="text-lg font-semibold tracking-tight text-ink">B-Edge</span>
+<!-- Dashboard shell — sidebar on desktop, bottom nav on mobile -->
+<div class="min-h-screen bg-gray-50 flex">
 
-    <div class="flex items-center gap-3">
+  <!-- ── Sidebar (desktop ≥ 768px) ──────────────────────────────────────── -->
+  <aside class="hidden md:flex md:flex-col md:w-56 md:fixed md:inset-y-0 bg-white border-r border-gray-200">
+
+    <!-- Wordmark -->
+    <div class="px-6 py-6 border-b border-gray-100">
+      <span class="text-lg font-semibold tracking-tight text-ink">B-Edge</span>
+      <p class="text-xs text-gray-400 mt-0.5">Artist Dashboard</p>
+    </div>
+
+    <!-- Nav links -->
+    <nav class="flex-1 px-3 py-4 space-y-1">
+      @for (item of navItems; track item.path) {
+        <a
+          [routerLink]="item.path"
+          routerLinkActive="bg-gray-100 text-ink font-medium"
+          [routerLinkActiveOptions]="{ exact: false }"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-600
+                 hover:bg-gray-50 hover:text-ink transition-colors"
+        >
+          <lucide-icon [name]="item.icon" [size]="20" [strokeWidth]="2" class="flex-shrink-0" />
+          {{ item.label }}
+        </a>
+      }
+    </nav>
+
+    <!-- Artist info (tap → profile) + logout -->
+    <div class="px-4 py-4 border-t border-gray-100">
       @if (user(); as u) {
-        <span class="text-sm text-gray-600 hidden sm:inline">{{ u.name }}</span>
+        <a
+          routerLink="/dashboard/profile"
+          class="flex items-center gap-3 mb-3 -mx-2 px-2 py-1.5 rounded-lg
+                 hover:bg-gray-50 transition-colors"
+        >
+          <div class="w-8 h-8 rounded-full bg-ink flex items-center justify-center
+                      text-white text-xs font-semibold flex-shrink-0">
+            {{ initials(u.name) }}
+          </div>
+          <div class="min-w-0">
+            <p class="text-sm font-medium text-ink truncate">{{ u.name }}</p>
+            <p class="text-xs text-gray-400 truncate">{{ u.email }}</p>
+          </div>
+        </a>
       }
       <button
-        type="button"
-        (click)="signOut()"
-        class="text-sm text-gray-500 hover:text-ink transition-colors"
+        (click)="logout()"
+        class="w-full text-left text-sm text-gray-500 hover:text-ink
+               px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
       >
         Sign out
       </button>
     </div>
-  </header>
+  </aside>
 
-  <div class="flex flex-1 min-h-0">
-    <!-- Sidebar — desktop only -->
-    <aside
-      class="hidden md:flex w-56 bg-white border-r border-gray-200 flex-col py-4 shrink-0"
-    >
-      <nav class="flex flex-col gap-1 px-3">
-        @for (item of navItems; track item.path) {
-          <a
-            [routerLink]="item.path"
-            routerLinkActive="bg-gray-100 text-ink"
-            [routerLinkActiveOptions]="{ exact: false }"
-            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium
-                   text-gray-600 hover:bg-gray-50 hover:text-ink transition-colors"
-          >
-            {{ item.label }}
-          </a>
-        }
-      </nav>
-    </aside>
+  <!-- ── Main content area ───────────────────────────────────────────────── -->
+  <div class="flex-1 flex flex-col md:ml-56">
 
-    <!-- Main content -->
-    <main class="flex-1 min-w-0 overflow-y-auto p-4 md:p-6 pb-20 md:pb-6">
+    <!-- Mobile top bar -->
+    <header class="md:hidden flex items-center justify-between px-4 py-4
+                   bg-white border-b border-gray-200 sticky top-0 z-10">
+      <span class="text-base font-semibold tracking-tight text-ink">B-Edge</span>
+      @if (user(); as u) {
+        <a
+          routerLink="/dashboard/profile"
+          aria-label="Go to profile"
+          class="w-8 h-8 rounded-full bg-ink flex items-center justify-center
+                 text-white text-xs font-semibold active:opacity-80 transition-opacity"
+        >
+          {{ initials(u.name) }}
+        </a>
+      }
+    </header>
+
+    <!-- Page content -->
+    <main class="flex-1 px-4 py-6 md:px-8 pb-24 md:pb-8">
       <router-outlet />
     </main>
   </div>
 
-  <!-- Bottom tab bar — mobile only -->
-  <nav
-    class="md:hidden fixed bottom-0 inset-x-0 h-16 bg-white border-t border-gray-200
-           flex items-center justify-around px-2"
-  >
+  <!-- ── Bottom nav (mobile only) ───────────────────────────────────────── -->
+  <nav class="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-gray-200
+              flex items-center justify-around px-2 py-2 z-10">
     @for (item of navItems; track item.path) {
       <a
         [routerLink]="item.path"
         routerLinkActive="text-ink"
-        class="flex flex-col items-center gap-1 px-3 py-1 text-xs font-medium
-               text-gray-400 transition-colors"
+        [routerLinkActiveOptions]="{ exact: false }"
+        class="flex flex-col items-center gap-1 px-3 py-1 text-gray-400
+               hover:text-ink transition-colors"
       >
-        {{ item.label }}
+        <lucide-icon [name]="item.icon" [size]="22" [strokeWidth]="2" />
+        <span class="text-[10px] font-medium">{{ item.label }}</span>
       </a>
     }
   </nav>
+
 </div>

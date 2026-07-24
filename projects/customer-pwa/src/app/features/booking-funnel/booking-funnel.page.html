@@ -1,0 +1,40 @@
+@if (loading()) {
+  <div class="flex items-center justify-center min-h-full text-gray-400 text-[14px]">Loading…</div>
+} @else if (loadError() || !artist()) {
+  <div class="flex items-center justify-center min-h-full text-gray-400 text-[14px] px-6 text-center">
+    Couldn't load this profile. Check your connection and try again.
+  </div>
+} @else {
+  @switch (step()) {
+    @case ('profile') {
+      <app-artist-profile-screen
+        [artist]="artist()!"
+        [services]="services()"
+        [portfolio]="portfolio()"
+        (continueWith)="onProfileContinue($event)"
+      />
+    }
+    @case ('select-service') {
+      <app-select-service-screen
+        [artistName]="artist()!.name"
+        [services]="services()"
+        [selectedServiceId]="selectedServiceId()"
+        (selectService)="selectedServiceId.set($event)"
+        (back)="step.set('profile')"
+        (continue)="step.set('pick-datetime')"
+      />
+    }
+    @case ('pick-datetime') {
+      <app-pick-datetime-screen
+        [artistId]="artistId()"
+        [serviceId]="selectedServiceId()!"
+        [stores]="stores()"
+        (back)="step.set('select-service')"
+        (continueWith)="onSlotChosen($event)"
+      />
+    }
+    @default {
+      <div class="p-6 text-gray-400 text-[14px]">Screen not built yet — step: {{ step() }}</div>
+    }
+  }
+}

@@ -6,162 +6,193 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
+import { LucideAngularModule } from 'lucide-angular';
 
-import { ArtistDataService } from '@bedge/shared';
-import type { ArtistProfile, UpdateProfileRequest } from '@bedge/shared';
+import { ArtistDataService, CloudinaryUploadService } from '@bedge/shared';
+import type { ArtistProfile } from '@bedge/shared';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Component
-// ─────────────────────────────────────────────────────────────────────────────
+import { PortfolioComponent } from './portfolio.component';
 
 /**
- * Profile screen for the artist dashboard.
+ * Profile screen — edit bio + instagram handle, upload/remove avatar photo,
+ * manage portfolio photos.
  *
- * Displays read-only identity fields (name, email, phone) fetched from the
- * artist's own profile, and editable fields (bio, Instagram handle) that map
- * to PATCH /artists/:id.
+ * Avatar upload flow:
+ *  1. User picks a photo.
+ *  2. Uploads directly to Cloudinary (unsigned preset).
+ *  3. The returned URL is saved via PATCH /artists/:id (avatar_url field).
  *
- * The form auto-populates with current values on load. The Save button is
- * disabled until the artist actually changes something, preventing unnecessary
- * API calls. A success banner confirms the save and auto-dismisses after 3s.
+ * Avatar removal sends an empty string rather than null: the Go repository
+ * uses COALESCE($4, avatar_url), so null would preserve the existing value.
+ * An empty string clears it, and the template treats it as "no avatar".
  */
 @Component({
   selector: 'bedge-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [FormsModule, PortfolioComponent, LucideAngularModule],
   templateUrl: './profile.component.html',
 })
 export class ProfileComponent implements OnInit {
-  private readonly artistService = inject(ArtistDataService);
+  private readonly artistSvc: ArtistDataService = inject(ArtistDataService);
+  private readonly cloudinary: CloudinaryUploadService = inject(CloudinaryUploadService);
 
-  // ── Profile data ──────────────────────────────────────────────────────────
+  // ── State ─────────────────────────────────────────────────────────────────
 
-  /** Loaded profile. Null until the API responds. */
+  readonly loading = signal(true);
+  readonly saving = signal(false);
+  readonly loadError = signal<string | null>(null);
+  readonly saveError = signal<string | null>(null);
+  readonly saved = signal(false);
   readonly profile = signal<ArtistProfile | null>(null);
 
-  /** True while the profile is loading on init. */
-  readonly loading = signal(true);
-
-  /** Top-level load error. */
-  readonly loadError = signal<string | null>(null);
-
-  // ── Editable form fields ──────────────────────────────────────────────────
-
-  /** Current value of the bio textarea. */
   readonly bio = signal('');
-
-  /** Current value of the Instagram field. */
   readonly instagram = signal('');
 
-  // ── Snapshot for dirty detection ──────────────────────────────────────────
+  /** True while the avatar photo is uploading or being removed. */
+  readonly avatarBusy = signal(false);
+  readonly avatarError = signal<string | null>(null);
 
-  /** Bio value as loaded from the API — used to detect unsaved changes. */
-  private savedBio = '';
-
-  /** Instagram value as loaded from the API — used to detect unsaved changes. */
-  private savedInstagram = '';
-
-  // ── Save state ────────────────────────────────────────────────────────────
-
-  /** True while the PATCH request is in flight. */
-  readonly saving = signal(false);
-
-  /** Save error message, or null. */
-  readonly saveError = signal<string | null>(null);
-
-  /** True for 3 seconds after a successful save — shows the success banner. */
-  readonly saved = signal(false);
-
-  // ── Derived ───────────────────────────────────────────────────────────────
-
-  /**
-   * True when the artist has changed at least one field from its saved value.
-   * Keeps the Save button disabled when nothing has changed.
-   */
-  get isDirty(): boolean {
-    return (
-      this.bio() !== this.savedBio ||
-      this.instagram() !== this.savedInstagram
-    );
+  /** True when the artist has an avatar photo set. */
+  get hasAvatar(): boolean {
+    const url = this.profile()?.avatar_url;
+    return !!url && url.trim().length > 0;
   }
 
-  /** Initials derived from the artist's name, used for the avatar circle. */
+  get isDirty(): boolean {
+    const p = this.profile();
+    if (!p) return false;
+    return this.bio() !== (p.bio ?? '') || this.instagram() !== (p.instagram ?? '');
+  }
+
   get initials(): string {
     const name = this.profile()?.name ?? '';
-    return name
-      .split(' ')
-      .slice(0, 2)
-      .map((w) => w[0]?.toUpperCase() ?? '')
-      .join('');
+    const parts = name.trim().split(/\s+/);
+    if (!parts[0]) return '?';
+    if (parts.length === 1) return parts[0][0].toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Lifecycle
-  // ─────────────────────────────────────────────────────────────────────────
+  // ── Lifecycle ─────────────────────────────────────────────────────────────
 
   ngOnInit(): void {
-    this.artistService.getMyProfile().subscribe({
-      next: (profile) => {
-        this.profile.set(profile);
-        // Populate editable fields from the loaded profile.
-        this.bio.set(profile.bio ?? '');
-        this.instagram.set(profile.instagram ?? '');
-        // Snapshot for dirty detection.
-        this.savedBio = profile.bio ?? '';
-        this.savedInstagram = profile.instagram ?? '';
-        this.loading.set(false);
-      },
-      error: () => {
-        this.loadError.set('Could not load your profile. Please refresh.');
-        this.loading.set(false);
-      },
-    });
+    this.load();
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Save
-  // ─────────────────────────────────────────────────────────────────────────
+  // ── Actions ───────────────────────────────────────────────────────────────
 
-  /** Submit the editable fields to PATCH /artists/:id. */
   save(): void {
-    const profile = this.profile();
-    if (!profile || !this.isDirty || this.saving()) return;
+    const p = this.profile();
+    if (!p || !this.isDirty) return;
 
     this.saving.set(true);
     this.saveError.set(null);
+    this.saved.set(false);
 
-    const req: UpdateProfileRequest = {
-      bio: this.bio().trim() || undefined,
-      instagram: this.instagram().trim() || undefined,
-    };
+    const bio = this.bio().trim() || undefined;
+    const instagram = this.instagram().trim() || undefined;
 
-    this.artistService.updateProfile(profile.id, req).subscribe({
-      next: (updated) => {
-        // Update snapshot so dirty detection resets correctly.
-        this.savedBio = updated.bio ?? '';
-        this.savedInstagram = updated.instagram ?? '';
-        // Reflect the server's trimmed values back into the form.
-        this.bio.set(updated.bio ?? '');
-        this.instagram.set(updated.instagram ?? '');
+    this.artistSvc.updateProfile(p.id, { bio, instagram }).subscribe({
+      next: () => {
+        this.profile.update((prev) => (prev ? { ...prev, bio, instagram } : prev));
         this.saving.set(false);
-        this.showSavedBanner();
+        this.saved.set(true);
+        setTimeout(() => this.saved.set(false), 3000);
       },
       error: () => {
         this.saving.set(false);
-        this.saveError.set('Could not save changes. Please try again.');
+        this.saveError.set('Failed to save profile. Please try again.');
       },
     });
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Private helpers
-  // ─────────────────────────────────────────────────────────────────────────
+  /** Triggered by the avatar file input. */
+  onAvatarSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    input.value = '';
 
-  /** Show the success banner for 3 seconds then dismiss it automatically. */
-  private showSavedBanner(): void {
-    this.saved.set(true);
-    setTimeout(() => this.saved.set(false), 3000);
+    if (!file.type.startsWith('image/')) {
+      this.avatarError.set('Please select an image file.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      this.avatarError.set('Image must be smaller than 10MB.');
+      return;
+    }
+
+    this.uploadAvatar(file);
+  }
+
+  /** Remove the current avatar photo, falling back to the default placeholder. */
+  removeAvatar(): void {
+    const p = this.profile();
+    if (!p || !this.hasAvatar) return;
+
+    this.avatarBusy.set(true);
+    this.avatarError.set(null);
+
+    // Empty string (not null) — see the class doc comment for why.
+    this.artistSvc.updateProfile(p.id, { avatar_url: '' }).subscribe({
+      next: () => {
+        this.profile.update((prev) => (prev ? { ...prev, avatar_url: '' } : prev));
+        this.avatarBusy.set(false);
+      },
+      error: () => {
+        this.avatarBusy.set(false);
+        this.avatarError.set('Failed to remove photo. Please try again.');
+      },
+    });
+  }
+
+  // ── Private ───────────────────────────────────────────────────────────────
+
+  private uploadAvatar(file: File): void {
+    const p = this.profile();
+    if (!p) return;
+
+    this.avatarBusy.set(true);
+    this.avatarError.set(null);
+
+    this.cloudinary.upload(file).subscribe({
+      next: (result) => {
+        this.artistSvc.updateProfile(p.id, { avatar_url: result.url }).subscribe({
+          next: () => {
+            this.profile.update((prev) =>
+              prev ? { ...prev, avatar_url: result.url } : prev,
+            );
+            this.avatarBusy.set(false);
+          },
+          error: () => {
+            this.avatarBusy.set(false);
+            this.avatarError.set('Photo uploaded but failed to save. Please try again.');
+          },
+        });
+      },
+      error: () => {
+        this.avatarBusy.set(false);
+        this.avatarError.set('Upload failed. Check your connection and try again.');
+      },
+    });
+  }
+
+  private load(): void {
+    this.loading.set(true);
+    this.loadError.set(null);
+
+    this.artistSvc.getMyProfile().subscribe({
+      next: (data: ArtistProfile) => {
+        this.profile.set(data);
+        this.bio.set(data.bio ?? '');
+        this.instagram.set(data.instagram ?? '');
+        this.loading.set(false);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.loading.set(false);
+        this.loadError.set('Failed to load profile. Please try again.');
+      },
+    });
   }
 }

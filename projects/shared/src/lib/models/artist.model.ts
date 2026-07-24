@@ -11,6 +11,7 @@ export interface Artist {
   readonly bio?: string;
   readonly bio_ar?: string;
   readonly instagram?: string;
+  readonly avatar_url?: string;
   readonly rating: string;        // decimal as string
   readonly review_count: number;
   readonly is_verified: boolean;
@@ -27,6 +28,7 @@ export interface ArtistProfile {
   readonly bio?: string;
   readonly bio_ar?: string;
   readonly instagram?: string;
+  readonly avatar_url?: string;
   readonly rating: string;
   readonly review_count: number;
   readonly is_verified: boolean;
@@ -94,9 +96,10 @@ export interface BusinessHoursException {
 
 /** Request body for PATCH /artists/:id (Go artist.UpdateProfileRequest). */
 export interface UpdateProfileRequest {
-  bio?: string;        // max 500
-  bio_ar?: string;     // max 500
-  instagram?: string;  // max 255
+  bio?: string;         // max 500
+  bio_ar?: string;      // max 500
+  instagram?: string;   // max 255
+  avatar_url?: string;  // max 500, must be a valid URL
 }
 
 /** Request body for POST /artists/salon/services. */

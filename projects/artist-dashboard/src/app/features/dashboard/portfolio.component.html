@@ -1,0 +1,128 @@
+<!-- Portfolio photo manager -->
+<div class="mb-6">
+  <div class="flex items-center justify-between mb-3">
+    <h2 class="text-xs font-medium text-gray-400 uppercase tracking-wide">Portfolio</h2>
+    <span class="text-xs text-gray-400">{{ photos().length }}/{{ maxAllowed() }}</span>
+  </div>
+
+  <!-- Error banner -->
+  @if (error(); as msg) {
+    <p class="text-sm text-danger-dark bg-danger-light rounded-lg px-4 py-3 mb-3">
+      {{ msg }}
+    </p>
+  }
+
+  <!-- Upload error -->
+  @if (uploadError(); as msg) {
+    <p class="text-sm text-danger-dark bg-danger-light rounded-lg px-4 py-3 mb-3">
+      {{ msg }}
+    </p>
+  }
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="flex items-center gap-2 text-sm text-gray-400 mb-3">
+      <span class="animate-spin inline-block w-4 h-4 border-2 border-gray-300 border-t-ink rounded-full"></span>
+      Loading portfolio…
+    </div>
+  }
+
+  @if (!loading()) {
+
+    <!-- Photo grid -->
+    @if (photos().length > 0) {
+      <div class="grid grid-cols-3 gap-2 mb-3">
+        @for (photo of photos(); track photo.id) {
+          <div class="relative aspect-square rounded-lg overflow-hidden border border-gray-200 group">
+            <img
+              [src]="photo.url"
+              [alt]="'Portfolio photo'"
+              class="w-full h-full object-cover"
+            />
+
+            <!-- Cover badge -->
+            @if (isCover(photo)) {
+              <span class="absolute top-1.5 left-1.5 bg-ink text-white text-[10px] font-medium px-2 py-0.5 rounded-full">
+                Cover
+              </span>
+            }
+
+            <!-- Hover actions -->
+            <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors
+                        flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+
+              @if (!isCover(photo)) {
+                <button
+                  type="button"
+                  (click)="setCover(photo)"
+                  [disabled]="settingCoverId() === photo.id"
+                  class="w-7 h-7 rounded-full bg-white text-ink flex items-center justify-center
+                         text-xs hover:bg-gray-100 transition-colors disabled:opacity-50"
+                  title="Set as cover"
+                >
+                  @if (settingCoverId() === photo.id) {
+                    <span class="animate-spin inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full"></span>
+                  } @else {
+                    ★
+                  }
+                </button>
+              }
+
+              <button
+                type="button"
+                (click)="deletePhoto(photo)"
+                [disabled]="deletingId() === photo.id"
+                class="w-7 h-7 rounded-full bg-white text-danger-dark flex items-center justify-center
+                       text-xs hover:bg-gray-100 transition-colors disabled:opacity-50"
+                title="Delete photo"
+              >
+                @if (deletingId() === photo.id) {
+                  <span class="animate-spin inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full"></span>
+                } @else {
+                  ✕
+                }
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Empty state -->
+    @if (photos().length === 0) {
+      <div class="rounded-lg border border-dashed border-gray-300 p-8 text-center mb-3">
+        <p class="text-2xl mb-2">📷</p>
+        <p class="text-sm text-gray-500">No portfolio photos yet.</p>
+      </div>
+    }
+
+    <!-- Upload button -->
+    @if (canAddMore) {
+      <label
+        class="block w-full text-center rounded-lg border border-gray-200 py-2.5 text-sm
+               font-medium text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer
+               disabled:opacity-50"
+        [class.pointer-events-none]="uploading()"
+        [class.opacity-50]="uploading()"
+      >
+        @if (uploading()) {
+          Uploading…
+        } @else {
+          + Add photo
+        }
+        <input
+          type="file"
+          accept="image/*"
+          class="hidden"
+          [disabled]="uploading()"
+          (change)="onFileSelected($event)"
+        />
+      </label>
+    } @else {
+      <p class="text-xs text-gray-400 text-center">
+        Portfolio is full. Delete a photo to add a new one.
+      </p>
+    }
+
+  }
+</div>
