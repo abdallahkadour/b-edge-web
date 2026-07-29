@@ -33,8 +33,43 @@
         (continueWith)="onSlotChosen($event)"
       />
     }
-    @default {
-      <div class="p-6 text-gray-400 text-[14px]">Screen not built yet — step: {{ step() }}</div>
+    @case ('details') {
+      @if (selectedService() && selectedStore() && selectedStartTime() && heldUntil()) {
+        <app-guest-details-screen
+          [service]="selectedService()!"
+          [storeName]="selectedStore()!.name"
+          [startTime]="selectedStartTime()!"
+          [heldUntil]="heldUntil()!"
+          [submitting]="submitting()"
+          [submitError]="submitError()"
+          [initialName]="customerName()"
+          [initialPhone]="customerPhone()"
+          [initialNotes]="customerNotes()"
+          (nameChange)="customerName.set($event)"
+          (phoneChange)="customerPhone.set($event)"
+          (notesChange)="customerNotes.set($event)"
+          (back)="step.set('pick-datetime')"
+          (submitDetails)="onDetailsSubmit($event)"
+          (holdExpired)="onHoldExpired()"
+        />
+      }
+    }
+    @case ('slot-unavailable') {
+      <app-slot-unavailable-screen
+        (chooseAnotherTime)="onChooseAnotherTime()"
+        (backToProfile)="onSlotUnavailableBackToProfile()"
+      />
+    }
+    @case ('confirmed') {
+      @if (confirmedBooking() && selectedService() && selectedStore()) {
+        <app-booking-confirmed-screen
+          [booking]="confirmedBooking()!"
+          [service]="selectedService()!"
+          [storeName]="selectedStore()!.name"
+          [artistName]="artist()!.name"
+          (backToProfile)="onConfirmedBackToProfile()"
+        />
+      }
     }
   }
 }

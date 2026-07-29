@@ -71,11 +71,11 @@
                   class="h-[44px] rounded border text-[14px] font-medium leading-[20px] flex items-center justify-center gap-1 transition-all cursor-pointer"
                   [class]="isSelected
                     ? 'bg-ink border-ink text-white'
-                    : slot.is_early_bird
+                    : slot.is_early_bird && (slot.early_bird_fee ?? '0') !== '0'
                       ? 'bg-warning-light border-warning-light text-warning-dark hover:border-warning'
                       : 'bg-white border-gray-200 text-ink hover:border-gray-400'"
                 >
-                  @if (slot.is_early_bird && !isSelected) {
+                  @if (slot.is_early_bird && (slot.early_bird_fee ?? '0') !== '0' && !isSelected) {
                     <lucide-icon name="zap" [size]="14" class="fill-warning text-warning shrink-0" />
                   }
                   {{ formatTime(slot.start_time) }}

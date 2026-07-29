@@ -5,7 +5,18 @@ import {
 } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
-import { LucideAngularModule, ArrowLeft, Check, ChevronRight, Star, Zap } from 'lucide-angular';
+import {
+  LucideAngularModule,
+  ArrowLeft,
+  Check,
+  ChevronRight,
+  Star,
+  Zap,
+  MapPin,
+  Loader2,
+  MessageSquare,
+  X,
+} from 'lucide-angular';
 
 import { API_CONFIG } from '@bedge/shared';
 
@@ -35,7 +46,17 @@ export const appConfig: ApplicationConfig = {
     // LucideAngularModule.pick() inside a component's own imports array,
     // which breaks AOT static analysis.
     importProvidersFrom(
-      LucideAngularModule.pick({ ArrowLeft, Check, ChevronRight, Star, Zap }),
+      LucideAngularModule.pick({
+        ArrowLeft,
+        Check,
+        ChevronRight,
+        Star,
+        Zap,
+        MapPin,
+        Loader2,
+        MessageSquare,
+        X,
+      }),
     ),
   ],
 };

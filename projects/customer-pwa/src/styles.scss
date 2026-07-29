@@ -1,3 +1,24 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/**
+ * Chrome/Safari paint a hardcoded pale-blue background on autofilled inputs
+ * and ignore background-color, which overrides the design system on the one
+ * screen where the form has to look trustworthy. There is no property to
+ * disable it — the standard workaround is an inset box-shadow large enough
+ * to cover the field, plus a long transition so the browser's own fade never
+ * shows the blue underneath.
+ */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+  box-shadow: 0 0 0 1000px #ffffff inset;
+  -webkit-text-fill-color: #0a0a0a;
+  caret-color: #0a0a0a;
+  transition: background-color 5000s ease-in-out 0s;
+}

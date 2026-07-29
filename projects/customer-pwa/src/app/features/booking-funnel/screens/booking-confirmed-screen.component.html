@@ -1,0 +1,55 @@
+<div class="relative flex flex-col min-h-full bg-gray-50 text-ink items-center px-6 justify-center pt-10 pb-[140px]">
+  <div class="flex flex-col items-center text-center max-w-[340px] w-full">
+    <div class="w-16 h-16 rounded-full border-2 border-success text-success flex items-center justify-center mb-6">
+      <lucide-icon name="check" [size]="32" [strokeWidth]="2.5" />
+    </div>
+
+    <h1 class="text-[24px] font-bold leading-[32px] tracking-[-0.02em] text-ink">
+      Booking request sent!
+    </h1>
+    <p class="text-[14px] text-gray-500 leading-[20px] mt-2 mb-8">
+      {{ artistName() }} will review and confirm your appointment.
+    </p>
+
+    <div class="w-full bg-white rounded-lg border border-gray-200 shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden text-left mb-6">
+      <div class="px-5 py-4 flex justify-between items-center border-b border-gray-100">
+        <span class="text-[12px] font-bold tracking-[0.05em] uppercase text-gray-500">Service</span>
+        <span class="text-[14px] font-medium text-ink text-right max-w-[200px] truncate">{{ service().name }}</span>
+      </div>
+      <div class="px-5 py-4 flex justify-between items-center border-b border-gray-100">
+        <span class="text-[12px] font-bold tracking-[0.05em] uppercase text-gray-500">Date</span>
+        <span class="text-[14px] font-medium text-ink">{{ dateLabel() }}</span>
+      </div>
+      <div class="px-5 py-4 flex justify-between items-center border-b border-gray-100">
+        <span class="text-[12px] font-bold tracking-[0.05em] uppercase text-gray-500">Time</span>
+        <span class="text-[14px] font-medium text-ink">{{ timeLabel() }}</span>
+      </div>
+      <div class="px-5 py-4 flex justify-between items-center border-b border-gray-100">
+        <span class="text-[12px] font-bold tracking-[0.05em] uppercase text-gray-500">Location</span>
+        <span class="text-[14px] font-medium text-ink text-right max-w-[200px] truncate">{{ storeName() }}</span>
+      </div>
+      <div class="px-5 py-4 flex justify-between items-center">
+        <span class="text-[12px] font-bold tracking-[0.05em] uppercase text-gray-500">Status</span>
+        <span class="inline-flex items-center px-3 py-1 rounded-full bg-success/10 text-success text-[13px] font-semibold leading-4">
+          {{ statusLabel() }}
+        </span>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2 text-gray-400 text-[14px] leading-[20px] mb-8">
+      <lucide-icon name="message-square" [size]="16" [strokeWidth]="2" class="text-gray-400 shrink-0" />
+      <span>You'll receive confirmation on WhatsApp</span>
+    </div>
+  </div>
+
+  <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-50 flex justify-center">
+    <div class="w-full max-w-[390px] px-2">
+      <button
+        (click)="backToProfile.emit()"
+        class="w-full h-[52px] rounded border border-gray-200 bg-white text-ink text-[15px] font-medium leading-[20px] flex items-center justify-center hover:bg-gray-50 active:bg-gray-100 transition-all cursor-pointer"
+      >
+        Back to {{ artistName() }}'s profile
+      </button>
+    </div>
+  </div>
+</div>
