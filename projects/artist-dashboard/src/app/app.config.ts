@@ -29,6 +29,8 @@ import {
   Bell,
   Package,
   Pencil,
+  Plus,
+  X,
   Image,
   FileText,
   ShoppingBag,
@@ -65,7 +67,7 @@ export const appConfig: ApplicationConfig = {
     // Register the Lucide icons used across the app once, here, so every
     // standalone component can reference them by string name (e.g.
     // <lucide-icon name="calendar-days">) without each component needing to
-    // import and .pick() icons itself — that pattern breaks Angular's AOT
+    // import and .pick() icons itself - that pattern breaks Angular's AOT
     // static analysis of the `imports` array.
     importProvidersFrom(
       LucideAngularModule.pick({
@@ -88,6 +90,8 @@ export const appConfig: ApplicationConfig = {
         Bell,
         Package,
         Pencil,
+        Plus,
+        X,
         Image,
         FileText,
         ShoppingBag,
@@ -98,7 +102,7 @@ export const appConfig: ApplicationConfig = {
 
     // On startup, try to restore the session by exchanging the httpOnly
     // refresh cookie for a fresh access token. If there is no valid cookie
-    // the call fails and we boot unauthenticated — that is fine.
+    // the call fails and we boot unauthenticated - that is fine.
     provideAppInitializer(() => {
       const auth = inject(AuthStore);
       return auth.refresh().pipe(catchError(() => of(null)));

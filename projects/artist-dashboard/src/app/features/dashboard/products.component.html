@@ -1,4 +1,4 @@
-<!-- Products — artist catalogue management -->
+<!-- Products - artist catalogue management -->
 <div>
 
   <!-- Header -->
@@ -230,14 +230,6 @@
               <label
                 class="w-full h-32 rounded-lg border-2 border-dashed border-gray-200 hover:border-ink flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-colors text-gray-400 hover:text-ink"
               >
-                @if (uploading()) {
-                  <lucide-icon name="loader-2" [size]="20" [strokeWidth]="2" class="animate-spin" />
-                  <span class="text-xs font-medium">Uploading…</span>
-                } @else {
-                  <lucide-icon name="image" [size]="20" [strokeWidth]="2" />
-                  <span class="text-xs font-medium">Click to upload a photo</span>
-                  <span class="text-[10px] text-gray-400">PNG or JPG, up to 10MB</span>
-                }
                 <input
                   type="file"
                   accept="image/*"
@@ -245,6 +237,18 @@
                   [disabled]="uploading()"
                   class="hidden"
                 />
+                @if (uploading()) {
+                  <span class="flex flex-col items-center gap-1.5">
+                    <lucide-icon name="loader-2" [size]="20" [strokeWidth]="2" class="animate-spin" />
+                    <span class="text-xs font-medium">Uploading...</span>
+                  </span>
+                } @else {
+                  <span class="flex flex-col items-center gap-1.5">
+                    <lucide-icon name="image" [size]="20" [strokeWidth]="2" />
+                    <span class="text-xs font-medium">Click to upload a photo</span>
+                    <span class="text-[10px] text-gray-400">PNG or JPG, up to 10MB</span>
+                  </span>
+                }
               </label>
             }
           </div>
@@ -274,7 +278,7 @@
                 ></span>
               </span>
               <span class="text-xs font-medium text-gray-600">
-                {{ form().isActive ? 'Active — customers can order this' : 'Inactive — hidden from customers' }}
+                {{ form().isActive ? 'Active. Customers can order this' : 'Inactive. Hidden from customers' }}
               </span>
             </button>
           }
@@ -295,8 +299,12 @@
           >
             @if (saving()) {
               <lucide-icon name="loader-2" [size]="15" [strokeWidth]="2" class="animate-spin" />
+              <span>Saving...</span>
+            } @else if (editingId()) {
+              <span>Save changes</span>
+            } @else {
+              <span>Add product</span>
             }
-            {{ editingId() ? 'Save changes' : 'Add product' }}
           </button>
           <button
             type="button"
