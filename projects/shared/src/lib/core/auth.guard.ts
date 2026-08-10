@@ -27,7 +27,7 @@ export function authGuard(allowedRoles?: readonly UserRole[]): CanActivateFn {
     if (allowedRoles && allowedRoles.length > 0) {
       const role = auth.role();
       if (!role || !allowedRoles.includes(role)) {
-        // Authenticated but wrong role — send somewhere safe.
+        // Authenticated but wrong role - send somewhere safe.
         return router.createUrlTree(['/']);
       }
     }

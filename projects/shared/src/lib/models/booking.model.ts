@@ -1,13 +1,13 @@
 /**
  * Booking domain models.
  *
- * These interfaces mirror the Go API response structs exactly — field names
+ * These interfaces mirror the Go API response structs exactly - field names
  * are snake_case to match the JSON sent over the wire. Do not rename fields
  * to camelCase; they must match the API contract precisely.
  *
  * Money fields are `string`, not `number`. The Go backend uses decimal.Decimal
  * which serializes to a JSON string (e.g. "50.00") to preserve precision.
- * Never parse these into floats for arithmetic — use a decimal library if math
+ * Never parse these into floats for arithmetic - use a decimal library if math
  * is required. For display, the string is rendered as-is.
  */
 
@@ -48,7 +48,7 @@ export type BookingChannel =
  * The subset of channels a client may set when creating a booking.
  * The Go CreateBookingRequest validator allows only:
  *   oneof=customer_pwa artist_dashboard walk_in phone instagram
- * Note whatsapp_bot is excluded — the compiler enforces this rule.
+ * Note whatsapp_bot is excluded - the compiler enforces this rule.
  */
 export type CreatableChannel =
   | 'customer_pwa'
@@ -90,6 +90,7 @@ export interface Booking {
   readonly deposit_amount: string;
   readonly deposit_deadline?: string;  // ISO 8601, present once approved
   readonly deposit_paid_at?: string;   // ISO 8601, present once deposit paid
+  readonly deposit_reference?: string; // optional artist-entered note, e.g. a transaction code
   readonly channel: BookingChannel;
   readonly special_requests?: string;
   readonly cancellation_reason?: string;
@@ -144,7 +145,7 @@ export interface TimeSlot {
 /**
  * Request body for holding a slot as a guest, no identity yet
  * (POST /api/v1/bookings/guest/hold). Mirrors the Go HoldGuestSlotRequest
- * struct. No authentication required — this is the guest funnel's C-04 step.
+ * struct. No authentication required - this is the guest funnel's C-04 step.
  */
 export interface HoldGuestSlotRequest {
   artist_id: string;
@@ -160,7 +161,7 @@ export interface HoldGuestSlotRequest {
  */
 export interface HoldGuestSlotResponse {
   readonly booking_id: string;
-  readonly held_until: string; // ISO 8601 UTC timestamp — 10-minute hold deadline
+  readonly held_until: string; // ISO 8601 UTC timestamp - 10-minute hold deadline
   readonly start_time: string;
   readonly end_time: string;
 }
@@ -168,7 +169,7 @@ export interface HoldGuestSlotResponse {
 /**
  * Request body for submitting a guest's details to complete a held booking
  * (PATCH /api/v1/bookings/guest/:id/submit). Mirrors the Go
- * SubmitGuestBookingRequest struct. No authentication required — this is the
+ * SubmitGuestBookingRequest struct. No authentication required - this is the
  * guest funnel's C-05 step. Fails with HOLD_EXPIRED (409) if held_until has
  * already passed.
  */

@@ -2,7 +2,7 @@
  * Auth domain models. Mirror the Go auth response/request structs.
  *
  * Note: the refresh token is delivered ONLY as an httpOnly cookie and is
- * never present in any response body. Do not add a refresh_token field here —
+ * never present in any response body. Do not add a refresh_token field here
  * it would be a security regression.
  */
 

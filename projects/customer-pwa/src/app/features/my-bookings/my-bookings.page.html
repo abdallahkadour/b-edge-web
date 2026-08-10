@@ -1,0 +1,107 @@
+<!-- My Bookings -->
+<div class="min-h-screen bg-gray-50">
+
+  <div class="bg-white border-b border-gray-200 px-5 pt-6 pb-4">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-xl font-bold text-ink">My Bookings</h1>
+        @if (auth.customer(); as c) {
+          <p class="text-sm text-gray-500 mt-0.5">{{ c.name }}</p>
+        }
+      </div>
+      <button type="button" (click)="logout()" class="text-xs text-gray-400 font-semibold underline">
+        Sign out
+      </button>
+    </div>
+
+    <!-- Filter tabs -->
+    <div class="flex gap-1.5 bg-gray-100 p-1 rounded-full mt-4">
+      <button
+        type="button"
+        (click)="selectTab('upcoming')"
+        [class]="activeTab() === 'upcoming'
+          ? 'flex-1 text-center py-1.5 text-xs font-bold uppercase tracking-wider rounded-full bg-white text-ink shadow-sm'
+          : 'flex-1 text-center py-1.5 text-xs font-bold uppercase tracking-wider rounded-full text-gray-400'"
+      >
+        Upcoming ({{ countFor('upcoming') }})
+      </button>
+      <button
+        type="button"
+        (click)="selectTab('past')"
+        [class]="activeTab() === 'past'
+          ? 'flex-1 text-center py-1.5 text-xs font-bold uppercase tracking-wider rounded-full bg-white text-ink shadow-sm'
+          : 'flex-1 text-center py-1.5 text-xs font-bold uppercase tracking-wider rounded-full text-gray-400'"
+      >
+        Past ({{ countFor('past') }})
+      </button>
+      <button
+        type="button"
+        (click)="selectTab('cancelled')"
+        [class]="activeTab() === 'cancelled'
+          ? 'flex-1 text-center py-1.5 text-xs font-bold uppercase tracking-wider rounded-full bg-white text-ink shadow-sm'
+          : 'flex-1 text-center py-1.5 text-xs font-bold uppercase tracking-wider rounded-full text-gray-400'"
+      >
+        Cancelled ({{ countFor('cancelled') }})
+      </button>
+    </div>
+  </div>
+
+  <div class="px-5 py-4">
+
+    @if (errorMessage(); as msg) {
+      <div class="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+        {{ msg }}
+      </div>
+    }
+
+    @if (loading()) {
+      <div class="space-y-3">
+        <div class="h-28 rounded-xl bg-gray-100 animate-pulse"></div>
+        <div class="h-28 rounded-xl bg-gray-100 animate-pulse"></div>
+      </div>
+    }
+
+    @if (!loading()) {
+      <div class="space-y-3">
+        @for (b of filteredBookings(); track b.id) {
+          <button
+            type="button"
+            (click)="openBooking(b.id)"
+            class="w-full text-left bg-white rounded-xl border border-gray-100 p-4 hover:border-gray-300 transition-colors"
+          >
+            <div class="flex justify-between items-start">
+              <div>
+                <h3 class="text-sm font-bold text-ink">{{ b.service_name }}</h3>
+                <p class="text-xs text-gray-400 mt-0.5">with {{ b.artist_name }} · {{ b.store_name }}</p>
+              </div>
+              <span class="text-[10px] font-bold uppercase px-2 py-1 rounded-full bg-gray-100 text-gray-600 shrink-0">
+                {{ statusLabel(b.status) }}
+              </span>
+            </div>
+
+            <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
+              <span class="text-xs text-gray-500">
+                {{ formatDateTime(b.start_time) }}
+              </span>
+              <span class="text-sm font-bold text-ink">${{ b.final_price }}</span>
+            </div>
+          </button>
+        }
+
+        @if (filteredBookings().length === 0) {
+          <div class="rounded-xl border border-gray-200 bg-white p-8 text-center">
+            <p class="text-2xl mb-2">📅</p>
+            <p class="text-sm font-medium text-ink">
+              @switch (activeTab()) {
+                @case ('upcoming') { No upcoming bookings }
+                @case ('past') { No past bookings yet }
+                @case ('cancelled') { No cancelled bookings }
+              }
+            </p>
+          </div>
+        }
+      </div>
+    }
+
+  </div>
+</div>

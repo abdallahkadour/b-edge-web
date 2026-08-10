@@ -10,6 +10,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { catchError, of } from 'rxjs';
 import {
   LucideAngularModule,
+  Calendar,
   CalendarDays,
   Users,
   Banknote,
@@ -18,6 +19,21 @@ import {
   User,
   Trash2,
   Camera,
+  Wallet,
+  AlertCircle,
+  Check,
+  Loader2,
+  MessageSquare,
+  Phone,
+  Star,
+  Bell,
+  Package,
+  Pencil,
+  Image,
+  FileText,
+  ShoppingBag,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-angular';
 
 import {
@@ -53,6 +69,7 @@ export const appConfig: ApplicationConfig = {
     // static analysis of the `imports` array.
     importProvidersFrom(
       LucideAngularModule.pick({
+        Calendar,
         CalendarDays,
         Users,
         Banknote,
@@ -61,6 +78,21 @@ export const appConfig: ApplicationConfig = {
         User,
         Trash2,
         Camera,
+        Wallet,
+        AlertCircle,
+        Check,
+        Loader2,
+        MessageSquare,
+        Phone,
+        Star,
+        Bell,
+        Package,
+        Pencil,
+        Image,
+        FileText,
+        ShoppingBag,
+        ChevronLeft,
+        ChevronRight,
       }),
     ),
 

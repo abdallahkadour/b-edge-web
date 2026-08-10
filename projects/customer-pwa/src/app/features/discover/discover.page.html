@@ -1,0 +1,148 @@
+<!-- Discover / browse screen -->
+<div class="min-h-screen bg-white">
+
+  <!-- Header -->
+  <div class="px-5 pt-4 pb-2.5 flex justify-between items-center bg-white sticky top-0 z-20">
+    <span class="text-lg font-bold tracking-tight text-ink uppercase flex items-center gap-1.5">
+      B-Edge
+      <span class="w-1.5 h-1.5 rounded-full bg-[#16a34a]"></span>
+    </span>
+    <button
+      type="button"
+      (click)="openMyBookings()"
+      class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors"
+      aria-label="My bookings"
+    >
+      <lucide-icon name="user" [size]="17" [strokeWidth]="2" />
+    </button>
+  </div>
+
+  <div class="px-5 pt-1.5 pb-24 space-y-5">
+
+    <!-- Search -->
+    <div class="relative">
+      <lucide-icon
+        name="search"
+        [size]="16"
+        [strokeWidth]="2"
+        class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10"
+      />
+      <input
+        type="text"
+        placeholder="Search by artist, service, or city…"
+        [value]="searchQuery()"
+        (input)="onSearchInput($any($event.target).value)"
+        class="w-full h-11 pl-12 pr-4 bg-gray-100 rounded-full text-sm text-ink font-medium border-0 focus:outline-none focus:ring-1 focus:ring-ink placeholder:text-gray-400"
+      />
+    </div>
+
+    <!-- Category chips -->
+    <div class="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5">
+      <button
+        type="button"
+        (click)="selectCategory('all')"
+        [class]="selectedCategory() === 'all'
+          ? 'shrink-0 py-1.5 px-4 font-bold text-xs uppercase tracking-wider rounded-full bg-ink text-white'
+          : 'shrink-0 py-1.5 px-4 font-bold text-xs uppercase tracking-wider rounded-full bg-gray-100 text-gray-500'"
+      >
+        All
+      </button>
+      @for (cat of categories; track cat) {
+        <button
+          type="button"
+          (click)="selectCategory(cat)"
+          [class]="selectedCategory() === cat
+            ? 'shrink-0 py-1.5 px-4 font-bold text-xs uppercase tracking-wider rounded-full bg-ink text-white'
+            : 'shrink-0 py-1.5 px-4 font-bold text-xs uppercase tracking-wider rounded-full bg-gray-100 text-gray-500'"
+        >
+          {{ cat }}
+        </button>
+      }
+    </div>
+
+    <!-- Error banner -->
+    @if (errorMessage(); as msg) {
+      <div class="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+        {{ msg }}
+      </div>
+    }
+
+    <!-- Loading skeleton -->
+    @if (loading()) {
+      <div class="grid grid-cols-2 gap-3">
+        <div class="aspect-square rounded-lg bg-gray-100 animate-pulse"></div>
+        <div class="aspect-square rounded-lg bg-gray-100 animate-pulse"></div>
+        <div class="aspect-square rounded-lg bg-gray-100 animate-pulse"></div>
+        <div class="aspect-square rounded-lg bg-gray-100 animate-pulse"></div>
+      </div>
+    }
+
+    <!-- City-grouped results -->
+    @if (!loading()) {
+      @for (section of citySections(); track section.city) {
+        <div class="space-y-3">
+          <div class="flex justify-between items-center">
+            <h3 class="text-sm font-extrabold text-ink tracking-tight">{{ section.city }}</h3>
+            <span class="text-[11px] font-bold text-gray-400 uppercase">{{ section.artists.length }} artist{{ section.artists.length === 1 ? '' : 's' }}</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            @for (artist of section.artists; track artist.id + artist.city) {
+              <button
+                type="button"
+                (click)="openArtist(artist)"
+                class="text-left bg-white rounded-xl border border-gray-100 p-2 hover:border-gray-300 transition-all relative"
+              >
+                <!-- Avatar / photo placeholder -->
+                <div [class]="'w-full aspect-square rounded-lg flex items-center justify-center font-bold text-lg uppercase relative ' + avatarClass(artist.id)">
+                  <span>{{ initials(artist.name) }}</span>
+
+                  <!-- Rating badge -->
+                  <span class="absolute bottom-2 left-2 bg-white/95 text-ink text-[9px] font-bold uppercase py-0.5 px-2 rounded tracking-wider flex items-center gap-1 shadow-sm">
+                    <lucide-icon name="star" [size]="8" [strokeWidth]="2" class="fill-current" />
+                    {{ formatRating(artist.rating) }}
+                  </span>
+
+                  <!-- New badge -->
+                  @if (artist.is_new) {
+                    <span class="absolute top-2 left-2 bg-ink text-white text-[8px] font-bold uppercase px-2 py-0.5 rounded tracking-wide">
+                      New
+                    </span>
+                  }
+
+                  <!-- Verified badge -->
+                  @if (artist.is_verified) {
+                    <span class="absolute top-2 right-2 bg-white/95 rounded-full p-1 shadow-sm">
+                      <lucide-icon name="badge-check" [size]="12" [strokeWidth]="2" class="text-ink" />
+                    </span>
+                  }
+                </div>
+
+                <!-- Name + category -->
+                <div class="mt-2.5 px-1 pb-1">
+                  <h4 class="text-sm font-bold text-ink truncate">{{ artist.name }}</h4>
+                  <p class="text-[11px] text-gray-400 font-medium tracking-tight mt-0.5">
+                    @if (artist.category) {
+                      <span class="capitalize">{{ artist.category }}</span> ·
+                    }
+                    {{ artist.city }}
+                  </p>
+                  <p class="text-[10px] text-gray-400 mt-1">{{ artist.review_count }} review{{ artist.review_count === 1 ? '' : 's' }}</p>
+                </div>
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      @if (citySections().length === 0) {
+        <div class="rounded-lg border border-gray-200 bg-white p-8 text-center">
+          <p class="text-2xl mb-2">💄</p>
+          <p class="text-sm font-medium text-ink">No artists found</p>
+          <p class="text-xs text-gray-400 mt-1">Try a different search or category.</p>
+        </div>
+      }
+    }
+
+  </div>
+</div>

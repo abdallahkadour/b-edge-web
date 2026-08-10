@@ -1,6 +1,6 @@
 /**
  * Earnings domain models. Mirror the Go earnings response structs.
- * Money fields are strings — decimal.Decimal serializes to quoted JSON strings.
+ * Money fields are strings - decimal.Decimal serializes to quoted JSON strings.
  */
 
 /** A single day in the 7-day daily breakdown. */

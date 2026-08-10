@@ -19,3 +19,22 @@ export interface CreateReviewRequest {
   rating: number;     // 1–5
   comment?: string;   // max 1000
 }
+
+// ── Guest review-link flow ──────────────────────────────────────────────────
+// No account, no login - the token in the URL is the only credential.
+// Used by the LeaveReviewScreen, reached via /review/:token.
+
+/** GET /reviews/by-token/:token - booking summary for the landing screen. */
+export interface ReviewBookingContext {
+  readonly service_name: string;
+  readonly artist_name: string;
+  readonly store_name: string;
+  readonly start_time: string; // ISO 8601 UTC
+  readonly final_price: string; // decimal as string
+}
+
+/** POST /reviews/by-token/:token request body (Go review.SubmitReviewByTokenRequest). */
+export interface SubmitReviewByTokenRequest {
+  rating: number;     // 1–5
+  comment?: string;   // max 1000
+}

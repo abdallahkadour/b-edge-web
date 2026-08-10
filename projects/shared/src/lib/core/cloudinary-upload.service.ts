@@ -9,7 +9,7 @@ export interface CloudinaryUploadResult {
 
 /**
  * Uploads images directly from the browser to Cloudinary using an unsigned
- * upload preset. This bypasses the Go backend entirely for the file bytes —
+ * upload preset. This bypasses the Go backend entirely for the file bytes
  * only the resulting URL is later sent to POST /api/v1/media.
  *
  * Cloud name and upload preset come from environment config. The upload
@@ -18,10 +18,10 @@ export interface CloudinaryUploadResult {
  */
 @Injectable({ providedIn: 'root' })
 export class CloudinaryUploadService {
-  /** Cloudinary cloud name — see environment.ts. */
+  /** Cloudinary cloud name - see environment.ts. */
   private readonly cloudName = 'mlop5tfg';
 
-  /** Unsigned upload preset name — created in the Cloudinary dashboard. */
+  /** Unsigned upload preset name - created in the Cloudinary dashboard. */
   private readonly uploadPreset = 'bedge-media';
 
   private get uploadUrl(): string {

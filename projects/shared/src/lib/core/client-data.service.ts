@@ -6,14 +6,14 @@ import type { ClientCard, ClientProfile, NoteResponse, UpsertNoteRequest } from 
 
 /**
  * Data-access service for the client CRM domain.
- * Thin wrappers over ApiService — one method per endpoint.
+ * Thin wrappers over ApiService - one method per endpoint.
  */
 @Injectable({ providedIn: 'root' })
 export class ClientDataService {
   private readonly api = inject(ApiService);
 
   /**
-   * GET /clients?q= — list the artist's clients.
+   * GET /clients?q= - list the artist's clients.
    * Optional q searches by name or service.
    *
    * Uses getArray: a search that matches nothing returns null, not [], and
@@ -25,13 +25,13 @@ export class ClientDataService {
     return this.api.getArray<ClientCard>('/clients', params);
   }
 
-  /** GET /clients/:id — one client's full profile + booking history. */
+  /** GET /clients/:id - one client's full profile + booking history. */
   getClient(customerId: string): Observable<ClientProfile> {
     return this.api.get<ClientProfile>(`/clients/${customerId}`);
   }
 
   /**
-   * PUT /clients/:id/notes — create or update the private note for a client.
+   * PUT /clients/:id/notes - create or update the private note for a client.
    * The server route is a PUT (full replace of the note), not a PATCH.
    */
   upsertNote(customerId: string, req: UpsertNoteRequest): Observable<NoteResponse> {

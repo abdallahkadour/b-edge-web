@@ -6,14 +6,14 @@ import type { EarningsSummary } from '../models';
 
 /**
  * Data-access service for the earnings domain.
- * Thin wrapper over ApiService — one method per endpoint.
+ * Thin wrapper over ApiService - one method per endpoint.
  */
 @Injectable({ providedIn: 'root' })
 export class EarningsDataService {
   private readonly api = inject(ApiService);
 
   /**
-   * GET /earnings/summary — revenue summary for the authenticated artist.
+   * GET /earnings/summary - revenue summary for the authenticated artist.
    * If from/to are omitted, the API defaults to the current calendar month.
    */
   getSummary(from?: string, to?: string): Observable<EarningsSummary> {

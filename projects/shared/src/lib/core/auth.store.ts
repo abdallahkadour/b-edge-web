@@ -14,7 +14,7 @@ import type {
  * Holds authentication state with signals and owns the access token.
  *
  * Token strategy:
- *  - The access token (short-lived JWT) lives in memory only — never in
+ *  - The access token (short-lived JWT) lives in memory only - never in
  *    localStorage, which is readable by any XSS payload. In-memory means it
  *    is lost on full page reload, and we recover it via the refresh cookie.
  *  - The refresh token is an httpOnly cookie set by the server; JS never sees it.

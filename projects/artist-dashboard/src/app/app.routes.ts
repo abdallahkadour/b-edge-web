@@ -10,6 +10,9 @@ import { authGuard } from '@bedge/shared';
  *   /clients       — CRM client list
  *   /clients/:id   — single client detail + notes
  *   /earnings      — revenue summary
+ *   /deposits      — deposit verification queue
+ *   /calendar      — weekly appointment calendar
+ *   /waitlist      — customers waiting for a fully-booked date
  *   /services      — service catalogue management
  *   /hours         — business hours + block dates
  *   /profile       — artist profile + portfolio
@@ -57,6 +60,41 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/dashboard/earnings.component').then(
             (m) => m.EarningsComponent,
+          ),
+      },
+      {
+        path: 'deposits',
+        loadComponent: () =>
+          import('./features/dashboard/deposit-queue.component').then(
+            (m) => m.DepositQueueComponent,
+          ),
+      },
+      {
+        path: 'calendar',
+        loadComponent: () =>
+          import('./features/dashboard/calendar.component').then(
+            (m) => m.CalendarComponent,
+          ),
+      },
+      {
+        path: 'products',
+        loadComponent: () =>
+          import('./features/dashboard/products.component').then(
+            (m) => m.ProductsComponent,
+          ),
+      },
+      {
+        path: 'orders',
+        loadComponent: () =>
+          import('./features/dashboard/orders.component').then(
+            (m) => m.OrdersComponent,
+          ),
+      },
+      {
+        path: 'waitlist',
+        loadComponent: () =>
+          import('./features/dashboard/waitlist.component').then(
+            (m) => m.WaitlistComponent,
           ),
       },
       {

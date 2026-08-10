@@ -1,0 +1,232 @@
+<!-- Orders — product fulfilment queue -->
+<div>
+
+  <div class="mb-5">
+    <h1 class="text-xl font-semibold text-ink tracking-tight">Orders</h1>
+    <p class="text-sm text-gray-500 mt-0.5">Product orders from your clients</p>
+  </div>
+
+  <!-- Status tabs -->
+  <div class="flex items-center gap-5 border-b border-gray-100 overflow-x-auto">
+    @for (tab of tabs; track tab.key) {
+      <button
+        type="button"
+        (click)="selectTab(tab.key)"
+        [class]="activeTab() === tab.key
+          ? 'pb-2.5 text-[13px] font-bold text-ink border-b-2 border-ink whitespace-nowrap'
+          : 'pb-2.5 text-[13px] font-medium text-gray-400 border-b-2 border-transparent hover:text-gray-600 whitespace-nowrap'"
+      >
+        {{ tab.label }}
+        @if (countFor(tab.key) > 0) {
+          <span class="ml-1 text-[11px]">({{ countFor(tab.key) }})</span>
+        }
+      </button>
+    }
+  </div>
+
+  @if (errorMessage(); as msg) {
+    <div class="mt-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+      {{ msg }}
+    </div>
+  }
+
+  <!-- Attention banner -->
+  @if (activeTab() === 'placed' && needsPaymentCount() > 0) {
+    <div class="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-3.5 flex items-center gap-3 text-amber-900">
+      <lucide-icon name="clock" [size]="18" [strokeWidth]="2" class="text-amber-600 shrink-0" />
+      <span class="text-[13px] font-medium">
+        {{ needsPaymentCount() }} {{ needsPaymentCount() === 1 ? 'order' : 'orders' }} waiting on payment confirmation
+      </span>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="space-y-4 mt-5">
+      <div class="h-40 rounded-xl bg-gray-100 animate-pulse"></div>
+      <div class="h-40 rounded-xl bg-gray-100 animate-pulse"></div>
+    </div>
+  }
+
+  @if (!loading()) {
+    @if (displayed().length === 0) {
+      <div class="py-16 text-center border-2 border-dashed border-gray-200 rounded-xl bg-white mt-5">
+        <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 mx-auto mb-3">
+          <lucide-icon name="package" [size]="22" [strokeWidth]="2" />
+        </div>
+        <p class="text-sm font-semibold text-gray-700">Nothing here right now</p>
+        <p class="text-xs text-gray-400 mt-0.5">Incoming client orders will appear here.</p>
+      </div>
+    } @else {
+      <div class="space-y-4 mt-5">
+        @for (order of displayed(); track order.id) {
+          <div class="bg-white border border-gray-200 rounded-xl p-5">
+
+            <!-- Top row -->
+            <div class="flex items-start justify-between">
+              <div>
+                <h2 class="text-[15px] font-bold text-ink">{{ order.customer_name }}</h2>
+                <div class="text-[11px] text-gray-400 font-medium mt-0.5">
+                  Order #{{ shortRef(order.id) }}
+                  @if (order.customer_phone) { · +961 {{ order.customer_phone }} }
+                  · {{ formatDate(order.created_at) }}
+                </div>
+              </div>
+              <span [class]="'text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shrink-0 ' + statusClass(order.status)">
+                {{ statusLabel(order.status) }}
+              </span>
+            </div>
+
+            <!-- Line items -->
+            <div class="mt-4 bg-gray-50 rounded-lg p-3 divide-y divide-gray-100">
+              @for (item of order.items; track item.product_id) {
+                <div class="pt-2 first:pt-0 pb-2 last:pb-0 flex items-center justify-between gap-3 text-[13px]">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="font-semibold text-ink truncate">{{ item.product_name }}</span>
+                    <span class="text-gray-400 font-medium text-xs shrink-0">×{{ item.quantity }}</span>
+                  </div>
+                  <span class="font-semibold text-ink shrink-0">${{ item.subtotal }}</span>
+                </div>
+              }
+            </div>
+
+            @if (order.delivery_notes) {
+              <div class="mt-3 bg-gray-50 border border-gray-200 rounded-lg p-2.5 flex items-start gap-2 text-xs text-gray-600 italic">
+                <lucide-icon name="file-text" [size]="14" [strokeWidth]="2" class="text-gray-400 shrink-0 mt-0.5" />
+                <span>{{ order.delivery_notes }}</span>
+              </div>
+            }
+
+            @if (order.payment_reference) {
+              <div class="mt-3 text-[11px] text-gray-500 font-mono bg-gray-100 px-2.5 py-1 rounded w-fit">
+                Ref: {{ order.payment_reference }}
+              </div>
+            }
+
+            <!-- Bottom row -->
+            <div class="flex items-center justify-between pt-4 mt-4 border-t border-gray-100">
+              <span class="text-base font-bold text-ink">${{ order.total_amount }}</span>
+
+              <div class="flex items-center gap-2">
+                @if (whatsAppLink(order); as link) {
+                  <a
+                    [href]="link"
+                    target="_blank"
+                    rel="noopener"
+                    class="h-9 px-3 bg-white hover:bg-gray-50 text-gray-700 font-medium text-xs rounded-lg border border-gray-200 flex items-center gap-1.5 transition-colors"
+                  >
+                    <lucide-icon name="message-square" [size]="14" [strokeWidth]="2" class="text-[#16a34a]" />
+                    Message
+                  </a>
+                }
+
+                @switch (order.status) {
+                  @case ('placed') {
+                    <button
+                      type="button"
+                      (click)="openConfirmModal(order)"
+                      [disabled]="busyOrderId() === order.id"
+                      class="h-9 px-4 bg-ink hover:opacity-90 text-white font-bold text-xs rounded-lg transition-opacity disabled:opacity-40"
+                    >
+                      Confirm payment
+                    </button>
+                  }
+                  @case ('confirmed') {
+                    <button
+                      type="button"
+                      (click)="markShipped(order)"
+                      [disabled]="busyOrderId() === order.id"
+                      class="h-9 px-4 bg-ink hover:opacity-90 text-white font-bold text-xs rounded-lg transition-opacity flex items-center gap-1.5 disabled:opacity-40"
+                    >
+                      @if (busyOrderId() === order.id) {
+                        <lucide-icon name="loader-2" [size]="13" [strokeWidth]="2" class="animate-spin" />
+                      }
+                      Mark shipped
+                    </button>
+                  }
+                  @case ('shipped') {
+                    <button
+                      type="button"
+                      (click)="markDelivered(order)"
+                      [disabled]="busyOrderId() === order.id"
+                      class="h-9 px-4 bg-ink hover:opacity-90 text-white font-bold text-xs rounded-lg transition-opacity flex items-center gap-1.5 disabled:opacity-40"
+                    >
+                      @if (busyOrderId() === order.id) {
+                        <lucide-icon name="loader-2" [size]="13" [strokeWidth]="2" class="animate-spin" />
+                      }
+                      Mark delivered
+                    </button>
+                  }
+                  @case ('delivered') {
+                    <div class="flex items-center gap-1 text-xs font-bold text-[#16a34a] px-2.5 py-1.5 bg-[#16a34a]/10 rounded-lg">
+                      <lucide-icon name="check" [size]="14" [strokeWidth]="2" />
+                      Completed
+                    </div>
+                  }
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+
+  <!-- Confirm payment modal -->
+  @if (modalOrder(); as order) {
+    <div class="fixed inset-0 z-50 bg-ink/40 flex items-center justify-center p-4" (click)="closeModal()">
+      <div class="bg-white border border-gray-200 rounded-2xl w-full max-w-[420px] shadow-xl overflow-hidden" (click)="$event.stopPropagation()">
+        <div class="px-5 py-4 border-b border-gray-100">
+          <h2 class="text-base font-bold text-ink">Confirm payment received</h2>
+          <p class="text-xs text-gray-500 mt-0.5">
+            Order #{{ shortRef(order.id) }} · ${{ order.total_amount }}
+          </p>
+        </div>
+
+        <div class="p-5 space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-ink mb-1">Reference (optional)</label>
+            <input
+              type="text"
+              [value]="paymentReference()"
+              (input)="paymentReference.set($any($event.target).value)"
+              placeholder="Whish transaction number"
+              class="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm outline-none focus:border-ink"
+            />
+            <p class="text-[11px] text-gray-400 mt-1.5">
+              Only for your own records — the customer never sees this.
+            </p>
+          </div>
+
+          @if (modalError(); as err) {
+            <div class="rounded-lg bg-red-50 border border-red-200 px-3.5 py-2.5 text-xs text-red-700">
+              {{ err }}
+            </div>
+          }
+        </div>
+
+        <div class="px-5 py-4 border-t border-gray-100 flex flex-col gap-2">
+          <button
+            type="button"
+            (click)="confirmPayment()"
+            [disabled]="busyOrderId() !== null"
+            class="w-full h-11 bg-ink hover:opacity-90 text-white font-bold text-[13px] uppercase tracking-wide rounded-lg transition-opacity flex items-center justify-center gap-2 disabled:opacity-40"
+          >
+            @if (busyOrderId() !== null) {
+              <lucide-icon name="loader-2" [size]="15" [strokeWidth]="2" class="animate-spin" />
+            }
+            Confirm payment
+          </button>
+          <button
+            type="button"
+            (click)="closeModal()"
+            [disabled]="busyOrderId() !== null"
+            class="w-full h-11 bg-white border border-gray-200 text-ink font-bold text-[13px] uppercase tracking-wide rounded-lg hover:bg-gray-50 disabled:opacity-40"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

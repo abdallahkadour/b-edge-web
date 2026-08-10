@@ -1,0 +1,230 @@
+<!-- Deposit Queue screen -->
+<div>
+
+  <!-- Page header -->
+  <div class="mb-6">
+    <h1 class="text-xl font-semibold text-ink">Deposit Queue</h1>
+    <p class="text-sm text-gray-500 mt-0.5">Verify incoming deposits and review confirmed ones.</p>
+  </div>
+
+  <!-- Error banner -->
+  @if (errorMessage(); as msg) {
+    <div class="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+      {{ msg }}
+    </div>
+  }
+
+  <!-- Loading skeleton -->
+  @if (loading()) {
+    <div class="space-y-3">
+      <div class="h-10 rounded-full bg-gray-100 animate-pulse"></div>
+      <div class="h-28 rounded-lg bg-gray-100 animate-pulse"></div>
+      <div class="h-28 rounded-lg bg-gray-100 animate-pulse"></div>
+    </div>
+  }
+
+  @if (!loading()) {
+
+    <!-- Urgent banner -->
+    @if (hasUrgent() && activeTab() === 'pending') {
+      <div class="mb-4 p-3 bg-ink text-white rounded-lg flex items-start gap-2.5">
+        <lucide-icon name="alert-circle" [size]="15" [strokeWidth]="2" class="shrink-0 mt-0.5" />
+        <div class="flex-1">
+          <p class="text-xs font-bold uppercase tracking-wide">Urgent action pending</p>
+          @if (urgentItem(); as u) {
+            <p class="text-[11px] text-white/60 mt-1">
+              {{ u.customer_name }}'s deposit deadline is under 24 hours away - verify to keep the booking alive.
+            </p>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Tabs -->
+    <div class="flex gap-1.5 bg-gray-100 p-1 rounded-full mb-4 select-none">
+      <button
+        type="button"
+        (click)="selectTab('pending')"
+        [class]="activeTab() === 'pending'
+          ? 'flex-1 text-center py-1.5 text-xs font-bold uppercase tracking-wider rounded-full bg-white text-ink shadow-sm'
+          : 'flex-1 text-center py-1.5 text-xs font-bold uppercase tracking-wider rounded-full text-gray-400'"
+      >
+        Pending ({{ pendingCount() }})
+      </button>
+      <button
+        type="button"
+        (click)="selectTab('received')"
+        [class]="activeTab() === 'received'
+          ? 'flex-1 text-center py-1.5 text-xs font-bold uppercase tracking-wider rounded-full bg-white text-ink shadow-sm'
+          : 'flex-1 text-center py-1.5 text-xs font-bold uppercase tracking-wider rounded-full text-gray-400'"
+      >
+        Received ({{ receivedCount() }})
+      </button>
+    </div>
+
+    <!-- Pending list -->
+    @if (activeTab() === 'pending') {
+      <div class="space-y-3">
+        @for (item of pending(); track item.id) {
+          <div class="bg-white border border-gray-200 rounded-lg p-3.5 space-y-3">
+            <div class="flex justify-between items-start">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center font-bold text-xs text-ink shrink-0">
+                  {{ initials(item.customer_name) }}
+                </div>
+                <div>
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-sm font-bold text-ink">{{ item.customer_name }}</span>
+                    @if (isUrgent(item)) {
+                      <span class="bg-ink text-white text-[8px] font-bold uppercase px-1.5 py-0.5 rounded tracking-wide">
+                        Urgent
+                      </span>
+                    }
+                  </div>
+                  <p class="text-[11px] text-gray-400 font-medium">{{ item.service_name }}</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="block text-xs font-bold text-ink">${{ item.deposit_amount }}</span>
+                <span class="block text-[9px] text-gray-400 font-bold uppercase tracking-wider">Deposit</span>
+              </div>
+            </div>
+
+            <div class="pt-2 px-0.5 border-t border-gray-100 flex justify-between items-center text-[10px] text-gray-400 font-medium">
+              <span class="flex items-center gap-1">
+                <lucide-icon name="clock" [size]="11" [strokeWidth]="2" />
+                {{ formatBookingTime(item.start_time) }}
+              </span>
+              @if (item.deposit_deadline) {
+                <span class="text-ink font-semibold">Due {{ formatDueDate(item.deposit_deadline) }}</span>
+              }
+            </div>
+
+            <button
+              type="button"
+              (click)="openVerify(item)"
+              class="w-full h-9 bg-ink hover:opacity-90 text-white font-bold text-[10px] uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 transition-opacity"
+            >
+              <lucide-icon name="check" [size]="12" [strokeWidth]="2" />
+              Verify payment
+            </button>
+          </div>
+        }
+
+        @if (pending().length === 0) {
+          <div class="rounded-lg border border-gray-200 bg-white p-8 text-center">
+            <p class="text-2xl mb-2">✅</p>
+            <p class="text-sm font-medium text-ink">Nothing pending</p>
+            <p class="text-xs text-gray-400 mt-1">Deposits awaiting verification will show up here.</p>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Received list -->
+    @if (activeTab() === 'received') {
+      <div class="space-y-3">
+        @for (item of received(); track item.id) {
+          <div class="bg-white border border-gray-200 rounded-lg p-3.5 space-y-3">
+            <div class="flex justify-between items-start">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center font-bold text-xs text-ink shrink-0">
+                  {{ initials(item.customer_name) }}
+                </div>
+                <div>
+                  <span class="text-sm font-bold text-ink block">{{ item.customer_name }}</span>
+                  <p class="text-[11px] text-gray-400 font-medium">{{ item.service_name }}</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="block text-xs font-bold text-ink">${{ item.deposit_amount }}</span>
+                <span class="block text-[9px] text-gray-400 font-bold uppercase tracking-wider">Deposit</span>
+              </div>
+            </div>
+
+            <div class="pt-2 px-0.5 border-t border-gray-100 flex justify-between items-center text-[10px] text-gray-400 font-medium">
+              <span class="flex items-center gap-1">
+                <lucide-icon name="clock" [size]="11" [strokeWidth]="2" />
+                {{ formatBookingTime(item.start_time) }}
+              </span>
+              @if (item.deposit_paid_at) {
+                <span class="text-[#16a34a] font-bold">Received {{ formatDueDate(item.deposit_paid_at) }}</span>
+              }
+            </div>
+
+            @if (item.deposit_reference) {
+              <p class="text-[10px] text-gray-400 italic px-0.5">Ref: {{ item.deposit_reference }}</p>
+            }
+          </div>
+        }
+
+        @if (received().length === 0) {
+          <div class="rounded-lg border border-gray-200 bg-white p-8 text-center">
+            <p class="text-2xl mb-2">📭</p>
+            <p class="text-sm font-medium text-ink">Nothing received yet</p>
+            <p class="text-xs text-gray-400 mt-1">Confirmed deposits will show up here.</p>
+          </div>
+        }
+      </div>
+    }
+
+  }
+
+  <!-- Verify modal -->
+  @if (verifyingItem(); as item) {
+    <div
+      class="fixed inset-0 bg-ink/65 flex items-end sm:items-center justify-center z-50 p-4"
+      (click)="closeVerify()"
+    >
+      <div
+        class="bg-white rounded-2xl w-full max-w-sm p-5 space-y-4 shadow-xl"
+        (click)="$event.stopPropagation()"
+      >
+        <div>
+          <h3 class="text-base font-bold text-ink">Verify deposit</h3>
+          <p class="text-xs text-gray-400 mt-0.5">
+            Confirm you received ${{ item.deposit_amount }} from {{ item.customer_name }} via Whish / OMT.
+          </p>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-ink mb-1">
+            Transaction ref or notes (optional)
+          </label>
+          <input
+            type="text"
+            [value]="verificationNotes()"
+            (input)="verificationNotes.set($any($event.target).value)"
+            placeholder="e.g. Whish Code #94821"
+            class="w-full h-10 px-3 border border-gray-200 rounded-lg text-xs text-ink focus:outline-none focus:border-ink"
+          />
+        </div>
+
+        <div class="flex gap-2 pt-1">
+          <button
+            type="button"
+            (click)="closeVerify()"
+            [disabled]="verifying()"
+            class="flex-1 h-10 border border-gray-200 rounded-lg text-ink font-bold text-xs uppercase tracking-wider hover:bg-gray-50 disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            (click)="confirmVerify()"
+            [disabled]="verifying()"
+            class="flex-1 h-10 bg-[#16a34a] hover:opacity-90 rounded-lg text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 disabled:opacity-50 transition-opacity"
+          >
+            @if (verifying()) {
+              <lucide-icon name="loader-2" [size]="13" [strokeWidth]="2" class="animate-spin" />
+            } @else {
+              <lucide-icon name="check" [size]="13" [strokeWidth]="2" />
+            }
+            Mark received
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

@@ -1,9 +1,43 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
 import { API_CONFIG } from '../tokens/api-config.token';
 import type { ApiResponse, ResponseMeta } from '../models';
+
+/** A single field-level validation error, e.g. { field: "Name", message: "Name is invalid" }. */
+export interface ApiFieldError {
+  readonly field: string;
+  readonly message: string;
+}
+
+/** The shape of the `error` object every B-Edge endpoint returns on failure. */
+export interface ApiErrorBody {
+  readonly code?: string;
+  readonly message?: string;
+  readonly details?: ApiFieldError[];
+}
+
+/**
+ * Extracts the most useful error message available from a failed API call.
+ *
+ * Prefers field-level validation details ("Name is invalid") over the
+ * generic top-level message ("Please check the highlighted fields") - the
+ * generic message is what a form was showing before this helper existed,
+ * and it tells the customer nothing about what to actually fix. Falls back
+ * to the caller's default only for network errors or response shapes with
+ * no useful detail at all (a 500, a timeout, etc.).
+ */
+export function extractApiErrorMessage(err: HttpErrorResponse, fallback: string): string {
+  const apiError = (err.error as { error?: ApiErrorBody } | undefined)?.error;
+  if (!apiError) return fallback;
+
+  if (apiError.details && apiError.details.length > 0) {
+    return apiError.details.map((d) => d.message).join(' ');
+  }
+  if (apiError.message) return apiError.message;
+  return fallback;
+}
 
 /** A list result carrying both the items and pagination metadata. */
 export interface ListResult<T> {
@@ -33,7 +67,7 @@ export class ApiService {
 
   /**
    * GET a single resource, unwrapping the envelope's `data`.
-   * Do NOT use for arrays — see `getArray()`.
+   * Do NOT use for arrays - see `getArray()`.
    */
   get<T>(path: string, params?: Record<string, string | number>): Observable<T> {
     return this.http
@@ -68,7 +102,7 @@ export class ApiService {
 
   /**
    * PUT a body, unwrapping the envelope's `data`.
-   * Used by endpoints that fully replace a resource — e.g. the client note
+   * Used by endpoints that fully replace a resource - e.g. the client note
    * upsert (PUT /clients/:id/notes), which is NOT a PATCH server-side.
    */
   put<T>(path: string, body: unknown): Observable<T> {

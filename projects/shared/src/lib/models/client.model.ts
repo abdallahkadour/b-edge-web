@@ -1,6 +1,6 @@
 /**
  * Client CRM domain models. Mirror the Go client response structs.
- * Money fields are strings — decimal.Decimal serializes to quoted JSON strings.
+ * Money fields are strings - decimal.Decimal serializes to quoted JSON strings.
  */
 
 /** One client card in the artist's client list (Go client.ClientCard). */

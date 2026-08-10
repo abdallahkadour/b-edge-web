@@ -1,12 +1,13 @@
 /**
  * Artist domain models. Mirror the Go artist response/request structs.
  * Money fields (price, deposit_amount, early_bird_fee) and rating are
- * `string` — decimal.Decimal serializes to a quoted JSON string.
+ * `string` - decimal.Decimal serializes to a quoted JSON string.
  */
 
 /** Public artist profile (Go artist.ArtistResponse). */
 export interface Artist {
   readonly id: string;
+  readonly handle?: string; // public booking-link identifier, e.g. "rania"
   readonly name: string;
   readonly bio?: string;
   readonly bio_ar?: string;
@@ -17,11 +18,12 @@ export interface Artist {
   readonly is_verified: boolean;
 }
 
-/** Full own-profile (Go artist.ArtistProfile) — returned by GET /artists/me. */
+/** Full own-profile (Go artist.ArtistProfile) - returned by GET /artists/me. */
 export interface ArtistProfile {
   readonly id: string;
   readonly user_id: string;
   readonly salon_id?: string;
+  readonly handle?: string;
   readonly name: string;
   readonly email: string;
   readonly phone?: string;
@@ -96,6 +98,7 @@ export interface BusinessHoursException {
 
 /** Request body for PATCH /artists/:id (Go artist.UpdateProfileRequest). */
 export interface UpdateProfileRequest {
+  handle?: string;      // lowercase alphanumeric + hyphens, 3-50 chars, no leading/trailing hyphen
   bio?: string;         // max 500
   bio_ar?: string;      // max 500
   instagram?: string;   // max 255

@@ -1,5 +1,5 @@
 /**
- * Enriched booking model — adds joined display names to the base Booking type.
+ * Enriched booking model - adds joined display names to the base Booking type.
  * Returned by GET /bookings/artist/:id and GET /bookings/:id.
  * Mirror of Go booking.EnrichedBookingResponse.
  */
@@ -26,6 +26,8 @@ export interface EnrichedBooking {
   readonly deposit_amount: string;
   readonly deposit_deadline?: string;
   readonly deposit_paid_at?: string;
+  readonly deposit_reference?: string;
+  readonly review_token?: string; // present once completed; see leave-review.page.ts
   readonly channel: BookingChannel;
   readonly special_requests?: string;
   readonly cancellation_reason?: string;
@@ -33,6 +35,7 @@ export interface EnrichedBooking {
   // Joined display names
   readonly customer_name: string;
   readonly customer_phone?: string;
+  readonly artist_name: string;
   readonly service_name: string;
   readonly store_name: string;
   readonly store_city: string;

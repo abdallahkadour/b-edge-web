@@ -1,0 +1,119 @@
+<!-- Guest review-link screen -->
+<div class="min-h-screen bg-white flex flex-col">
+
+  <!-- Header -->
+  <div class="h-14 px-4 flex items-center justify-center border-b border-gray-100 sticky top-0 bg-white z-10 shrink-0">
+    <span class="text-sm font-bold tracking-tight text-ink">Leave a Review</span>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="flex-1 p-5 space-y-4">
+      <div class="h-20 rounded-xl bg-gray-100 animate-pulse"></div>
+      <div class="h-32 rounded-xl bg-gray-100 animate-pulse"></div>
+    </div>
+  }
+
+  <!-- Invalid/expired link -->
+  @if (!loading() && loadError()) {
+    <div class="flex-1 flex flex-col items-center justify-center text-center p-6">
+      <p class="text-2xl mb-2">🔗</p>
+      <h3 class="text-base font-bold text-ink">{{ loadError() }}</h3>
+      <p class="text-xs text-gray-400 mt-2 max-w-[240px]">
+        If you think this is a mistake, reach out to the artist directly.
+      </p>
+    </div>
+  }
+
+  <!-- Success -->
+  @if (!loading() && !loadError() && submitted()) {
+    <div class="flex-1 flex flex-col items-center justify-center text-center p-6">
+      <div class="w-16 h-16 rounded-full border-2 border-success text-success flex items-center justify-center mb-4">
+        <lucide-icon name="check" [size]="32" [strokeWidth]="2.5" />
+      </div>
+      <h3 class="text-lg font-extrabold text-ink tracking-tight">Review submitted</h3>
+      @if (context(); as ctx) {
+        <p class="text-xs text-gray-500 font-medium mt-2 max-w-[260px] leading-relaxed">
+          Thank you! Your feedback helps other clients find {{ ctx.artist_name }}.
+        </p>
+      }
+    </div>
+  }
+
+  <!-- Form -->
+  @if (!loading() && !loadError() && !submitted() && context(); as ctx) {
+    <div class="flex-1 px-5 py-5 pb-24 space-y-6">
+
+      <!-- Booking summary card -->
+      <div class="bg-gray-50 border border-gray-150 rounded-xl p-3.5">
+        <span class="text-[9px] uppercase font-bold tracking-wider text-gray-400 mb-1 block">Your booking</span>
+        <span class="text-sm font-extrabold text-ink block">{{ ctx.service_name }} with {{ ctx.artist_name }}</span>
+        <span class="text-xs text-gray-400 font-medium mt-0.5 block">{{ ctx.store_name }} · ${{ ctx.final_price }}</span>
+      </div>
+
+      <!-- Rating -->
+      <div class="space-y-3.5 text-center">
+        <h4 class="text-xs font-bold text-ink uppercase tracking-wider">How was your experience?</h4>
+
+        <div class="flex justify-center gap-2">
+          @for (star of stars; track star) {
+            <button
+              type="button"
+              (click)="selectRating(star)"
+              class="p-1 active:scale-125 transition-transform"
+            >
+              <lucide-icon
+                name="star"
+                [size]="32"
+                [strokeWidth]="2"
+                [class]="rating() >= star ? 'fill-ink stroke-ink' : 'stroke-gray-300 fill-none'"
+              />
+            </button>
+          }
+        </div>
+
+        <p class="text-sm font-black text-ink tracking-tight pt-1">{{ ratingLabel(rating()) }}</p>
+      </div>
+
+      <!-- Comment -->
+      <div class="space-y-2">
+        <label class="block text-xs font-bold text-ink uppercase tracking-wider">Write a comment</label>
+        <div class="relative">
+          <textarea
+            [value]="comment()"
+            (input)="onCommentInput($any($event.target).value)"
+            placeholder="Share details about your experience…"
+            rows="4"
+            class="w-full p-3.5 border border-gray-200 text-ink bg-white placeholder:text-gray-300 text-sm focus:outline-none focus:border-ink transition-all resize-none rounded-lg"
+          ></textarea>
+          <div class="absolute bottom-2.5 right-3 text-[10px] text-gray-400 font-mono">
+            {{ comment().length }}/250
+          </div>
+        </div>
+      </div>
+
+      @if (submitError(); as err) {
+        <div class="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+          {{ err }}
+        </div>
+      }
+
+    </div>
+
+    <!-- Sticky submit -->
+    <div class="fixed bottom-0 left-0 right-0 h-[52px] max-w-lg mx-auto">
+      <button
+        type="button"
+        (click)="submit()"
+        [disabled]="submitting()"
+        class="w-full h-full bg-ink hover:opacity-90 text-white font-bold text-sm tracking-wide uppercase transition-opacity flex items-center justify-center gap-2 disabled:opacity-60"
+      >
+        @if (submitting()) {
+          <lucide-icon name="loader-2" [size]="16" [strokeWidth]="2" class="animate-spin" />
+        }
+        Submit review
+      </button>
+    </div>
+  }
+
+</div>

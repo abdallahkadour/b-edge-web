@@ -46,6 +46,11 @@ export class DashboardLayoutComponent {
   /** Navigation items shared between the sidebar and the mobile bottom bar. */
   readonly navItems: NavItem[] = [
     { path: '/dashboard/bookings', label: 'Bookings', icon: 'calendar-days' },
+    { path: '/dashboard/calendar', label: 'Calendar', icon: 'calendar' },
+    { path: '/dashboard/waitlist', label: 'Waitlist', icon: 'bell' },
+    { path: '/dashboard/products', label: 'Products', icon: 'package' },
+    { path: '/dashboard/orders', label: 'Orders', icon: 'shopping-bag' },
+    { path: '/dashboard/deposits', label: 'Deposits', icon: 'wallet' },
     { path: '/dashboard/clients',  label: 'Clients',  icon: 'users' },
     { path: '/dashboard/earnings', label: 'Earnings', icon: 'banknote' },
     { path: '/dashboard/services', label: 'Services', icon: 'scissors' },
