@@ -1,0 +1,170 @@
+<!-- Cart and checkout -->
+<div class="min-h-screen bg-white flex flex-col">
+
+  <header class="sticky top-0 z-20 bg-white border-b border-gray-100 px-4 h-14 flex items-center">
+    <button
+      type="button"
+      (click)="goBack()"
+      class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-ink"
+      aria-label="Back"
+    >
+      <lucide-icon name="arrow-left" [size]="20" [strokeWidth]="2" />
+    </button>
+    <h1 class="text-[17px] font-bold text-ink tracking-tight mx-auto -translate-x-4">Your order</h1>
+  </header>
+
+  <div class="flex-1 px-4 py-4 pb-40">
+
+    @if (cart.isEmpty()) {
+      <div class="py-20 text-center">
+        <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 mx-auto mb-3">
+          <lucide-icon name="shopping-bag" [size]="22" [strokeWidth]="2" />
+        </div>
+        <p class="text-sm font-medium text-ink">Your cart is empty</p>
+        <button
+          type="button"
+          (click)="goBack()"
+          class="mt-4 px-4 py-2 border border-ink rounded-lg text-[13px] font-semibold text-ink"
+        >Browse the shop</button>
+      </div>
+    } @else {
+
+      <!-- Line items -->
+      <div class="divide-y divide-gray-100">
+        @for (line of cart.lines(); track line.product.id) {
+          <div class="py-3 flex items-center gap-3">
+            <div class="w-14 h-14 rounded-lg overflow-hidden bg-gray-100 shrink-0 flex items-center justify-center text-gray-300">
+              @if (line.product.image_url) {
+                <img [src]="line.product.image_url" [alt]="line.product.name" class="w-full h-full object-cover" />
+              } @else {
+                <lucide-icon name="image" [size]="18" [strokeWidth]="1.5" />
+              }
+            </div>
+
+            <div class="flex-1 min-w-0">
+              <h3 class="text-[14px] font-semibold text-ink truncate">{{ line.product.name }}</h3>
+              <p class="text-xs text-gray-500 mt-0.5">${{ line.product.price }} each</p>
+            </div>
+
+            <div class="flex items-center gap-1.5 bg-gray-100 rounded-lg h-8 px-1 shrink-0">
+              <button
+                type="button"
+                (click)="cart.decrement(line.product.id)"
+                class="w-6 h-6 rounded flex items-center justify-center text-ink hover:bg-gray-200"
+                aria-label="Remove one"
+              >
+                <lucide-icon name="minus" [size]="14" [strokeWidth]="2.5" />
+              </button>
+              <span class="text-[13px] font-bold text-ink min-w-[16px] text-center">{{ line.quantity }}</span>
+              <button
+                type="button"
+                (click)="cart.add(line.product)"
+                class="w-6 h-6 rounded flex items-center justify-center text-ink hover:bg-gray-200"
+                aria-label="Add one"
+              >
+                <lucide-icon name="plus" [size]="14" [strokeWidth]="2.5" />
+              </button>
+            </div>
+
+            <span class="text-[14px] font-bold text-ink w-16 text-right shrink-0">
+              ${{ lineSubtotal(line.product.price, line.quantity) }}
+            </span>
+          </div>
+        }
+      </div>
+
+      <!-- Total -->
+      <div class="flex items-center justify-between py-4 mt-2 border-t border-gray-200">
+        <span class="text-sm text-gray-500">Total</span>
+        <span class="text-[18px] font-bold text-ink">${{ cart.estimatedTotal() }}</span>
+      </div>
+
+      <!-- Your details -->
+      <div class="mt-4 space-y-3">
+        <h2 class="text-sm font-bold text-ink">Your details</h2>
+
+        <div>
+          <label class="block text-xs font-medium text-ink mb-1">Full name</label>
+          <input
+            type="text"
+            [value]="name()"
+            (input)="name.set($any($event.target).value)"
+            placeholder="Your name"
+            class="w-full h-11 px-3.5 border rounded-lg text-[15px] outline-none focus:border-ink"
+            [class]="touched() && !isNameValid() ? 'border-red-400' : 'border-gray-200'"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-ink mb-1">Phone number</label>
+          <div
+            class="flex items-center bg-white border rounded-lg h-11 overflow-hidden focus-within:border-ink"
+            [class]="touched() && !isPhoneValid() ? 'border-red-400' : 'border-gray-200'"
+          >
+            <div class="flex items-center gap-1.5 px-3.5 bg-gray-50 border-r border-gray-200 h-full shrink-0">
+              <span class="text-base">🇱🇧</span>
+              <span class="text-sm font-medium text-ink">+961</span>
+            </div>
+            <input
+              type="tel"
+              inputmode="numeric"
+              [value]="phoneDigits()"
+              (input)="onPhoneInput($any($event.target).value)"
+              placeholder="70 000 000"
+              class="w-full h-full px-3.5 outline-none text-[15px]"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-ink mb-1">Delivery notes (optional)</label>
+          <textarea
+            rows="3"
+            [value]="deliveryNotes()"
+            (input)="deliveryNotes.set($any($event.target).value)"
+            placeholder="Address, landmark, or any delivery instructions"
+            class="w-full p-3 border border-gray-200 rounded-lg text-sm outline-none focus:border-ink resize-none"
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- Payment expectation -->
+      <div class="mt-4 rounded-lg bg-gray-50 border border-gray-200 px-3.5 py-3 flex gap-2.5">
+        <lucide-icon name="info" [size]="16" [strokeWidth]="2" class="text-gray-400 shrink-0 mt-0.5" />
+        <p class="text-xs text-gray-600 leading-relaxed">
+          Place your order, then send payment by OMT or Whish. The artist will confirm once
+          it arrives, and you can follow the status from your orders.
+        </p>
+      </div>
+
+      @if (errorMessage(); as msg) {
+        <div class="mt-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+          {{ msg }}
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Sticky footer -->
+  @if (!cart.isEmpty()) {
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3">
+      <div class="flex justify-end mb-1.5">
+        <span class="text-[11px] text-gray-500">Total ${{ cart.estimatedTotal() }}</span>
+      </div>
+      <button
+        type="button"
+        (click)="placeOrder()"
+        [disabled]="placing()"
+        class="w-full h-[52px] bg-ink hover:opacity-90 text-white font-bold text-sm uppercase tracking-wide rounded-lg transition-opacity flex items-center justify-center gap-2 disabled:opacity-40"
+      >
+        @if (placing()) {
+          <lucide-icon name="loader-2" [size]="16" [strokeWidth]="2" class="animate-spin" />
+          <span>Placing order</span>
+        } @else {
+          <span>Place order</span>
+        }
+      </button>
+    </div>
+  }
+
+</div>

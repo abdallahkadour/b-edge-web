@@ -1,0 +1,153 @@
+<!-- Shop - customer product catalogue -->
+<div class="min-h-screen bg-white">
+
+  <!-- Sticky header -->
+  <header class="sticky top-0 z-20 bg-white border-b border-gray-100 px-4 h-14 flex items-center justify-between">
+    <button
+      type="button"
+      (click)="goBack()"
+      class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-ink"
+      aria-label="Back"
+    >
+      <lucide-icon name="arrow-left" [size]="20" [strokeWidth]="2" />
+    </button>
+
+    <h1 class="text-[17px] font-bold text-ink tracking-tight">Shop</h1>
+
+    <button
+      type="button"
+      (click)="openCart()"
+      class="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 text-ink"
+      aria-label="Cart"
+    >
+      <lucide-icon name="shopping-bag" [size]="20" [strokeWidth]="2" />
+      @if (cart.itemCount() > 0) {
+        <span
+          class="absolute -top-0.5 -right-0.5 bg-ink text-white text-[10px] font-bold min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1 border-2 border-white"
+        >{{ cart.itemCount() }}</span>
+      }
+    </button>
+  </header>
+
+  <!-- Category pills -->
+  <div class="px-4 py-3 border-b border-gray-100 overflow-x-auto flex items-center gap-2">
+    <button
+      type="button"
+      (click)="selectCategory('all')"
+      [class]="selectedCategory() === 'all'
+        ? 'px-3.5 py-1.5 rounded-full text-[13px] font-semibold whitespace-nowrap bg-ink text-white'
+        : 'px-3.5 py-1.5 rounded-full text-[13px] font-medium whitespace-nowrap bg-gray-100 text-gray-500'"
+    >All</button>
+    @for (cat of categories; track cat) {
+      <button
+        type="button"
+        (click)="selectCategory(cat)"
+        [class]="selectedCategory() === cat
+          ? 'px-3.5 py-1.5 rounded-full text-[13px] font-semibold whitespace-nowrap bg-ink text-white'
+          : 'px-3.5 py-1.5 rounded-full text-[13px] font-medium whitespace-nowrap bg-gray-100 text-gray-500'"
+      >{{ label(cat) }}</button>
+    }
+  </div>
+
+  <div class="px-4 py-4 pb-24">
+
+    @if (errorMessage(); as msg) {
+      <div class="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+        {{ msg }}
+      </div>
+    }
+
+    @if (loading()) {
+      <div class="grid grid-cols-2 gap-3">
+        <div class="h-52 rounded-xl bg-gray-100 animate-pulse"></div>
+        <div class="h-52 rounded-xl bg-gray-100 animate-pulse"></div>
+        <div class="h-52 rounded-xl bg-gray-100 animate-pulse"></div>
+        <div class="h-52 rounded-xl bg-gray-100 animate-pulse"></div>
+      </div>
+    }
+
+    @if (!loading() && !errorMessage()) {
+      @if (displayed().length === 0) {
+        <div class="py-16 text-center">
+          <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 mx-auto mb-3">
+            <lucide-icon name="shopping-bag" [size]="22" [strokeWidth]="2" />
+          </div>
+          <p class="text-sm font-medium text-ink">Nothing here yet</p>
+          <p class="text-xs text-gray-400 mt-1">
+            This artist has not listed any products in this category.
+          </p>
+        </div>
+      } @else {
+        <div class="grid grid-cols-2 gap-3">
+          @for (p of displayed(); track p.id) {
+            <div class="rounded-xl overflow-hidden border border-gray-100 flex flex-col">
+              <div class="aspect-square bg-gray-100 flex items-center justify-center text-gray-300">
+                @if (p.image_url) {
+                  <img [src]="p.image_url" [alt]="p.name" class="w-full h-full object-cover" />
+                } @else {
+                  <lucide-icon name="image" [size]="26" [strokeWidth]="1.5" />
+                }
+              </div>
+
+              <div class="p-2.5 flex-1 flex flex-col">
+                <h3 class="text-[14px] font-semibold text-ink leading-snug line-clamp-2">{{ p.name }}</h3>
+
+                <div class="flex items-end justify-between mt-2 pt-1">
+                  <span class="text-[15px] font-bold text-ink">${{ p.price }}</span>
+
+                  @if (cart.quantityOf(p.id) === 0) {
+                    <button
+                      type="button"
+                      (click)="cart.add(p)"
+                      class="w-8 h-8 rounded-lg bg-ink text-white flex items-center justify-center hover:opacity-90 transition-opacity"
+                      aria-label="Add to cart"
+                    >
+                      <lucide-icon name="plus" [size]="16" [strokeWidth]="2.5" />
+                    </button>
+                  } @else {
+                    <div class="flex items-center gap-1.5 bg-gray-100 rounded-lg h-8 px-1">
+                      <button
+                        type="button"
+                        (click)="cart.decrement(p.id)"
+                        class="w-6 h-6 rounded flex items-center justify-center text-ink hover:bg-gray-200"
+                        aria-label="Remove one"
+                      >
+                        <lucide-icon name="minus" [size]="14" [strokeWidth]="2.5" />
+                      </button>
+                      <span class="text-[13px] font-bold text-ink min-w-[16px] text-center">{{ cart.quantityOf(p.id) }}</span>
+                      <button
+                        type="button"
+                        (click)="cart.add(p)"
+                        class="w-6 h-6 rounded flex items-center justify-center text-ink hover:bg-gray-200"
+                        aria-label="Add one"
+                      >
+                        <lucide-icon name="plus" [size]="14" [strokeWidth]="2.5" />
+                      </button>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Sticky cart bar -->
+  @if (cart.itemCount() > 0) {
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3">
+      <button
+        type="button"
+        (click)="openCart()"
+        class="w-full h-[52px] bg-ink hover:opacity-90 text-white rounded-lg transition-opacity flex items-center justify-between px-4"
+      >
+        <span class="text-[13px] font-bold uppercase tracking-wide">
+          View cart ({{ cart.itemCount() }})
+        </span>
+        <span class="text-[15px] font-bold">${{ cart.estimatedTotal() }}</span>
+      </button>
+    </div>
+  }
+
+</div>

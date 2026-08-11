@@ -12,6 +12,7 @@
         [services]="services()"
         [portfolio]="portfolio()"
         (continueWith)="onProfileContinue($event)"
+        (openShop)="onOpenShop()"
       />
     }
     @case ('select-service') {
@@ -26,9 +27,10 @@
     }
     @case ('pick-datetime') {
       <app-pick-datetime-screen
-        [artistId]="artistId()"
+        [artistId]="resolvedArtistId()!"
         [serviceId]="selectedServiceId()!"
         [stores]="stores()"
+        [holding]="holdingSlot()"
         (back)="step.set('select-service')"
         (continueWith)="onSlotChosen($event)"
       />

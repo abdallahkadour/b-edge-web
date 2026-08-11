@@ -96,6 +96,17 @@ export class CustomerLoginPage implements OnDestroy {
     this.requestCode();
   }
 
+  /** From the phone step, there is nowhere "back" to except Discover - this
+   *  screen has no prior step of its own. From the code step, back means
+   *  re-entering the phone number, which changePhone() already does. */
+  goBack(): void {
+    if (this.step() === 'code') {
+      this.changePhone();
+    } else {
+      this.router.navigateByUrl('/');
+    }
+  }
+
   changePhone(): void {
     this.step.set('phone');
     this.code.set('');

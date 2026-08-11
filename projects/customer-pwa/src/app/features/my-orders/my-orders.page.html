@@ -1,0 +1,146 @@
+<!-- My Orders -->
+<div class="min-h-screen bg-gray-50">
+
+  <div class="bg-white border-b border-gray-200 px-5 pt-6 pb-4">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-xl font-bold text-ink">My Orders</h1>
+        @if (auth.customer(); as c) {
+          <p class="text-sm text-gray-500 mt-0.5">{{ c.name }}</p>
+        }
+      </div>
+      <div class="flex items-center gap-3">
+        <button type="button" (click)="goToBookings()" class="text-xs text-ink font-semibold underline">
+          My bookings
+        </button>
+        <button type="button" (click)="logout()" class="text-xs text-gray-400 font-semibold underline">
+          Sign out
+        </button>
+      </div>
+    </div>
+
+    <!-- Filter tabs -->
+    <div class="flex gap-1.5 bg-gray-100 p-1 rounded-full mt-4">
+      <button
+        type="button"
+        (click)="selectTab('active')"
+        [class]="activeTab() === 'active'
+          ? 'flex-1 text-center py-1.5 text-xs font-bold uppercase tracking-wider rounded-full bg-white text-ink shadow-sm'
+          : 'flex-1 text-center py-1.5 text-xs font-bold uppercase tracking-wider rounded-full text-gray-400'"
+      >
+        Active ({{ countFor('active') }})
+      </button>
+      <button
+        type="button"
+        (click)="selectTab('delivered')"
+        [class]="activeTab() === 'delivered'
+          ? 'flex-1 text-center py-1.5 text-xs font-bold uppercase tracking-wider rounded-full bg-white text-ink shadow-sm'
+          : 'flex-1 text-center py-1.5 text-xs font-bold uppercase tracking-wider rounded-full text-gray-400'"
+      >
+        Delivered ({{ countFor('delivered') }})
+      </button>
+      <button
+        type="button"
+        (click)="selectTab('cancelled')"
+        [class]="activeTab() === 'cancelled'
+          ? 'flex-1 text-center py-1.5 text-xs font-bold uppercase tracking-wider rounded-full bg-white text-ink shadow-sm'
+          : 'flex-1 text-center py-1.5 text-xs font-bold uppercase tracking-wider rounded-full text-gray-400'"
+      >
+        Cancelled ({{ countFor('cancelled') }})
+      </button>
+    </div>
+  </div>
+
+  <div class="px-5 py-4">
+
+    @if (errorMessage(); as msg) {
+      <div class="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+        {{ msg }}
+      </div>
+    }
+
+    @if (loading()) {
+      <div class="space-y-3">
+        <div class="h-28 rounded-xl bg-gray-100 animate-pulse"></div>
+        <div class="h-28 rounded-xl bg-gray-100 animate-pulse"></div>
+      </div>
+    }
+
+    @if (!loading()) {
+      <div class="space-y-3">
+        @for (o of filteredOrders(); track o.id) {
+          <div class="bg-white rounded-xl border border-gray-100 p-4">
+            <div class="flex justify-between items-start">
+              <div class="min-w-0">
+                <h3 class="text-sm font-bold text-ink">Order #{{ shortRef(o.id) }}</h3>
+                <p class="text-xs text-gray-400 mt-0.5 truncate">{{ itemSummary(o) }}</p>
+              </div>
+              <span [class]="'text-[10px] font-bold uppercase px-2 py-1 rounded-full shrink-0 ' + statusClass(o.status)">
+                {{ statusLabel(o.status) }}
+              </span>
+            </div>
+
+            <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
+              <span class="text-xs text-gray-500">{{ formatDate(o.created_at) }}</span>
+              <span class="text-sm font-bold text-ink">${{ o.total_amount }}</span>
+            </div>
+
+            @if (canCancel(o)) {
+              @if (confirmingId() !== o.id) {
+                <button
+                  type="button"
+                  (click)="askToCancel(o.id)"
+                  class="w-full h-9 mt-3 text-xs font-semibold text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                >
+                  Cancel order
+                </button>
+              } @else {
+                <div class="mt-3 pt-3 border-t border-gray-100">
+                  <p class="text-xs text-gray-600 mb-2">Cancel order #{{ shortRef(o.id) }}?</p>
+                  @if (cancelError(); as err) {
+                    <p class="text-xs text-red-600 mb-2">{{ err }}</p>
+                  }
+                  <div class="flex gap-2">
+                    <button
+                      type="button"
+                      (click)="confirmCancel(o)"
+                      [disabled]="cancellingId() === o.id"
+                      class="flex-1 h-9 bg-red-600 hover:opacity-90 text-white text-xs font-bold rounded-lg transition-opacity disabled:opacity-50 flex items-center justify-center gap-1.5"
+                    >
+                      @if (cancellingId() === o.id) {
+                        <lucide-icon name="loader-2" [size]="13" [strokeWidth]="2" class="animate-spin" />
+                      }
+                      Yes, cancel
+                    </button>
+                    <button
+                      type="button"
+                      (click)="dismissCancel()"
+                      [disabled]="cancellingId() === o.id"
+                      class="flex-1 h-9 bg-white border border-gray-200 text-ink text-xs font-semibold rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      Never mind
+                    </button>
+                  </div>
+                </div>
+              }
+            }
+          </div>
+        }
+
+        @if (filteredOrders().length === 0) {
+          <div class="rounded-xl border border-gray-200 bg-white p-8 text-center">
+            <p class="text-2xl mb-2">🛍️</p>
+            <p class="text-sm font-medium text-ink">
+              @switch (activeTab()) {
+                @case ('active') { No active orders }
+                @case ('delivered') { No delivered orders yet }
+                @case ('cancelled') { No cancelled orders }
+              }
+            </p>
+          </div>
+        }
+      </div>
+    }
+
+  </div>
+</div>

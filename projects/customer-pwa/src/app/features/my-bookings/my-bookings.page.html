@@ -9,9 +9,14 @@
           <p class="text-sm text-gray-500 mt-0.5">{{ c.name }}</p>
         }
       </div>
-      <button type="button" (click)="logout()" class="text-xs text-gray-400 font-semibold underline">
-        Sign out
-      </button>
+      <div class="flex items-center gap-3">
+        <button type="button" (click)="goToOrders()" class="text-xs text-ink font-semibold underline">
+          My orders
+        </button>
+        <button type="button" (click)="logout()" class="text-xs text-gray-400 font-semibold underline">
+          Sign out
+        </button>
+      </div>
     </div>
 
     <!-- Filter tabs -->

@@ -1,0 +1,114 @@
+<!-- Order placed - payment instructions -->
+<div class="min-h-screen bg-white flex flex-col">
+
+  <div class="h-14 px-4 flex items-center justify-center border-b border-gray-100">
+    <span class="text-sm font-bold tracking-tight text-ink">B-Edge</span>
+  </div>
+
+  <div class="flex-1 px-5 py-8">
+
+    <div class="text-center">
+      <div class="w-14 h-14 rounded-full bg-[#16a34a]/10 flex items-center justify-center mx-auto mb-4">
+        <lucide-icon name="check" [size]="26" [strokeWidth]="2.5" class="text-[#16a34a]" />
+      </div>
+      <h1 class="text-xl font-bold text-ink tracking-tight">Order placed</h1>
+      <p class="text-sm text-gray-500 mt-1.5">
+        Order #{{ shortRef() }}
+        @if (itemCount() > 0) {
+          <span>· {{ itemCount() }} {{ itemCount() === 1 ? 'item' : 'items' }}</span>
+        }
+      </p>
+    </div>
+
+    <!-- Payment instructions: the focus of this screen -->
+    <div class="mt-7 bg-white border border-gray-200 rounded-2xl p-5">
+      <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Next step</span>
+
+      @if (order(); as o) {
+        <h2 class="text-base font-bold text-ink mt-1.5">
+          Send ${{ o.total_amount }} to complete your order
+        </h2>
+      } @else {
+        <h2 class="text-base font-bold text-ink mt-1.5">
+          Send your payment to complete this order
+        </h2>
+      }
+
+      <p class="text-[13px] text-gray-600 leading-relaxed mt-2">
+        Transfer the total by OMT or Whish to the artist, then they will confirm your order.
+        You will get a WhatsApp message once it is confirmed.
+      </p>
+    </div>
+
+    <!-- Order details, collapsed by default -->
+    @if (order(); as o) {
+      <button
+        type="button"
+        (click)="toggleDetails()"
+        class="w-full mt-4 flex items-center justify-between py-3 border-t border-b border-gray-100 text-sm font-medium text-ink"
+      >
+        <span>View order details</span>
+        <lucide-icon name="chevron-right" [size]="16" [strokeWidth]="2" [class]="showDetails() ? 'rotate-90 transition-transform' : 'transition-transform'" />
+      </button>
+
+      @if (showDetails()) {
+        <div class="divide-y divide-gray-100">
+          @for (item of o.items; track item.product_id) {
+            <div class="py-2.5 flex items-center justify-between text-[13px]">
+              <span class="text-ink">
+                {{ item.product_name }}
+                <span class="text-gray-400">×{{ item.quantity }}</span>
+              </span>
+              <span class="font-semibold text-ink">${{ item.subtotal }}</span>
+            </div>
+          }
+          <div class="py-2.5 flex items-center justify-between">
+            <span class="text-sm text-gray-500">Total</span>
+            <span class="text-base font-bold text-ink">${{ o.total_amount }}</span>
+          </div>
+        </div>
+      }
+    }
+
+    <!-- Progress strip -->
+    <div class="mt-8">
+      <div class="flex items-center justify-between">
+        @for (step of steps; track step; let i = $index; let last = $last) {
+          <div class="flex items-center" [class.flex-1]="!last">
+            <span
+              [class]="i === 0
+                ? 'w-2.5 h-2.5 rounded-full bg-ink shrink-0'
+                : 'w-2.5 h-2.5 rounded-full border-2 border-gray-200 bg-white shrink-0'"
+            ></span>
+            @if (!last) {
+              <span class="flex-1 h-px bg-gray-200 mx-1"></span>
+            }
+          </div>
+        }
+      </div>
+      <div class="flex items-center justify-between mt-2">
+        @for (step of steps; track step; let i = $index) {
+          <span
+            [class]="i === 0
+              ? 'text-[10px] uppercase tracking-wider font-bold text-ink'
+              : 'text-[10px] uppercase tracking-wider text-gray-400'"
+          >{{ step }}</span>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="px-5 pb-8 flex flex-col gap-2">
+    <button
+      type="button"
+      (click)="viewMyOrders()"
+      class="w-full h-[52px] bg-white border border-ink text-ink font-bold text-sm uppercase tracking-wide rounded-lg hover:bg-gray-50"
+    >View my orders</button>
+    <button
+      type="button"
+      (click)="backToShop()"
+      class="w-full h-11 text-gray-500 text-[13px] font-medium"
+    >Back to shop</button>
+  </div>
+
+</div>

@@ -1,8 +1,16 @@
 <!-- Customer login - phone + WhatsApp OTP -->
 <div class="min-h-screen bg-white flex flex-col">
 
-  <div class="h-14 px-4 flex items-center justify-center border-b border-gray-100">
-    <span class="text-sm font-bold tracking-tight text-ink">B-Edge</span>
+  <div class="h-14 px-4 flex items-center border-b border-gray-100 relative">
+    <button
+      type="button"
+      (click)="goBack()"
+      class="p-1 -ml-1 text-gray-600"
+      aria-label="Back"
+    >
+      <lucide-icon name="arrow-left" [size]="20" [strokeWidth]="2" />
+    </button>
+    <span class="text-sm font-bold tracking-tight text-ink absolute left-1/2 -translate-x-1/2">B-Edge</span>
   </div>
 
   <div class="flex-1 px-5 py-8 flex flex-col">
@@ -46,7 +54,7 @@
       }
 
       <p class="text-xs text-gray-400 mt-6 text-center leading-relaxed">
-        No account needed to book - this is only for viewing your booking history.
+        No account needed to book. This is only for viewing your booking history.
       </p>
 
       <div class="flex-1"></div>

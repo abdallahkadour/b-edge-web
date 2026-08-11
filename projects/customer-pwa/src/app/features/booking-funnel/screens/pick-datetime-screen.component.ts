@@ -33,7 +33,7 @@ const STRIP_DAYS = 28;
  * Slot times arrive as UTC instants. They must render in the STORE's local
  * time, not the viewer's: an appointment at Beirut Downtown is at 6:00 AM
  * Beirut time whether the customer opens the link from Beirut, Dubai, or
- * Berlin. Using the browser's zone would show a different — and wrong — time
+ * Berlin. Using the browser's zone would show a different - and wrong - time
  * to anyone travelling or abroad.
  *
  * Hardcoded because every store is currently in Lebanon. When B-Edge expands
@@ -67,13 +67,13 @@ function storeHour24(iso: string): number {
 }
 
 /**
- * Step 3 of the guest funnel — choose a store, a date, and a slot.
+ * Step 3 of the guest funnel - choose a store, a date, and a slot.
  *
  * Slots are fetched per-date on tap rather than pre-loaded for the whole
  * strip. GET /bookings/slots runs a seven-step algorithm with several
  * sequential queries, so fanning it out 28 times on load would multiply
  * database load by visitor count. The trade-off is that fully-booked dates
- * cannot be greyed out in advance — they show "no availability" once tapped.
+ * cannot be greyed out in advance - they show "no availability" once tapped.
  * A bulk per-day endpoint is the pre-launch fix.
  */
 @Component({
@@ -89,10 +89,81 @@ export class PickDatetimeScreenComponent {
   readonly artistId = input.required<string>();
   readonly serviceId = input.required<string>();
   readonly stores = input.required<Store[]>();
+  /**
+   * True while the container's POST /bookings/guest/hold request is in
+   * flight, after Continue is tapped and before the screen switches to
+   * details. Without this the button gives no feedback during that network
+   * round trip and a second tap could fire a duplicate hold request.
+   */
+  readonly holding = input<boolean>(false);
 
   readonly back = output<void>();
   /** Emits the chosen store and slot start time (ISO 8601) on Continue. */
   readonly continueWith = output<{ storeId: string; startTime: string }>();
+
+  // ── Waitlist (PRD §9.5) ──────────────────────────────────────────────────
+  // Offered when a search for the selected date comes back with genuinely
+  // no slots - the same event this screen already has (slots().length===0)
+  // just needed a real action attached to it instead of a dead-end message.
+  // Handled directly here, not routed through the container via an output,
+  // matching this component's own established precedent (it already
+  // injects BookingDataService for slot-fetching, so this isn't a new
+  // deviation from "pure presentational" - it's consistent with what's
+  // already here).
+  protected readonly showWaitlistForm = signal(false);
+  protected readonly waitlistName = signal('');
+  protected readonly waitlistPhoneDigits = signal('');
+  protected readonly waitlistSubmitting = signal(false);
+  protected readonly waitlistJoined = signal(false);
+  protected readonly waitlistError = signal<string | null>(null);
+
+  protected readonly isWaitlistPhoneValid = () => /^\d{7,8}$/.test(this.waitlistPhoneDigits());
+  protected readonly isWaitlistNameValid = () => this.waitlistName().trim().length >= 2;
+
+  openWaitlistForm(): void {
+    this.waitlistError.set(null);
+    this.showWaitlistForm.set(true);
+  }
+
+  closeWaitlistForm(): void {
+    if (this.waitlistSubmitting()) return;
+    this.showWaitlistForm.set(false);
+  }
+
+  onWaitlistPhoneInput(value: string): void {
+    this.waitlistPhoneDigits.set(value.replace(/\D/g, '').slice(0, 8));
+  }
+
+  submitWaitlist(): void {
+    const storeId = this.selectedStoreId();
+    if (!storeId || !this.isWaitlistNameValid() || !this.isWaitlistPhoneValid() || this.waitlistSubmitting()) {
+      return;
+    }
+
+    this.waitlistSubmitting.set(true);
+    this.waitlistError.set(null);
+
+    this.bookingApi
+      .joinWaitlist({
+        artist_id: this.artistId(),
+        store_id: storeId,
+        service_id: this.serviceId(),
+        requested_date: this.selectedDate(),
+        name: this.waitlistName().trim(),
+        phone: this.waitlistPhoneDigits(),
+      })
+      .subscribe({
+        next: () => {
+          this.waitlistSubmitting.set(false);
+          this.showWaitlistForm.set(false);
+          this.waitlistJoined.set(true);
+        },
+        error: () => {
+          this.waitlistSubmitting.set(false);
+          this.waitlistError.set('Could not join the waitlist. Please try again.');
+        },
+      });
+  }
 
   protected readonly selectedStoreId = signal<string | null>(null);
   protected readonly selectedDate = signal<string>(toIsoDate(new Date()));
@@ -137,7 +208,7 @@ export class PickDatetimeScreenComponent {
   );
 
   protected readonly canContinue = computed(
-    () => this.selectedSlot() !== null && this.selectedStoreId() !== null,
+    () => this.selectedSlot() !== null && this.selectedStoreId() !== null && !this.holding(),
   );
 
   protected readonly ctaLabel = computed(() => {
@@ -145,7 +216,7 @@ export class PickDatetimeScreenComponent {
     if (!slot) return 'Continue';
 
     const part = storeParts(slot);
-    return `Continue — ${part['weekday']} ${part['day']} ${part['month']}, ${this.formatTime(slot)}`;
+    return `Continue: ${part['weekday']} ${part['day']} ${part['month']}, ${this.formatTime(slot)}`;
   });
 
   constructor() {
@@ -197,9 +268,12 @@ export class PickDatetimeScreenComponent {
     if (iso === this.selectedDate()) return;
     this.selectedDate.set(iso);
     this.selectedSlot.set(null);
+    this.waitlistJoined.set(false);
+    this.waitlistError.set(null);
   }
 
   protected onContinue(): void {
+    if (this.holding()) return;
     const storeId = this.selectedStoreId();
     const startTime = this.selectedSlot();
     if (!storeId || !startTime) return;
@@ -212,7 +286,7 @@ export class PickDatetimeScreenComponent {
    * Read in UTC deliberately. The backend builds slot times by combining a
    * store's local business hours with a date and stamping the result UTC, so
    * "09:00:00" opening hours become 09:00Z. Rendering those in the browser's
-   * local zone would shift every slot by the UTC offset — in Beirut, a 9am
+   * local zone would shift every slot by the UTC offset - in Beirut, a 9am
    * opening would display as noon.
    */
   protected formatTime(iso: string): string {

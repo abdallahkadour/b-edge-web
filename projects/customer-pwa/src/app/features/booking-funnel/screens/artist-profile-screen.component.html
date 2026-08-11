@@ -1,5 +1,5 @@
 <div class="relative flex flex-col min-h-full bg-gray-50 text-ink pb-[92px]">
-  <!-- Hero — omitted entirely when the artist has no avatar, rather than
+  <!-- Hero - omitted entirely when the artist has no avatar, rather than
        leaving a 300px empty grey block. -->
   @if (artist().avatar_url) {
     <div class="relative w-full h-[300px] overflow-hidden bg-gray-100">
@@ -87,12 +87,19 @@
 
   <!-- Fixed Bottom CTA -->
   <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-50 flex justify-center">
-    <div class="w-full max-w-[390px] px-2">
+    <div class="w-full max-w-[390px] px-2 flex flex-col gap-2">
       <button
         (click)="continueWith.emit(undefined)"
         class="w-full h-[52px] rounded bg-ink text-white text-[15px] font-medium leading-[20px] flex items-center justify-center hover:opacity-90 active:opacity-[85%] transition-all cursor-pointer"
       >
         Book an appointment
+      </button>
+      <button
+        (click)="openShop.emit()"
+        class="w-full h-11 rounded border border-gray-200 text-ink text-[13px] font-semibold flex items-center justify-center gap-1.5 hover:bg-gray-50 transition-colors cursor-pointer"
+      >
+        <lucide-icon name="shopping-bag" [size]="15" [strokeWidth]="2" />
+        Shop products
       </button>
     </div>
   </div>
