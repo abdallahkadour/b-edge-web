@@ -56,7 +56,9 @@
                 "input": "projects/artist-dashboard/public"
               }
             ],
-            "styles": ["projects/artist-dashboard/src/styles.scss"]
+            "styles": [
+              "projects/artist-dashboard/src/styles.scss"
+            ]
           },
           "configurations": {
             "production": {
@@ -72,7 +74,13 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "projects/artist-dashboard/src/environments/environment.ts",
+                  "with": "projects/artist-dashboard/src/environments/environment.prod.ts"
+                }
+              ]
             },
             "development": {
               "optimization": false,
@@ -122,7 +130,9 @@
                 "input": "projects/customer-pwa/public"
               }
             ],
-            "styles": ["projects/customer-pwa/src/styles.scss"]
+            "styles": [
+              "projects/customer-pwa/src/styles.scss"
+            ]
           },
           "configurations": {
             "production": {
@@ -138,7 +148,13 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "projects/customer-pwa/src/environments/environment.ts",
+                  "with": "projects/customer-pwa/src/environments/environment.prod.ts"
+                }
+              ]
             },
             "development": {
               "optimization": false,
