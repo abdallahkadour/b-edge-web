@@ -13,6 +13,17 @@ export interface Review {
   readonly created_at: string;
 }
 
+/**
+ * The PUBLIC-facing shape, from GET /public/reviews/artist/:id - adds a
+ * display name. Deliberately not the customer's full name: reviewer_name
+ * is formatted server-side as "first name + last initial" (e.g. "Sarah K."),
+ * a privacy choice specific to this being visible to anonymous visitors,
+ * not just the artist who already has a relationship with that customer.
+ */
+export interface EnrichedReview extends Review {
+  readonly reviewer_name: string;
+}
+
 /** Request body for POST /reviews (Go review.CreateReviewRequest). */
 export interface CreateReviewRequest {
   booking_id: string;

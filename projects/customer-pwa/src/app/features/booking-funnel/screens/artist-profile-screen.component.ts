@@ -33,6 +33,9 @@ export class ArtistProfileScreenComponent {
    *  rather than routing directly from this presentational component. */
   readonly openShop = output<void>();
 
+  /** Emits when the rating badge is tapped - same pattern as openShop. */
+  readonly openReviews = output<void>();
+
   protected hasDeposit(service: Service): boolean {
     return Number(service.deposit_amount) > 0;
   }

@@ -37,6 +37,11 @@ export const routes: Routes = [
       import('./features/customer-login/customer-login.page').then((m) => m.CustomerLoginPage),
   },
   {
+    path: 'book/:artistId/reviews',
+    loadComponent: () =>
+      import('./features/reviews/reviews.page').then((m) => m.ReviewsPage),
+  },
+  {
     // Product shop. Nested under the artist so the catalogue, cart and
     // confirmation all keep the artist context in the URL - a customer can
     // share or reopen any of them and still land in the right shop.
@@ -71,5 +76,14 @@ export const routes: Routes = [
     canActivate: [customerAuthGuard],
     loadComponent: () =>
       import('./features/booking-detail/booking-detail.page').then((m) => m.BookingDetailPage),
+  },
+  {
+    // Must stay last - Angular matches routes in declared order, and a
+    // wildcard placed earlier would swallow every route below it. Before
+    // this existed, an unmatched URL rendered nothing at all: a blank
+    // white page with no explanation and no way out.
+    path: '**',
+    loadComponent: () =>
+      import('./features/not-found/not-found.page').then((m) => m.NotFoundPage),
   },
 ];

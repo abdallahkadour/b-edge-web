@@ -23,11 +23,16 @@
           </span>
         }
       </div>
-      <div class="flex items-center gap-1">
+      <button
+        type="button"
+        (click)="openReviews.emit()"
+        class="flex items-center gap-1"
+        [attr.aria-label]="'See ' + artist().review_count + ' reviews'"
+      >
         <lucide-icon name="star" [size]="16" [strokeWidth]="2" class="fill-ink text-ink" />
         <span class="text-[14px] font-bold leading-[20px]">{{ artist().rating }}</span>
-        <span class="text-[14px] text-gray-400 leading-[20px]">({{ artist().review_count }})</span>
-      </div>
+        <span class="text-[14px] text-gray-400 leading-[20px] underline">({{ artist().review_count }})</span>
+      </button>
     </div>
 
     @if (artist().instagram) {

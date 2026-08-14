@@ -1,0 +1,81 @@
+<!-- Reviews -->
+<div class="min-h-screen bg-white">
+
+  <header class="sticky top-0 z-20 bg-white border-b border-gray-100 px-4 h-14 flex items-center">
+    <button
+      type="button"
+      (click)="goBack()"
+      class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-ink"
+      aria-label="Back"
+    >
+      <lucide-icon name="arrow-left" [size]="20" [strokeWidth]="2" />
+    </button>
+    <span class="text-[15px] font-bold text-ink mx-auto -translate-x-4">
+      @if (artistName(); as name) { {{ name }}'s reviews } @else { Reviews }
+    </span>
+  </header>
+
+  <div class="px-5 py-5">
+
+    @if (errorMessage(); as msg) {
+      <div class="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+        {{ msg }}
+      </div>
+    }
+
+    @if (loading()) {
+      <div class="space-y-3">
+        <div class="h-24 rounded-xl bg-gray-100 animate-pulse"></div>
+        <div class="h-24 rounded-xl bg-gray-100 animate-pulse"></div>
+        <div class="h-24 rounded-xl bg-gray-100 animate-pulse"></div>
+      </div>
+    }
+
+    @if (!loading() && !errorMessage()) {
+      @if (averageRating(); as avg) {
+        <div class="flex items-center gap-2 pb-5 mb-5 border-b border-gray-100">
+          <lucide-icon name="star" [size]="20" [strokeWidth]="0" class="text-ink fill-ink" />
+          <span class="text-xl font-bold text-ink">{{ avg }}</span>
+          <span class="text-sm text-gray-400">
+            · {{ reviews().length }} {{ reviews().length === 1 ? 'review' : 'reviews' }}
+          </span>
+        </div>
+      }
+
+      @if (reviews().length === 0) {
+        <div class="py-16 text-center">
+          <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 mx-auto mb-3">
+            <lucide-icon name="star" [size]="20" [strokeWidth]="2" />
+          </div>
+          <p class="text-sm font-medium text-ink">No reviews yet</p>
+          <p class="text-xs text-gray-400 mt-1">Be the first to book and leave one.</p>
+        </div>
+      } @else {
+        <div class="space-y-5">
+          @for (r of reviews(); track r.id) {
+            <div class="pb-5 border-b border-gray-100 last:border-0">
+              <div class="flex items-center justify-between">
+                <span class="text-[13px] font-semibold text-ink">{{ r.reviewer_name }}</span>
+                <span class="text-xs text-gray-400">{{ formatDate(r.created_at) }}</span>
+              </div>
+              <div class="flex items-center gap-0.5 mt-1.5">
+                @for (filled of starsFor(r.rating); track $index) {
+                  <lucide-icon
+                    name="star"
+                    [size]="14"
+                    [strokeWidth]="0"
+                    [class]="filled ? 'text-ink fill-ink' : 'text-gray-200 fill-gray-200'"
+                  />
+                }
+              </div>
+              @if (r.comment) {
+                <p class="text-sm text-gray-600 leading-relaxed mt-2">{{ r.comment }}</p>
+              }
+            </div>
+          }
+        </div>
+      }
+    }
+
+  </div>
+</div>

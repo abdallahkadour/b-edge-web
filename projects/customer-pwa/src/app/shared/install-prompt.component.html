@@ -1,0 +1,22 @@
+<!-- Install prompt banner - persists across routes, dismissible -->
+@if (visible()) {
+  <div class="fixed bottom-0 left-0 right-0 z-40 bg-ink text-white px-4 py-3 flex items-center gap-3">
+    <div class="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+      <lucide-icon name="download" [size]="18" [strokeWidth]="2" />
+    </div>
+    <div class="flex-1 min-w-0">
+      <p class="text-[13px] font-semibold leading-tight">Add B-Edge to your home screen</p>
+      <p class="text-[11px] text-white/60 mt-0.5">Book faster, no browser tabs</p>
+    </div>
+    <button
+      type="button"
+      (click)="dismiss()"
+      class="text-[11px] text-white/60 font-medium px-2 py-1.5"
+    >Not now</button>
+    <button
+      type="button"
+      (click)="install()"
+      class="text-[12px] font-bold bg-white text-ink px-3.5 py-1.5 rounded-lg shrink-0"
+    >Install</button>
+  </div>
+}

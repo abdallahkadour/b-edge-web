@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
+import { LucideAngularModule } from 'lucide-angular';
 
 import { ArtistDataService, BookingDataService, MediaDataService, extractApiErrorMessage } from '@bedge/shared';
 import type { Artist, Service, Store, MediaItem, Booking } from '@bedge/shared';
@@ -39,6 +40,7 @@ type FunnelStep =
   selector: 'app-booking-funnel-page',
   standalone: true,
   imports: [
+    LucideAngularModule,
     ArtistProfileScreenComponent,
     SelectServiceScreenComponent,
     PickDatetimeScreenComponent,
@@ -74,7 +76,13 @@ export class BookingFunnelPage implements OnInit {
   protected readonly stores = signal<Store[]>([]);
   protected readonly portfolio = signal<MediaItem[]>([]);
   protected readonly loading = signal(true);
-  protected readonly loadError = signal(false);
+  // 'not-found' (a real 404 - the artist ID/handle doesn't exist) vs
+  // 'network' (anything else - connectivity, a 500) get genuinely
+  // different messaging: telling someone to "check your connection" for a
+  // stale link is actively misleading, and telling someone their link is
+  // broken when the real problem is the server being unreachable is
+  // equally wrong the other way.
+  protected readonly loadError = signal<'not-found' | 'network' | null>(null);
 
   // ── Booking draft ──────────────────────────────────────────────────────────
   protected readonly step = signal<FunnelStep>('profile');
@@ -113,6 +121,15 @@ export class BookingFunnelPage implements OnInit {
    * input. ngOnInit is guaranteed to run after inputs are set.
    */
   ngOnInit(): void {
+    this.loadArtist();
+  }
+
+  /** Extracted from ngOnInit so the network-error state's "Try again"
+   *  button can re-run the exact same load, rather than duplicating it. */
+  protected loadArtist(): void {
+    this.loading.set(true);
+    this.loadError.set(null);
+
     const id = this.artistId();
 
     this.artistApi.getArtistById(id).subscribe({
@@ -137,11 +154,16 @@ export class BookingFunnelPage implements OnInit {
           next: (res) => this.portfolio.set(res.photos ?? []),
         });
       },
-      error: () => {
-        this.loadError.set(true);
+      error: (err: HttpErrorResponse) => {
+        this.loadError.set(err.status === 404 ? 'not-found' : 'network');
         this.loading.set(false);
       },
     });
+  }
+
+  /** "Browse other artists" action on the not-found state. */
+  protected goToDiscover(): void {
+    this.router.navigateByUrl('/');
   }
 
   /**
@@ -165,6 +187,10 @@ export class BookingFunnelPage implements OnInit {
    *  just to leave the page. */
   protected onOpenShop(): void {
     this.router.navigate(['/shop', this.artistId()]);
+  }
+
+  protected onOpenReviews(): void {
+    this.router.navigate(['/book', this.artistId(), 'reviews']);
   }
 
   /**

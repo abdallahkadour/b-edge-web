@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import type {
   Review,
+  EnrichedReview,
   CreateReviewRequest,
   ReviewBookingContext,
   SubmitReviewByTokenRequest,
@@ -25,9 +26,20 @@ export class ReviewDataService {
     return this.api.post<Review>('/reviews', req);
   }
 
-  /** GET /reviews/artist/:id - visible reviews for an artist. */
+  /** GET /reviews/artist/:id - visible reviews for an artist. Authed. */
   getReviewsByArtist(artistId: string): Observable<Review[]> {
     return this.api.getArray<Review>(`/reviews/artist/${artistId}`);
+  }
+
+  /**
+   * GET /public/reviews/artist/:id - public, no account needed. This is
+   * the one an anonymous visitor deciding whether to book actually uses -
+   * gating reviews behind login would contradict the guest-first design
+   * used everywhere else in this app. Enriched with a display name; see
+   * EnrichedReview's doc comment for why it's not the full customer name.
+   */
+  getPublicReviewsByArtist(artistId: string): Observable<EnrichedReview[]> {
+    return this.api.getArray<EnrichedReview>(`/public/reviews/artist/${artistId}`);
   }
 
   /**
