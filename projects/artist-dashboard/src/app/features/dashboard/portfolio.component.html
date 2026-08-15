@@ -40,6 +40,28 @@
               class="w-full h-full object-cover"
             />
 
+            <!-- Delete confirmation, overlaid on the tile being deleted so
+                 it is unambiguous WHICH photo is about to go. -->
+            @if (confirmingDeleteId() === photo.id) {
+              <div class="absolute inset-0 z-10 bg-ink/85 flex flex-col items-center justify-center gap-2 px-2">
+                <p class="text-white text-[11px] font-semibold text-center leading-tight">
+                  Delete this photo?
+                </p>
+                <div class="flex gap-1.5">
+                  <button
+                    type="button"
+                    (click)="deletePhoto(photo)"
+                    class="px-2.5 py-1 rounded bg-white text-danger-dark text-[11px] font-bold hover:bg-gray-100"
+                  >Delete</button>
+                  <button
+                    type="button"
+                    (click)="cancelDelete()"
+                    class="px-2.5 py-1 rounded border border-white/40 text-white text-[11px] font-medium hover:bg-white/10"
+                  >Keep</button>
+                </div>
+              </div>
+            }
+
             <!-- Cover badge -->
             @if (isCover(photo)) {
               <span class="absolute top-1.5 left-1.5 bg-ink text-white text-[10px] font-medium px-2 py-0.5 rounded-full">
@@ -70,7 +92,7 @@
 
               <button
                 type="button"
-                (click)="deletePhoto(photo)"
+                (click)="askToDelete(photo)"
                 [disabled]="deletingId() === photo.id"
                 class="w-7 h-7 rounded-full bg-white text-danger-dark flex items-center justify-center
                        text-xs hover:bg-gray-100 transition-colors disabled:opacity-50"

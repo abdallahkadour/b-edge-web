@@ -14,6 +14,8 @@ import {
   CloudinaryUploadService,
   PRODUCT_CATEGORIES,
   extractApiErrorMessage,
+  ButtonComponent,
+  BadgeComponent,
 } from '@bedge/shared';
 import type { Product, ProductCategory } from '@bedge/shared';
 
@@ -50,7 +52,7 @@ const EMPTY_FORM: ProductForm = {
   selector: 'bedge-products',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, ButtonComponent, BadgeComponent],
   templateUrl: './products.component.html',
 })
 export class ProductsComponent implements OnInit {

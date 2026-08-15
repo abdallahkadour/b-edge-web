@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { LucideAngularModule } from 'lucide-angular';
 
-import { BookingDataService } from '@bedge/shared';
+import { BookingDataService, isValidLocalPhone } from '@bedge/shared';
 import type { Store, TimeSlot } from '@bedge/shared';
 
 /** One cell in the horizontal 28-day strip. */
@@ -117,7 +117,7 @@ export class PickDatetimeScreenComponent {
   protected readonly waitlistJoined = signal(false);
   protected readonly waitlistError = signal<string | null>(null);
 
-  protected readonly isWaitlistPhoneValid = () => /^\d{7,8}$/.test(this.waitlistPhoneDigits());
+  protected readonly isWaitlistPhoneValid = () => isValidLocalPhone(this.waitlistPhoneDigits());
   protected readonly isWaitlistNameValid = () => this.waitlistName().trim().length >= 2;
 
   openWaitlistForm(): void {

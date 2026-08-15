@@ -7,14 +7,10 @@
       <h1 class="text-xl font-semibold text-ink tracking-tight">Products</h1>
       <p class="text-sm text-gray-500 mt-0.5">Items you sell to clients</p>
     </div>
-    <button
-      type="button"
-      (click)="openAdd()"
-      class="h-10 px-4 bg-ink hover:opacity-90 text-white text-[13px] font-bold rounded-lg flex items-center gap-1.5 transition-opacity"
-    >
+    <bedge-button size="sm" (click)="openAdd()">
       <lucide-icon name="plus" [size]="16" [strokeWidth]="2" />
       Add product
-    </button>
+    </bedge-button>
   </div>
 
   <!-- Filter row -->
@@ -81,13 +77,7 @@
         <p class="text-xs text-gray-400 mt-1 mb-4 max-w-xs">
           Add the products you sell so clients can order them
         </p>
-        <button
-          type="button"
-          (click)="openAdd()"
-          class="px-4 py-2 bg-ink hover:opacity-90 text-white text-[13px] font-bold rounded-lg transition-opacity"
-        >
-          Add product
-        </button>
+        <bedge-button size="sm" (click)="openAdd()">Add product</bedge-button>
       </div>
     } @else {
       <div class="bg-white border border-gray-200 rounded-xl overflow-hidden mt-6">
@@ -128,13 +118,9 @@
                 <td class="py-3 px-4 text-center">
                   <button type="button" (click)="toggleActive(p)">
                     @if (p.is_active) {
-                      <span class="px-2.5 py-1 bg-[#16a34a]/10 text-[#16a34a] text-[10px] font-bold uppercase tracking-wider rounded-full">
-                        Active
-                      </span>
+                      <bedge-badge tone="success">Active</bedge-badge>
                     } @else {
-                      <span class="px-2.5 py-1 bg-gray-100 text-gray-400 text-[10px] font-bold uppercase tracking-wider rounded-full">
-                        Inactive
-                      </span>
+                      <bedge-badge tone="muted">Inactive</bedge-badge>
                     }
                   </button>
                 </td>
@@ -291,29 +277,26 @@
         </div>
 
         <div class="px-5 py-4 border-t border-gray-100 flex flex-col gap-2">
-          <button
-            type="button"
+          <bedge-button
+            [fullWidth]="true"
+            [loading]="saving()"
+            [disabled]="!isFormValid()"
             (click)="save()"
-            [disabled]="saving() || !isFormValid()"
-            class="w-full h-11 bg-ink hover:opacity-90 text-white font-bold text-[13px] uppercase tracking-wide rounded-lg transition-opacity flex items-center justify-center gap-2 disabled:opacity-40"
           >
             @if (saving()) {
-              <lucide-icon name="loader-2" [size]="15" [strokeWidth]="2" class="animate-spin" />
-              <span>Saving...</span>
+              Saving...
             } @else if (editingId()) {
-              <span>Save changes</span>
+              Save changes
             } @else {
-              <span>Add product</span>
+              Add product
             }
-          </button>
-          <button
-            type="button"
-            (click)="closeModal()"
+          </bedge-button>
+          <bedge-button
+            variant="ghost"
+            [fullWidth]="true"
             [disabled]="saving()"
-            class="w-full h-11 bg-white border border-gray-200 text-ink font-bold text-[13px] uppercase tracking-wide rounded-lg hover:bg-gray-50 disabled:opacity-40"
-          >
-            Cancel
-          </button>
+            (click)="closeModal()"
+          >Cancel</bedge-button>
         </div>
       </div>
     </div>

@@ -7,9 +7,16 @@ import {
 } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { LucideAngularModule } from 'lucide-angular';
 
-import { ProductDataService, CustomerAuthStore, extractApiErrorMessage } from '@bedge/shared';
+import {
+  ProductDataService,
+  CustomerAuthStore,
+  extractApiErrorMessage,
+  ButtonComponent,
+  BadgeComponent,
+  CardComponent,
+} from '@bedge/shared';
+import type { BadgeTone } from '@bedge/shared';
 import type { Order, OrderStatus } from '@bedge/shared';
 
 type FilterTab = 'active' | 'delivered' | 'cancelled';
@@ -30,7 +37,7 @@ const CANCELLABLE_STATUSES = new Set<OrderStatus>(['placed', 'confirmed']);
 @Component({
   selector: 'app-my-orders-page',
   standalone: true,
-  imports: [LucideAngularModule],
+  imports: [ButtonComponent, BadgeComponent, CardComponent],
   templateUrl: './my-orders.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -86,18 +93,26 @@ export class MyOrdersPage implements OnInit {
     return status.charAt(0).toUpperCase() + status.slice(1);
   }
 
-  statusClass(status: string): string {
+  /**
+   * Maps an order status to a badge tone. Only the MAPPING lives here -
+   * how a tone actually looks is owned by BadgeComponent, so "confirmed"
+   * can never render green on one screen and grey on another.
+   *
+   * Note the previous version hardcoded '#16a34a' rather than using the
+   * `success` token that already existed in tailwind.config.js.
+   */
+  statusTone(status: string): BadgeTone {
     switch (status) {
       case 'confirmed':
       case 'delivered':
-        return 'bg-[#16a34a]/10 text-[#16a34a]';
+        return 'success';
       case 'shipped':
-        return 'bg-ink/10 text-ink';
+        return 'ink';
       case 'cancelled':
       case 'returned':
-        return 'bg-gray-100 text-gray-400';
+        return 'muted';
       default:
-        return 'bg-gray-100 text-gray-600';
+        return 'neutral';
     }
   }
 

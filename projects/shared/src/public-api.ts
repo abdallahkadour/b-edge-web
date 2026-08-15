@@ -21,6 +21,10 @@ export * from './lib/core/customer-auth-error.interceptor';
 export * from './lib/core/customer-auth.guard';
 export * from './lib/core/product-data.service';
 export * from './lib/core/cart.store';
+export * from './lib/core/phone.util';
+
+// UI primitives
+export * from './lib/ui';
 export * from './lib/core/auth.guard';
 
 // ── Data services ─────────────────────────────────────────────────────────────

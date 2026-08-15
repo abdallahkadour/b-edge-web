@@ -46,6 +46,17 @@ export class PortfolioComponent implements OnInit {
   /** ID of the photo currently being deleted, or null. */
   readonly deletingId = signal<string | null>(null);
 
+  /**
+   * Which photo, if any, is currently asking "are you sure?".
+   *
+   * Deletion was previously a single tap that fired the HTTP call
+   * immediately - on a touch grid of small overlay buttons, one mis-tap
+   * permanently destroyed an artist's portfolio photo with no undo and no
+   * way to recover the original file. Destructive and irreversible needs a
+   * deliberate second action.
+   */
+  readonly confirmingDeleteId = signal<string | null>(null);
+
   /** ID of the photo currently being set as cover, or null. */
   readonly settingCoverId = signal<string | null>(null);
 
@@ -84,7 +95,20 @@ export class PortfolioComponent implements OnInit {
   }
 
   /** Delete a photo from the portfolio. */
+  /** First tap: arm the confirmation for this tile. */
+  askToDelete(photo: MediaItem): void {
+    this.error.set(null);
+    this.confirmingDeleteId.set(photo.id);
+  }
+
+  /** Backing out of a confirmation. */
+  cancelDelete(): void {
+    this.confirmingDeleteId.set(null);
+  }
+
+  /** Second tap: actually delete. */
   deletePhoto(photo: MediaItem): void {
+    this.confirmingDeleteId.set(null);
     this.deletingId.set(photo.id);
     this.mediaSvc.deletePhoto(photo.id).subscribe({
       next: () => {

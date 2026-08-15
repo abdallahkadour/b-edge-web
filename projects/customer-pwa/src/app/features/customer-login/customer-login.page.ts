@@ -9,13 +9,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 
-import { CustomerAuthStore, extractApiErrorMessage } from '@bedge/shared';
-
-/** Lebanese mobile numbers run 7-8 digits after the +961 prefix, digits only.
- *  Same validation as guest-details-screen - deliberately kept identical. */
-function isValidLocalPhone(digitsOnly: string): boolean {
-  return /^\d{7,8}$/.test(digitsOnly);
-}
+import { CustomerAuthStore, extractApiErrorMessage, isValidLocalPhone } from '@bedge/shared';
 
 /** How long the "Resend code" link stays disabled after a send. Purely a
  *  UI courtesy - the real 3-per-5-min limit is enforced server-side. */

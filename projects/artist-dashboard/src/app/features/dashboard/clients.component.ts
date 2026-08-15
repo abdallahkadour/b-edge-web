@@ -9,7 +9,17 @@ import {
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
+import {
+  Subject,
+  merge,
+  of,
+  debounceTime,
+  distinctUntilChanged,
+  switchMap,
+  tap,
+  catchError,
+  takeUntil,
+} from 'rxjs';
 
 import { ClientDataService } from '@bedge/shared';
 import type { ClientCard } from '@bedge/shared';
@@ -44,12 +54,54 @@ export class ClientsComponent implements OnInit, OnDestroy {
   // ── Lifecycle ─────────────────────────────────────────────────────────────
 
   ngOnInit(): void {
-    // Debounce search input — avoid hammering the API on every keystroke
-    this.search$
-      .pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy$))
-      .subscribe((q) => this.load(q));
-
-    this.load();
+    // One stream drives every load, initial and search alike.
+    //
+    // switchMap is load-bearing: the previous version called .subscribe()
+    // and kicked off a SEPARATE http subscription per keystroke, so
+    // nothing cancelled in-flight requests. Typing "a" then "ab" could
+    // render "ab" and then have the slower "a" response overwrite it -
+    // the user sees results that do not match what is in the box.
+    // switchMap cancels the outstanding request whenever a newer one
+    // starts, so only the latest query can ever paint.
+    //
+    // catchError sits INSIDE switchMap deliberately. If it were on the
+    // outer pipe, the first failed request would terminate the whole
+    // stream and search would stay dead until the screen was reloaded -
+    // a worse bug than the one being fixed. Catching per-request keeps
+    // the outer stream alive for the next keystroke.
+    merge(
+      // Immediate first load, not subject to the 300ms debounce.
+      of(''),
+      this.search$.pipe(debounceTime(300), distinctUntilChanged()),
+    )
+      .pipe(
+        tap(() => {
+          this.loading.set(true);
+          this.errorMessage.set(null);
+        }),
+        switchMap((q) =>
+          this.clientSvc.listClients(q || undefined).pipe(
+            catchError((err: HttpErrorResponse) => {
+              this.loading.set(false);
+              this.errorMessage.set(
+                err.status === 0
+                  ? 'Cannot reach the server. Check your connection.'
+                  : 'Failed to load clients. Please try again.',
+              );
+              return of(null);
+            }),
+          ),
+        ),
+        takeUntil(this.destroy$),
+      )
+      .subscribe((data) => {
+        // null means the request failed and catchError already set the
+        // error message - leave the previous list in place rather than
+        // blanking the screen.
+        if (data === null) return;
+        this.clients.set(data ?? []);
+        this.loading.set(false);
+      });
   }
 
   ngOnDestroy(): void {
@@ -104,23 +156,4 @@ export class ClientsComponent implements OnInit, OnDestroy {
 
   // ── Private ───────────────────────────────────────────────────────────────
 
-  private load(q?: string): void {
-    this.loading.set(true);
-    this.errorMessage.set(null);
-
-    this.clientSvc.listClients(q).subscribe({
-      next: (data) => {
-        this.clients.set(data ?? []);
-        this.loading.set(false);
-      },
-      error: (err: HttpErrorResponse) => {
-        this.loading.set(false);
-        this.errorMessage.set(
-          err.status === 0
-            ? 'Cannot reach the server. Check your connection.'
-            : 'Failed to load clients. Please try again.',
-        );
-      },
-    });
-  }
 }

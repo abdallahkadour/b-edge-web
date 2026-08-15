@@ -11,15 +11,11 @@ import {
 } from '@angular/core';
 import { LucideAngularModule } from 'lucide-angular';
 
+import { isValidLocalPhone } from '@bedge/shared';
 import type { Service } from '@bedge/shared';
 
 /** The store's timezone. See pick-datetime-screen for why this isn't the browser's. */
 const STORE_TIMEZONE = 'Asia/Beirut';
-
-/** Lebanese mobile numbers run 7-8 digits after the +961 prefix, digits only. */
-function isValidLocalPhone(digitsOnly: string): boolean {
-  return /^\d{7,8}$/.test(digitsOnly);
-}
 
 /**
  * Step 4 of the guest funnel — contact details and final submit.

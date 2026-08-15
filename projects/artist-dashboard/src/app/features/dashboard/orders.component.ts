@@ -9,8 +9,15 @@ import {
 import { HttpErrorResponse } from '@angular/common/http';
 import { LucideAngularModule } from 'lucide-angular';
 
-import { ProductDataService, extractApiErrorMessage } from '@bedge/shared';
-import type { EnrichedOrder, OrderStatus } from '@bedge/shared';
+import {
+  ProductDataService,
+  extractApiErrorMessage,
+  ButtonComponent,
+  BadgeComponent,
+  CardComponent,
+  InputDirective,
+} from '@bedge/shared';
+import type { EnrichedOrder, OrderStatus, BadgeTone } from '@bedge/shared';
 
 type FilterTab = 'placed' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
 
@@ -27,7 +34,7 @@ type FilterTab = 'placed' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
   selector: 'bedge-orders',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, ButtonComponent, BadgeComponent, CardComponent, InputDirective],
   templateUrl: './orders.component.html',
 })
 export class OrdersComponent implements OnInit {
@@ -87,18 +94,25 @@ export class OrdersComponent implements OnInit {
     return status.charAt(0).toUpperCase() + status.slice(1);
   }
 
-  statusClass(status: OrderStatus): string {
+  /**
+   * Maps an order status to a badge tone. This mapping is identical to the
+   * one in the customer-facing my-orders screen by design - the same order
+   * must not read as "Confirmed" in green to the artist and grey to the
+   * customer. Only the mapping lives here; BadgeComponent owns how a tone
+   * renders, so the two screens cannot drift apart again.
+   */
+  statusTone(status: OrderStatus): BadgeTone {
     switch (status) {
       case 'confirmed':
       case 'delivered':
-        return 'bg-[#16a34a]/10 text-[#16a34a]';
+        return 'success';
       case 'shipped':
-        return 'bg-ink/10 text-ink';
+        return 'ink';
       case 'cancelled':
       case 'returned':
-        return 'bg-gray-100 text-gray-400';
+        return 'muted';
       default:
-        return 'bg-gray-100 text-gray-600';
+        return 'neutral';
     }
   }
 

@@ -15,13 +15,8 @@ import {
   ArtistDataService,
   CartStore,
   extractApiErrorMessage,
+  isValidLocalPhone,
 } from '@bedge/shared';
-
-/** Lebanese mobile numbers run 7-8 digits after the +961 prefix. Same rule
- *  as guest-details-screen and customer-login, deliberately identical. */
-function isValidLocalPhone(digitsOnly: string): boolean {
-  return /^\d{7,8}$/.test(digitsOnly);
-}
 
 /**
  * Cart and checkout.
