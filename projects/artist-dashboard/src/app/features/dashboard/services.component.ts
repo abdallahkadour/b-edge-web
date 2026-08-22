@@ -5,10 +5,15 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 
-import { ArtistDataService } from '@bedge/shared';
+import {
+  ArtistDataService,
+  BadgeComponent,
+  ButtonComponent,
+  InputDirective,
+  extractApiErrorMessage,
+} from '@bedge/shared';
 import type { Service, CreateServiceRequest, UpdateServiceRequest } from '@bedge/shared';
 
 /** Shape of the add/edit form. */
@@ -32,7 +37,7 @@ const emptyForm = (): ServiceForm => ({
   selector: 'bedge-services',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule],
+  imports: [ButtonComponent, BadgeComponent, InputDirective],
   templateUrl: './services.component.html',
 })
 export class ServicesComponent implements OnInit {
@@ -104,7 +109,9 @@ export class ServicesComponent implements OnInit {
       },
       error: (err: HttpErrorResponse) => {
         this.creating.set(false);
-        this.addError.set('Failed to create service. Check the values and try again.');
+        this.addError.set(
+          extractApiErrorMessage(err, 'Failed to create service. Check the values and try again.'),
+        );
       },
     });
   }
@@ -146,9 +153,12 @@ export class ServicesComponent implements OnInit {
         this.updating.set(false);
         this.editingId.set(null);
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.updating.set(false);
-        this.updateErrors.update((e) => ({ ...e, [svc.id]: 'Failed to save. Try again.' }));
+        this.updateErrors.update((e) => ({
+          ...e,
+          [svc.id]: extractApiErrorMessage(err, 'Failed to save. Try again.'),
+        }));
       },
     });
   }
@@ -164,9 +174,12 @@ export class ServicesComponent implements OnInit {
         );
         this.deletingId.set(null);
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.deletingId.set(null);
-        this.updateErrors.update((e) => ({ ...e, [svc.id]: 'Failed to deactivate.' }));
+        this.updateErrors.update((e) => ({
+          ...e,
+          [svc.id]: extractApiErrorMessage(err, 'Failed to deactivate.'),
+        }));
       },
     });
   }

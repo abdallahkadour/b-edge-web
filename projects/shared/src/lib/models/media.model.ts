@@ -30,3 +30,15 @@ export interface AddMediaRequest {
 export interface ReorderRequest {
   ids: string[];
 }
+
+/**
+ * A product's ADDITIONAL photo gallery (Go media.ProductGalleryResponse).
+ * The product's own `image_url` is untouched and always the primary/first
+ * photo shown everywhere - these are extra angles/views on top of it.
+ */
+export interface ProductGalleryResponse {
+  readonly product_id: string;
+  readonly photos: MediaItem[];
+  readonly total_count: number;
+  readonly max_allowed: number;
+}

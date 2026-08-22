@@ -7,7 +7,6 @@ import {
   signal,
 } from '@angular/core';
 import { Router } from '@angular/router';
-import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
   Subject,
@@ -21,7 +20,7 @@ import {
   takeUntil,
 } from 'rxjs';
 
-import { ClientDataService } from '@bedge/shared';
+import { ClientDataService, InputDirective } from '@bedge/shared';
 import type { ClientCard } from '@bedge/shared';
 
 /**
@@ -35,7 +34,7 @@ import type { ClientCard } from '@bedge/shared';
   selector: 'bedge-clients',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule],
+  imports: [InputDirective],
   templateUrl: './clients.component.html',
 })
 export class ClientsComponent implements OnInit, OnDestroy {

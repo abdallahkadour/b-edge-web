@@ -19,6 +19,28 @@
     </p>
   }
 
+  <!-- Oversized file - offer a resize instead of a flat rejection -->
+  @if (pendingOversizedFile(); as file) {
+    <div class="rounded-lg bg-warning-light border border-warning px-4 py-3 mb-3">
+      <p class="text-[13px] text-warning-dark leading-relaxed">
+        This photo is {{ pendingOversizedSizeMB().toFixed(1) }}MB, over the 15MB limit.
+        We can resize it to fit and upload it for you.
+      </p>
+      <div class="flex gap-2 mt-3">
+        <button
+          type="button"
+          (click)="confirmResize()"
+          class="text-xs font-semibold text-white bg-ink rounded-lg px-3 py-1.5 hover:opacity-90 transition-opacity"
+        >Resize &amp; upload</button>
+        <button
+          type="button"
+          (click)="dismissOversized()"
+          class="text-xs font-semibold text-gray-600 rounded-lg px-3 py-1.5 hover:bg-gray-100 transition-colors"
+        >Never mind</button>
+      </div>
+    </div>
+  }
+
   <!-- Loading -->
   @if (loading()) {
     <div class="flex items-center gap-2 text-sm text-gray-400 mb-3">
@@ -44,19 +66,19 @@
                  it is unambiguous WHICH photo is about to go. -->
             @if (confirmingDeleteId() === photo.id) {
               <div class="absolute inset-0 z-10 bg-ink/85 flex flex-col items-center justify-center gap-2 px-2">
-                <p class="text-white text-[11px] font-semibold text-center leading-tight">
+                <p class="text-white text-xs font-semibold text-center leading-tight">
                   Delete this photo?
                 </p>
                 <div class="flex gap-1.5">
                   <button
                     type="button"
                     (click)="deletePhoto(photo)"
-                    class="px-2.5 py-1 rounded bg-white text-danger-dark text-[11px] font-bold hover:bg-gray-100"
+                    class="px-2.5 py-1 rounded bg-white text-danger-dark text-xs font-bold hover:bg-gray-100"
                   >Delete</button>
                   <button
                     type="button"
                     (click)="cancelDelete()"
-                    class="px-2.5 py-1 rounded border border-white/40 text-white text-[11px] font-medium hover:bg-white/10"
+                    class="px-2.5 py-1 rounded border border-white/40 text-white text-xs font-medium hover:bg-white/10"
                   >Keep</button>
                 </div>
               </div>
@@ -64,7 +86,7 @@
 
             <!-- Cover badge -->
             @if (isCover(photo)) {
-              <span class="absolute top-1.5 left-1.5 bg-ink text-white text-[10px] font-medium px-2 py-0.5 rounded-full">
+              <span class="absolute top-1.5 left-1.5 bg-ink text-white text-xs font-medium px-2 py-0.5 rounded-full">
                 Cover
               </span>
             }

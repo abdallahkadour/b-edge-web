@@ -21,11 +21,9 @@
           <lucide-icon name="shopping-bag" [size]="22" [strokeWidth]="2" />
         </div>
         <p class="text-sm font-medium text-ink">Your cart is empty</p>
-        <button
-          type="button"
-          (click)="goBack()"
-          class="mt-4 px-4 py-2 border border-ink rounded-lg text-[13px] font-semibold text-ink"
-        >Browse the shop</button>
+        <bedge-button variant="secondary" size="sm" class="mt-4" (click)="goBack()">
+          Browse the shop
+        </bedge-button>
       </div>
     } @else {
 
@@ -59,7 +57,8 @@
               <button
                 type="button"
                 (click)="cart.add(line.product)"
-                class="w-6 h-6 rounded flex items-center justify-center text-ink hover:bg-gray-200"
+                [disabled]="line.product.stock_quantity !== undefined && line.quantity >= line.product.stock_quantity"
+                class="w-6 h-6 rounded flex items-center justify-center text-ink hover:bg-gray-200 disabled:opacity-30 disabled:pointer-events-none"
                 aria-label="Add one"
               >
                 <lucide-icon name="plus" [size]="14" [strokeWidth]="2.5" />
@@ -87,11 +86,12 @@
           <label class="block text-xs font-medium text-ink mb-1">Full name</label>
           <input
             type="text"
+            bedgeInput
+            [invalid]="touched() && !isNameValid()"
             [value]="name()"
             (input)="name.set($any($event.target).value)"
             placeholder="Your name"
-            class="w-full h-11 px-3.5 border rounded-lg text-[15px] outline-none focus:border-ink"
-            [class]="touched() && !isNameValid() ? 'border-red-400' : 'border-gray-200'"
+            class="h-11"
           />
         </div>
 
@@ -117,13 +117,38 @@
         </div>
 
         <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs font-medium text-ink">Delivery location</label>
+            @if (deliveryLocation(); as loc) {
+              <button type="button" (click)="changeLocation()" class="text-xs font-semibold text-ink underline">
+                Change
+              </button>
+            }
+          </div>
+          <p class="text-xs text-gray-500 mb-2">
+            Drop a pin instead of typing an address - it's what the courier will actually navigate to.
+          </p>
+
+          @if (deliveryLocation(); as loc) {
+            <bedge-location-map mode="view" [lat]="loc.lat" [lng]="loc.lng" height="180px" />
+          } @else {
+            <bedge-location-map mode="pick" (locationConfirmed)="onLocationConfirmed($event)" />
+          }
+
+          @if (touched() && !deliveryLocation()) {
+            <p class="mt-1.5 text-xs text-danger leading-4">Please set your delivery location.</p>
+          }
+        </div>
+
+        <div>
           <label class="block text-xs font-medium text-ink mb-1">Delivery notes (optional)</label>
           <textarea
+            bedgeInput
             rows="3"
             [value]="deliveryNotes()"
             (input)="deliveryNotes.set($any($event.target).value)"
             placeholder="Address, landmark, or any delivery instructions"
-            class="w-full p-3 border border-gray-200 rounded-lg text-sm outline-none focus:border-ink resize-none"
+            class="p-3 resize-none"
           ></textarea>
         </div>
       </div>
@@ -151,19 +176,14 @@
       <div class="flex justify-end mb-1.5">
         <span class="text-[11px] text-gray-500">Total ${{ cart.estimatedTotal() }}</span>
       </div>
-      <button
-        type="button"
+      <bedge-button
+        size="lg"
+        [fullWidth]="true"
+        [loading]="placing()"
         (click)="placeOrder()"
-        [disabled]="placing()"
-        class="w-full h-[52px] bg-ink hover:opacity-90 text-white font-bold text-sm uppercase tracking-wide rounded-lg transition-opacity flex items-center justify-center gap-2 disabled:opacity-40"
       >
-        @if (placing()) {
-          <lucide-icon name="loader-2" [size]="16" [strokeWidth]="2" class="animate-spin" />
-          <span>Placing order</span>
-        } @else {
-          <span>Place order</span>
-        }
-      </button>
+        {{ placing() ? 'Placing order' : 'Place order' }}
+      </bedge-button>
     </div>
   }
 

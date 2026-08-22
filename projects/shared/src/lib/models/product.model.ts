@@ -38,6 +38,20 @@ export interface Product {
   readonly price: string;
   readonly image_url?: string;
   readonly is_active: boolean;
+  /**
+   * Remaining units. Absent/undefined means stock isn't tracked for this
+   * product at all - unlimited availability, never "sold out". A PRESENT
+   * 0 means genuinely sold out - these are two different states, not the
+   * same thing with a different label. Use `isSoldOut()` rather than
+   * checking `=== 0` directly everywhere this matters.
+   */
+  readonly stock_quantity?: number;
+}
+
+/** True when a product's stock is tracked AND fully depleted. A product
+ *  with no stock_quantity at all (unlimited/not tracked) is never sold out. */
+export function isSoldOut(product: Pick<Product, 'stock_quantity'>): boolean {
+  return product.stock_quantity !== undefined && product.stock_quantity <= 0;
 }
 
 /** POST /artists/products */
@@ -47,12 +61,16 @@ export interface CreateProductRequest {
   category?: ProductCategory;
   price: string;
   image_url?: string;
+  /** Omit for unlimited/untracked availability. */
+  stock_quantity?: number;
 }
 
 /**
  * PATCH /artists/products/:id - partial update. Only the fields present are
  * changed (COALESCE at the repository layer), so omitting a field leaves it
- * alone rather than nulling it.
+ * alone rather than nulling it. There is no way to clear stock_quantity
+ * back to "unlimited" through this endpoint - same limitation as every
+ * other field here.
  */
 export interface UpdateProductRequest {
   name?: string;
@@ -61,6 +79,7 @@ export interface UpdateProductRequest {
   price?: string;
   image_url?: string;
   is_active?: boolean;
+  stock_quantity?: number;
 }
 
 /** One line on an order. Names and prices are SNAPSHOTS taken at order time
@@ -82,6 +101,10 @@ export interface Order {
   readonly total_amount: string;
   readonly payment_reference?: string;
   readonly delivery_notes?: string;
+  /** Pin-dropped delivery location. Absent on orders placed before this
+   *  existed - never assume both are present together with delivery_notes. */
+  readonly delivery_lat?: number;
+  readonly delivery_lng?: number;
   readonly cancellation_reason?: string;
   readonly items: OrderItem[];
   readonly confirmed_at?: string;
@@ -102,11 +125,18 @@ export interface EnrichedOrder extends Order {
   readonly customer_phone?: string;
 }
 
-/** POST /orders - public, guest-friendly. */
+/**
+ * POST /orders - public, guest-friendly. delivery_lat/delivery_lng are
+ * required, not optional - a courier needs somewhere real to go, and a
+ * typed address doesn't reliably resolve to one in Lebanon. Captured via
+ * LocationMapComponent's pin drop, never typed.
+ */
 export interface PlaceOrderRequest {
   salon_id: string;
   name: string;
   phone: string;
+  delivery_lat: number;
+  delivery_lng: number;
   delivery_notes?: string;
   items: { product_id: string; quantity: number }[];
 }

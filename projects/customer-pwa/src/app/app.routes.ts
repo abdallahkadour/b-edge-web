@@ -50,6 +50,11 @@ export const routes: Routes = [
       import('./features/shop/shop.page').then((m) => m.ShopPage),
   },
   {
+    path: 'shop/:artistId/products/:productId',
+    loadComponent: () =>
+      import('./features/shop/product-detail.page').then((m) => m.ProductDetailPage),
+  },
+  {
     path: 'shop/:artistId/cart',
     loadComponent: () =>
       import('./features/shop/cart.page').then((m) => m.CartPage),

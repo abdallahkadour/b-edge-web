@@ -26,9 +26,23 @@ export class ReviewDataService {
     return this.api.post<Review>('/reviews', req);
   }
 
-  /** GET /reviews/artist/:id - visible reviews for an artist. Authed. */
+  /** GET /reviews/artist/:id - ALL of an artist's reviews, hidden included -
+   *  this is the artist's own moderation view. Authed. (Distinct from
+   *  getPublicReviewsByArtist below, which filters to visible-only and
+   *  needs no login.) */
   getReviewsByArtist(artistId: string): Observable<Review[]> {
     return this.api.getArray<Review>(`/reviews/artist/${artistId}`);
+  }
+
+  /** PATCH /reviews/:id/hide - artist removes a review from their public
+   *  profile without deleting it (reversible via showReview below). */
+  hideReview(reviewId: string): Observable<void> {
+    return this.api.command(`/reviews/${reviewId}/hide`, 'PATCH');
+  }
+
+  /** PATCH /reviews/:id/show - restores a previously hidden review. */
+  showReview(reviewId: string): Observable<void> {
+    return this.api.command(`/reviews/${reviewId}/show`, 'PATCH');
   }
 
   /**

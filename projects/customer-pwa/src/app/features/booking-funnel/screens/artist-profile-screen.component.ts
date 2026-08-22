@@ -36,6 +36,17 @@ export class ArtistProfileScreenComponent {
   /** Emits when the rating badge is tapped - same pattern as openShop. */
   readonly openReviews = output<void>();
 
+  /**
+   * Emits when the back/home button is tapped. This screen is the primary
+   * entry point for a shared link (Instagram bio, WhatsApp) - most
+   * visitors land here directly, with no Discover page anywhere in their
+   * browser history for the back button to return to. Without an in-app
+   * way home, a customer who wants to browse other artists has no path
+   * but manually editing the URL. The container owns navigation, same
+   * pattern as openShop/openReviews.
+   */
+  readonly goHome = output<void>();
+
   protected hasDeposit(service: Service): boolean {
     return Number(service.deposit_amount) > 0;
   }

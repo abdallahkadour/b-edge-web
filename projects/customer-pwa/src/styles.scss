@@ -2,6 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
+// Neutral desktop backdrop behind the centered phone-width frame (see
+// app.html). Invisible on a phone-width viewport - the frame is full-width
+// there, so there's no backdrop to see.
+@media (min-width: 768px) {
+  body {
+    background-color: #f3f4f6; // tailwind gray-100
+  }
+}
+
+// MapLibre GL JS's own stylesheet - controls (attribution, nav buttons,
+// markers) are positioned with `position: absolute` rules defined here.
+// This has to be a real global stylesheet import, not the side-effect
+// `import 'maplibre-gl/dist/maplibre-gl.css'` inside
+// LocationMapComponent (@bedge/shared) that used to be the only place it
+// was referenced - ng-packagr doesn't carry a library component's raw CSS
+// side-effect imports into a consuming app's build the way an app-level
+// import does, so that CSS was silently never shipping at all. Caught as
+// a real bug: the attribution control (required for OpenFreeMap's free
+// usage terms) was falling back to `position: static`, landing below the
+// map as a normal block element and getting clipped by its
+// overflow-hidden container instead of overlaying the map's corner.
+@import 'maplibre-gl/dist/maplibre-gl.css';
+
 /**
  * Chrome/Safari paint a hardcoded pale-blue background on autofilled inputs
  * and ignore background-color, which overrides the design system on the one

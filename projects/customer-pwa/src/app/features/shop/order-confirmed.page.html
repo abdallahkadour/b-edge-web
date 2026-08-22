@@ -99,11 +99,9 @@
   </div>
 
   <div class="px-5 pb-8 flex flex-col gap-2">
-    <button
-      type="button"
-      (click)="viewMyOrders()"
-      class="w-full h-[52px] bg-white border border-ink text-ink font-bold text-sm uppercase tracking-wide rounded-lg hover:bg-gray-50"
-    >View my orders</button>
+    <bedge-button variant="secondary" size="lg" [fullWidth]="true" (click)="viewMyOrders()">
+      View my orders
+    </bedge-button>
     <button
       type="button"
       (click)="backToShop()"

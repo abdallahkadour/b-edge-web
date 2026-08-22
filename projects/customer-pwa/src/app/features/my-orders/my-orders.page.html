@@ -70,7 +70,12 @@
       <div class="space-y-3">
         @for (o of filteredOrders(); track o.id) {
           <bedge-card>
-            <div class="flex justify-between items-start">
+            <button
+              type="button"
+              (click)="toggleExpand(o.id)"
+              class="w-full text-left flex justify-between items-start"
+              [attr.aria-expanded]="expandedId() === o.id"
+            >
               <div class="min-w-0">
                 <h3 class="text-sm font-bold text-ink">Order #{{ shortRef(o.id) }}</h3>
                 <p class="text-xs text-gray-400 mt-0.5 truncate">{{ itemSummary(o) }}</p>
@@ -78,12 +83,98 @@
               <bedge-badge [tone]="statusTone(o.status)" class="shrink-0">
                 {{ statusLabel(o.status) }}
               </bedge-badge>
-            </div>
+            </button>
 
-            <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
+            <button
+              type="button"
+              (click)="toggleExpand(o.id)"
+              class="w-full flex items-center justify-between mt-3 pt-3 border-t border-gray-50"
+            >
               <span class="text-xs text-gray-500">{{ formatDate(o.created_at) }}</span>
-              <span class="text-sm font-bold text-ink">${{ o.total_amount }}</span>
-            </div>
+              <span class="flex items-center gap-1.5">
+                <span class="text-sm font-bold text-ink">${{ o.total_amount }}</span>
+                <lucide-icon
+                  name="chevron-right"
+                  [size]="14"
+                  [strokeWidth]="2"
+                  class="text-gray-400"
+                  [class]="expandedId() === o.id ? 'rotate-90 transition-transform' : 'transition-transform'"
+                />
+              </span>
+            </button>
+
+            @if (expandedId() === o.id) {
+              <div class="mt-3 pt-3 border-t border-gray-100">
+
+                <!-- Line items -->
+                <div class="divide-y divide-gray-50">
+                  @for (item of o.items; track item.product_id) {
+                    <div class="py-2 flex items-center justify-between text-[13px]">
+                      <span class="text-ink">
+                        {{ item.product_name }}
+                        <span class="text-gray-400">×{{ item.quantity }}</span>
+                      </span>
+                      <span class="font-semibold text-ink">${{ item.subtotal }}</span>
+                    </div>
+                  }
+                </div>
+
+                @if (o.delivery_notes) {
+                  <p class="text-xs text-gray-500 mt-2">
+                    <span class="font-semibold text-ink">Delivery note:</span> {{ o.delivery_notes }}
+                  </p>
+                }
+
+                <!-- Status timeline -->
+                @if (isTerminalNonDelivery(o.status)) {
+                  <div class="mt-3 rounded-lg bg-gray-50 px-3 py-2.5">
+                    <p class="text-xs font-semibold text-ink">
+                      {{ o.status === 'cancelled' ? 'Order cancelled' : 'Order returned' }}
+                    </p>
+                    @if (o.cancellation_reason) {
+                      <p class="text-xs text-gray-500 mt-0.5">{{ o.cancellation_reason }}</p>
+                    }
+                    @if (o.cancelled_at) {
+                      <p class="text-[11px] text-gray-400 mt-1">{{ formatDate(o.cancelled_at) }}</p>
+                    }
+                  </div>
+                } @else {
+                  <div class="mt-4">
+                    <div class="flex items-center justify-between">
+                      @for (step of steps; track step; let i = $index; let last = $last) {
+                        <div class="flex items-center" [class.flex-1]="!last">
+                          <span
+                            [class]="i <= stepIndex(o)
+                              ? 'w-2.5 h-2.5 rounded-full bg-ink shrink-0'
+                              : 'w-2.5 h-2.5 rounded-full border-2 border-gray-200 bg-white shrink-0'"
+                          ></span>
+                          @if (!last) {
+                            <span
+                              class="flex-1 h-px mx-1"
+                              [class]="i < stepIndex(o) ? 'bg-ink' : 'bg-gray-200'"
+                            ></span>
+                          }
+                        </div>
+                      }
+                    </div>
+                    <div class="flex items-start justify-between mt-2">
+                      @for (step of steps; track step; let i = $index) {
+                        <div class="flex flex-col" [class.items-end]="i === steps.length - 1">
+                          <span
+                            [class]="i <= stepIndex(o)
+                              ? 'text-[10px] uppercase tracking-wider font-bold text-ink'
+                              : 'text-[10px] uppercase tracking-wider text-gray-400'"
+                          >{{ step }}</span>
+                          @if (stepDate(o, step); as d) {
+                            <span class="text-[10px] text-gray-400 mt-0.5">{{ formatDate(d) }}</span>
+                          }
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
 
             @if (canCancel(o)) {
               @if (confirmingId() !== o.id) {

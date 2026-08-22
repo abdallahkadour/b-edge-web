@@ -9,7 +9,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 
-import { ClientDataService } from '@bedge/shared';
+import { ClientDataService, BadgeComponent, bookingStatusTone } from '@bedge/shared';
 import type { ClientProfile } from '@bedge/shared';
 
 /**
@@ -20,10 +20,14 @@ import type { ClientProfile } from '@bedge/shared';
   selector: 'bedge-client-detail',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule],
+  imports: [FormsModule, BadgeComponent],
   templateUrl: './client-detail.component.html',
 })
 export class ClientDetailComponent implements OnInit {
+  /** Shared across bookings, client-detail and waitlist so the same
+   *  status can never render differently on different screens. */
+  protected readonly statusTone = bookingStatusTone;
+
   private readonly clientSvc = inject(ClientDataService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -125,16 +129,6 @@ export class ClientDetailComponent implements OnInit {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
 
-  statusClass(status: string): string {
-    switch (status) {
-      case 'completed':  return 'bg-gray-100 text-gray-600';
-      case 'confirmed':  return 'bg-green-100 text-green-700';
-      case 'cancelled':  return 'bg-red-100 text-red-700';
-      case 'no_show':    return 'bg-red-100 text-red-700';
-      case 'pending':    return 'bg-amber-100 text-amber-700';
-      default:           return 'bg-gray-100 text-gray-500';
-    }
-  }
 
   statusLabel(status: string): string {
     const labels: Record<string, string> = {

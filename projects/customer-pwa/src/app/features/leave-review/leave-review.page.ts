@@ -7,9 +7,10 @@ import {
   signal,
 } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 
-import { ReviewDataService } from '@bedge/shared';
+import { InputDirective, ReviewDataService } from '@bedge/shared';
 import type { ReviewBookingContext } from '@bedge/shared';
 
 /**
@@ -28,12 +29,13 @@ import type { ReviewBookingContext } from '@bedge/shared';
 @Component({
   selector: 'app-leave-review-page',
   standalone: true,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, InputDirective],
   templateUrl: './leave-review.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LeaveReviewPage implements OnInit {
   private readonly reviewSvc: ReviewDataService = inject(ReviewDataService);
+  private readonly router = inject(Router);
 
   readonly token = input.required<string>();
 
@@ -41,7 +43,12 @@ export class LeaveReviewPage implements OnInit {
   readonly loadError = signal<string | null>(null);
   readonly context = signal<ReviewBookingContext | null>(null);
 
-  readonly rating = signal(5);
+  /** Starts unrated - established rating widgets (App Store, Uber, Yelp)
+   *  never pre-select a score. Defaulting to 5 meant a customer who
+   *  glanced at this screen and tapped Submit without reading it submitted
+   *  a 5-star review they never actually chose, since nothing gated
+   *  submit on the rating being touched. */
+  readonly rating = signal(0);
   readonly comment = signal('');
   readonly submitting = signal(false);
   readonly submitError = signal<string | null>(null);
@@ -54,6 +61,13 @@ export class LeaveReviewPage implements OnInit {
       next: (ctx) => {
         this.context.set(ctx);
         this.loading.set(false);
+        // The link isn't single-use, so reopening/reloading it after a
+        // successful review used to re-show a blank, editable form with
+        // no sign anything had happened. Skip straight to the success
+        // state instead of waiting for a second submit to 409.
+        if (ctx.already_reviewed) {
+          this.submitted.set(true);
+        }
       },
       error: (err: HttpErrorResponse) => {
         this.loading.set(false);
@@ -75,7 +89,7 @@ export class LeaveReviewPage implements OnInit {
   }
 
   submit(): void {
-    if (this.submitting()) return;
+    if (this.submitting() || this.rating() === 0) return;
     this.submitting.set(true);
     this.submitError.set(null);
 
@@ -98,6 +112,19 @@ export class LeaveReviewPage implements OnInit {
           );
         },
       });
+  }
+
+  /**
+   * This page is only ever reached via a direct review link (WhatsApp/SMS,
+   * sent after a completed booking) - there is no prior in-app screen and
+   * no artist ID in ReviewBookingContext (only a display name) to link
+   * back to. Discover is the only honest "what's next" destination once a
+   * review is submitted, same fix as the artist-profile screen's back
+   * button, for the same underlying reason: a cold-start entry point with
+   * no way to keep browsing the platform.
+   */
+  protected goToDiscover(): void {
+    this.router.navigateByUrl('/');
   }
 
   protected ratingLabel(stars: number): string {

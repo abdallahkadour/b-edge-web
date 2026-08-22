@@ -36,12 +36,18 @@ import {
   ShoppingBag,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
+  ChevronDown,
+  MapPin,
+  MoreHorizontal,
+  Search,
 } from 'lucide-angular';
 
 import {
   API_CONFIG,
   authInterceptor,
   authErrorInterceptor,
+  rateLimitInterceptor,
   AuthStore,
 } from '@bedge/shared';
 
@@ -56,7 +62,7 @@ export const appConfig: ApplicationConfig = {
     // HttpClient with the auth interceptors.
     // Order matters: authInterceptor attaches the JWT on the way out,
     // authErrorInterceptor catches 401s on the way back in.
-    provideHttpClient(withInterceptors([authInterceptor, authErrorInterceptor])),
+    provideHttpClient(withInterceptors([authInterceptor, authErrorInterceptor, rateLimitInterceptor])),
 
     // Provide the API base URL to the shared library
     {
@@ -97,6 +103,11 @@ export const appConfig: ApplicationConfig = {
         ShoppingBag,
         ChevronLeft,
         ChevronRight,
+        ChevronUp,
+        ChevronDown,
+        MapPin,
+        MoreHorizontal,
+        Search,
       }),
     ),
 

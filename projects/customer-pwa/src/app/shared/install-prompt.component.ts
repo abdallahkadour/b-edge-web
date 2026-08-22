@@ -12,20 +12,33 @@ interface BeforeInstallPromptEvent extends Event {
 
 const DISMISSED_KEY = 'bedge_install_dismissed';
 
+type InstallMode =
+  | 'none'      // nothing to show: already installed, dismissed, or unsupported
+  | 'chromium'  // beforeinstallprompt available - a real, programmatic Install button
+  | 'ios';      // Safari on iOS - manual Share -> Add to Home Screen instructions
+
 /**
  * A dismissible "Add to home screen" banner, mounted once in the app root
  * so it persists across every route.
  *
- * Chrome and Edge fire `beforeinstallprompt` when a page qualifies as an
- * installable PWA (manifest + HTTPS, or localhost for dev) and the browser
- * would otherwise show its own small mini-infobar. Calling
- * `event.preventDefault()` suppresses that default UI so this banner can
- * offer the same action on B-Edge's own terms instead - offered once,
- * dismissible, and not shown again this browser once dismissed.
+ * Two genuinely different install paths, not one path with a missing
+ * fallback:
  *
- * Safari never fires this event at all - iOS installation is a manual
- * "Share > Add to Home Screen" action with no programmatic trigger, so
- * this component simply never shows there. That's expected, not a bug.
+ * Chrome and Edge fire `beforeinstallprompt` when a page qualifies as an
+ * installable PWA. Calling `event.preventDefault()` suppresses the
+ * browser's own mini-infobar so this banner can offer the same action on
+ * B-Edge's own terms - a real button that triggers the native install
+ * flow.
+ *
+ * Safari on iOS never fires that event, full stop - there is no
+ * programmatic install API on iOS at all. The only way to add a page to
+ * the home screen there is a manual "tap Share, then Add to Home Screen"
+ * action, which is a UI convention Apple owns, not something a page can
+ * trigger. The previous version of this component correctly documented
+ * that Safari never fires the event, then stopped there - which meant
+ * iOS users, roughly half of B-Edge's likely customer base, saw nothing
+ * at all rather than instructions for the path that actually works for
+ * them.
  */
 @Component({
   selector: 'app-install-prompt',
@@ -35,23 +48,26 @@ const DISMISSED_KEY = 'bedge_install_dismissed';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InstallPromptComponent {
-  readonly visible = signal(false);
+  readonly mode = signal<InstallMode>('none');
   private deferredEvent: BeforeInstallPromptEvent | null = null;
 
   constructor() {
     if (localStorage.getItem(DISMISSED_KEY) === '1') return;
+    if (this.isRunningStandalone()) return;
+
+    if (this.isIOS()) {
+      // No event to wait for - iOS never fires beforeinstallprompt, so
+      // show the manual instructions immediately rather than waiting
+      // forever for something that will never happen.
+      this.mode.set('ios');
+      return;
+    }
 
     window.addEventListener('beforeinstallprompt', (event: Event) => {
       event.preventDefault();
       this.deferredEvent = event as BeforeInstallPromptEvent;
-      this.visible.set(true);
+      this.mode.set('chromium');
     });
-
-    // If the app is already running as an installed PWA, there is nothing
-    // to prompt for - standalone display mode means it was already added.
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      this.visible.set(false);
-    }
   }
 
   async install(): Promise<void> {
@@ -62,11 +78,30 @@ export class InstallPromptComponent {
     // leaving a banner that can no longer do anything.
     await this.deferredEvent.userChoice;
     this.deferredEvent = null;
-    this.visible.set(false);
+    this.mode.set('none');
   }
 
   dismiss(): void {
     localStorage.setItem(DISMISSED_KEY, '1');
-    this.visible.set(false);
+    this.mode.set('none');
+  }
+
+  /** iPadOS 13+ reports itself as "Macintosh" with touch support, so
+   *  checking the UA string alone misses iPads. maxTouchPoints catches
+   *  that case without needing a UA parsing library for one signal. */
+  private isIOS(): boolean {
+    const ua = navigator.userAgent;
+    const isAppleTouchDevice = /iPad|iPhone|iPod/.test(ua);
+    const isDesktopSafariReportingAsIpad =
+      ua.includes('Macintosh') && navigator.maxTouchPoints > 1;
+    return isAppleTouchDevice || isDesktopSafariReportingAsIpad;
+  }
+
+  /** Two different signals because iOS Safari historically only reliably
+   *  supports the non-standard `navigator.standalone`, while
+   *  `display-mode: standalone` is the standard the rest of the web uses. */
+  private isRunningStandalone(): boolean {
+    const nav = navigator as Navigator & { standalone?: boolean };
+    return nav.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
   }
 }

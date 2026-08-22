@@ -22,6 +22,11 @@
       <p class="text-xs text-gray-400 mt-2 max-w-[240px]">
         If you think this is a mistake, reach out to the artist directly.
       </p>
+      <button
+        type="button"
+        (click)="goToDiscover()"
+        class="mt-6 h-11 px-6 bg-ink hover:opacity-90 text-white text-sm font-semibold rounded-lg transition-opacity"
+      >Browse other artists</button>
     </div>
   }
 
@@ -37,6 +42,11 @@
           Thank you! Your feedback helps other clients find {{ ctx.artist_name }}.
         </p>
       }
+      <button
+        type="button"
+        (click)="goToDiscover()"
+        class="mt-6 h-11 px-6 bg-ink hover:opacity-90 text-white text-sm font-semibold rounded-lg transition-opacity"
+      >Browse other artists</button>
     </div>
   }
 
@@ -60,6 +70,8 @@
             <button
               type="button"
               (click)="selectRating(star)"
+              [attr.aria-label]="'Rate ' + star + ' star' + (star > 1 ? 's' : '')"
+              [attr.aria-pressed]="rating() === star"
               class="p-1 active:scale-125 transition-transform"
             >
               <lucide-icon
@@ -80,11 +92,12 @@
         <label class="block text-xs font-bold text-ink uppercase tracking-wider">Write a comment</label>
         <div class="relative">
           <textarea
+            bedgeInput
             [value]="comment()"
             (input)="onCommentInput($any($event.target).value)"
             placeholder="Share details about your experience…"
             rows="4"
-            class="w-full p-3.5 border border-gray-200 text-ink bg-white placeholder:text-gray-300 text-sm focus:outline-none focus:border-ink transition-all resize-none rounded-lg"
+            class="p-3.5 text-sm resize-none"
           ></textarea>
           <div class="absolute bottom-2.5 right-3 text-[10px] text-gray-400 font-mono">
             {{ comment().length }}/250
@@ -105,7 +118,7 @@
       <button
         type="button"
         (click)="submit()"
-        [disabled]="submitting()"
+        [disabled]="submitting() || rating() === 0"
         class="w-full h-full bg-ink hover:opacity-90 text-white font-bold text-sm tracking-wide uppercase transition-opacity flex items-center justify-center gap-2 disabled:opacity-60"
       >
         @if (submitting()) {

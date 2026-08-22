@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+// MapLibre GL JS's own stylesheet - see the matching comment in
+// customer-pwa's styles.scss for why this has to live here rather than
+// as a side-effect import inside LocationMapComponent (@bedge/shared).
+@import 'maplibre-gl/dist/maplibre-gl.css';
+
 @layer components {
   .bedge-input {
     @apply w-full rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-ink placeholder-gray-300 outline-none transition-colors focus:border-gray-400 disabled:opacity-40 disabled:cursor-not-allowed;

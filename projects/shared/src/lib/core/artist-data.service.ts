@@ -10,6 +10,7 @@ import type {
   BusinessHours,
   BusinessHoursException,
   UpdateProfileRequest,
+  CreateStoreRequest,
   CreateServiceRequest,
   UpdateServiceRequest,
   SetBusinessHoursRequest,
@@ -68,6 +69,11 @@ export class ArtistDataService {
   /** GET /artists/salon/stores - stores for the authenticated artist's salon. */
   getStoresBySalon(): Observable<Store[]> {
     return this.api.getArray<Store>('/artists/salon/stores');
+  }
+
+  /** POST /artists/salon/stores - add a second (or further) branch. */
+  createStore(req: CreateStoreRequest): Observable<Store> {
+    return this.api.post<Store>('/artists/salon/stores', req);
   }
 
   /** GET /artists/:id/stores - stores an artist is assigned to. Accepts either a UUID or a handle in :id. */

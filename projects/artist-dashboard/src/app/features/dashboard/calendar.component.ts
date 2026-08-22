@@ -8,8 +8,9 @@ import {
 } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { LucideAngularModule } from 'lucide-angular';
+import { A11yModule } from '@angular/cdk/a11y';
 
-import { ArtistDataService, BookingDataService } from '@bedge/shared';
+import { ArtistDataService, BadgeComponent, BookingDataService } from '@bedge/shared';
 import type { EnrichedBooking } from '@bedge/shared';
 import { environment } from '../../../environments/environment';
 
@@ -45,7 +46,7 @@ interface PositionedBooking {
   selector: 'bedge-calendar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, A11yModule, BadgeComponent],
   templateUrl: './calendar.component.html',
 })
 export class CalendarComponent implements OnInit {

@@ -9,7 +9,13 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 
-import { BookingDataService, CustomerAuthStore } from '@bedge/shared';
+import {
+  BadgeComponent,
+  BookingDataService,
+  CustomerAuthStore,
+  bookingStatusTone,
+  formatStatusLabel,
+} from '@bedge/shared';
 import type { EnrichedBooking } from '@bedge/shared';
 
 type FilterTab = 'upcoming' | 'past' | 'cancelled';
@@ -25,7 +31,7 @@ const PAST_STATUSES = new Set(['completed', 'no_show']);
 @Component({
   selector: 'app-my-bookings-page',
   standalone: true,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, BadgeComponent],
   templateUrl: './my-bookings.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -39,6 +45,9 @@ export class MyBookingsPage implements OnInit {
   readonly bookings = signal<EnrichedBooking[]>([]);
   readonly activeTab = signal<FilterTab>('upcoming');
 
+  protected readonly statusTone = bookingStatusTone;
+  protected readonly statusLabel = formatStatusLabel;
+
   ngOnInit(): void {
     this.load();
   }
@@ -47,19 +56,33 @@ export class MyBookingsPage implements OnInit {
     this.activeTab.set(tab);
   }
 
+  /**
+   * "Upcoming" means both a non-terminal status AND a start_time that
+   * hasn't happened yet. Status alone used to be the whole rule, so a
+   * pending/approved booking the artist never resolved kept showing as
+   * "Upcoming" indefinitely - a booking from over a week ago, with nothing
+   * to indicate it was stale. Once its slot has passed, it falls through
+   * to "Past" instead of just staying wrong forever.
+   */
+  private isUpcoming(b: EnrichedBooking): boolean {
+    return UPCOMING_STATUSES.has(b.status) && new Date(b.start_time).getTime() >= Date.now();
+  }
+
+  private matchesTab(b: EnrichedBooking, tab: FilterTab): boolean {
+    if (tab === 'cancelled') return CANCELLED_STATUSES.has(b.status);
+    if (tab === 'upcoming') return this.isUpcoming(b);
+    // 'past': terminal past statuses, plus any non-terminal booking whose
+    // time has already passed (see isUpcoming's comment).
+    return PAST_STATUSES.has(b.status) || (UPCOMING_STATUSES.has(b.status) && !this.isUpcoming(b));
+  }
+
   filteredBookings(): EnrichedBooking[] {
     const tab = this.activeTab();
-    const set = tab === 'upcoming' ? UPCOMING_STATUSES : tab === 'past' ? PAST_STATUSES : CANCELLED_STATUSES;
-    return this.bookings().filter((b) => set.has(b.status));
+    return this.bookings().filter((b) => this.matchesTab(b, tab));
   }
 
   countFor(tab: FilterTab): number {
-    const set = tab === 'upcoming' ? UPCOMING_STATUSES : tab === 'past' ? PAST_STATUSES : CANCELLED_STATUSES;
-    return this.bookings().filter((b) => set.has(b.status)).length;
-  }
-
-  statusLabel(status: string): string {
-    return status.split('_').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ');
+    return this.bookings().filter((b) => this.matchesTab(b, tab)).length;
   }
 
   formatDateTime(iso: string): string {

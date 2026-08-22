@@ -8,24 +8,31 @@ import {
 } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { LucideAngularModule } from 'lucide-angular';
+import { A11yModule } from '@angular/cdk/a11y';
 
 import {
   ProductDataService,
   CloudinaryUploadService,
   PRODUCT_CATEGORIES,
   extractApiErrorMessage,
+  validateImageFile,
+  resizeImageToFit,
   ButtonComponent,
   BadgeComponent,
 } from '@bedge/shared';
 import type { Product, ProductCategory } from '@bedge/shared';
+import { ProductPhotoGalleryComponent } from './product-photo-gallery.component';
 
 /** The form's working state. Price is a string throughout — it's a string on
  *  the wire (decimal.Decimal) and a string in the input; converting to number
- *  and back would only risk float artefacts on money. */
+ *  and back would only risk float artefacts on money. stockQuantity is a
+ *  string for the same input-binding reason — empty string means "leave
+ *  unlimited", parsed to a number (or omitted) only when saving. */
 interface ProductForm {
   name: string;
   category: ProductCategory;
   price: string;
+  stockQuantity: string;
   imageUrl: string;
   description: string;
   isActive: boolean;
@@ -35,6 +42,7 @@ const EMPTY_FORM: ProductForm = {
   name: '',
   category: 'makeup',
   price: '',
+  stockQuantity: '',
   imageUrl: '',
   description: '',
   isActive: true,
@@ -52,7 +60,13 @@ const EMPTY_FORM: ProductForm = {
   selector: 'bedge-products',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [LucideAngularModule, ButtonComponent, BadgeComponent],
+  imports: [
+    LucideAngularModule,
+    ButtonComponent,
+    BadgeComponent,
+    A11yModule,
+    ProductPhotoGalleryComponent,
+  ],
   templateUrl: './products.component.html',
 })
 export class ProductsComponent implements OnInit {
@@ -79,6 +93,11 @@ export class ProductsComponent implements OnInit {
   readonly saving = signal(false);
   readonly formError = signal<string | null>(null);
   readonly uploading = signal(false);
+
+  /** Set when a picked file is over the 15MB limit - see PortfolioComponent's
+   *  identical fields for why this holds the file rather than just erroring. */
+  readonly pendingOversizedFile = signal<File | null>(null);
+  readonly pendingOversizedSizeMB = signal(0);
 
   readonly displayed = computed(() => {
     const cat = this.selectedCategory();
@@ -119,6 +138,7 @@ export class ProductsComponent implements OnInit {
       name: p.name,
       category: p.category ?? 'makeup',
       price: p.price,
+      stockQuantity: p.stock_quantity !== undefined ? String(p.stock_quantity) : '',
       imageUrl: p.image_url ?? '',
       description: p.description ?? '',
       isActive: p.is_active,
@@ -147,15 +167,46 @@ export class ProductsComponent implements OnInit {
     // different file first.
     input.value = '';
 
-    if (!file.type.startsWith('image/')) {
-      this.formError.set('That file is not an image.');
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      this.formError.set('That image is larger than 10MB. Please choose a smaller one.');
+    this.formError.set(null);
+    this.pendingOversizedFile.set(null);
+
+    const result = validateImageFile(file);
+    if (result.ok) {
+      this.uploadFile(file);
       return;
     }
 
+    if (result.reason === 'too-large') {
+      this.pendingOversizedFile.set(file);
+      this.pendingOversizedSizeMB.set(result.sizeMB);
+      return;
+    }
+
+    this.formError.set(result.message);
+  }
+
+  /** Person accepted the resize offer. */
+  confirmResize(): void {
+    const file = this.pendingOversizedFile();
+    if (!file) return;
+
+    this.pendingOversizedFile.set(null);
+    this.uploading.set(true);
+    this.formError.set(null);
+
+    resizeImageToFit(file)
+      .then((resized) => this.uploadFile(resized))
+      .catch(() => {
+        this.uploading.set(false);
+        this.formError.set('Could not resize that image. Please try a smaller photo.');
+      });
+  }
+
+  dismissOversized(): void {
+    this.pendingOversizedFile.set(null);
+  }
+
+  private uploadFile(file: File): void {
     this.uploading.set(true);
     this.formError.set(null);
 
@@ -164,9 +215,9 @@ export class ProductsComponent implements OnInit {
         this.uploading.set(false);
         this.patchForm('imageUrl', result.url);
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.uploading.set(false);
-        this.formError.set('Could not upload that image. Please try again.');
+        this.formError.set(extractApiErrorMessage(err, 'Could not upload that image. Please try again.'));
       },
     });
   }
@@ -176,8 +227,15 @@ export class ProductsComponent implements OnInit {
   }
 
   isFormValid(): boolean {
+    // Also gates the Save button: saving while an upload is still in flight
+    // would snapshot the form before imageUrl gets patched with the
+    // uploaded photo's URL, silently saving the product with no image.
+    if (this.uploading()) return false;
+
     const f = this.form();
-    return f.name.trim().length >= 2 && /^\d+(\.\d{1,2})?$/.test(f.price.trim());
+    const stockTrimmed = f.stockQuantity.trim();
+    const stockOk = stockTrimmed === '' || /^\d+$/.test(stockTrimmed);
+    return f.name.trim().length >= 2 && /^\d+(\.\d{1,2})?$/.test(f.price.trim()) && stockOk;
   }
 
   save(): void {
@@ -187,12 +245,14 @@ export class ProductsComponent implements OnInit {
     this.saving.set(true);
     this.formError.set(null);
 
+    const stockTrimmed = f.stockQuantity.trim();
     const body = {
       name: f.name.trim(),
       category: f.category,
       price: f.price.trim(),
       description: f.description.trim() || undefined,
       image_url: f.imageUrl.trim() || undefined,
+      stock_quantity: stockTrimmed === '' ? undefined : Number(stockTrimmed),
     };
 
     const id = this.editingId();

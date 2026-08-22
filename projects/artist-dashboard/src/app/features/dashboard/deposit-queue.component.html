@@ -1,5 +1,5 @@
 <!-- Deposit Queue screen -->
-<div>
+<div class="max-w-4xl mx-auto">
 
   <!-- Page header -->
   <div class="mb-6">
@@ -32,7 +32,7 @@
         <div class="flex-1">
           <p class="text-xs font-bold uppercase tracking-wide">Urgent action pending</p>
           @if (urgentItem(); as u) {
-            <p class="text-[11px] text-white/60 mt-1">
+            <p class="text-xs text-white/60 mt-1">
               {{ u.customer_name }}'s deposit deadline is under 24 hours away - verify to keep the booking alive.
             </p>
           }
@@ -80,8 +80,13 @@
                         Urgent
                       </span>
                     }
+                    @if (item.status === 'deposit_paid') {
+                      <span class="bg-amber-100 text-amber-800 text-[8px] font-bold uppercase px-1.5 py-0.5 rounded tracking-wide">
+                        Deposit received
+                      </span>
+                    }
                   </div>
-                  <p class="text-[11px] text-gray-400 font-medium">{{ item.service_name }}</p>
+                  <p class="text-xs text-gray-400 font-medium">{{ item.service_name }}</p>
                 </div>
               </div>
               <div class="text-right">
@@ -90,7 +95,7 @@
               </div>
             </div>
 
-            <div class="pt-2 px-0.5 border-t border-gray-100 flex justify-between items-center text-[10px] text-gray-400 font-medium">
+            <div class="pt-2 px-0.5 border-t border-gray-100 flex justify-between items-center text-xs text-gray-400 font-medium">
               <span class="flex items-center gap-1">
                 <lucide-icon name="clock" [size]="11" [strokeWidth]="2" />
                 {{ formatBookingTime(item.start_time) }}
@@ -100,14 +105,22 @@
               }
             </div>
 
-            <button
-              type="button"
-              (click)="openVerify(item)"
-              class="w-full h-9 bg-ink hover:opacity-90 text-white font-bold text-[10px] uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 transition-opacity"
-            >
-              <lucide-icon name="check" [size]="12" [strokeWidth]="2" />
-              Verify payment
-            </button>
+            @if (item.status === 'deposit_paid') {
+              <bedge-button
+                size="sm"
+                [fullWidth]="true"
+                [loading]="actingOnId() === item.id"
+                (click)="confirmFinal(item)"
+              >
+                <lucide-icon name="check" [size]="12" [strokeWidth]="2" />
+                Confirm booking
+              </bedge-button>
+            } @else {
+              <bedge-button size="sm" [fullWidth]="true" (click)="openVerify(item)">
+                <lucide-icon name="check" [size]="12" [strokeWidth]="2" />
+                Verify payment
+              </bedge-button>
+            }
           </div>
         }
 
@@ -133,7 +146,7 @@
                 </div>
                 <div>
                   <span class="text-sm font-bold text-ink block">{{ item.customer_name }}</span>
-                  <p class="text-[11px] text-gray-400 font-medium">{{ item.service_name }}</p>
+                  <p class="text-xs text-gray-400 font-medium">{{ item.service_name }}</p>
                 </div>
               </div>
               <div class="text-right">
@@ -142,7 +155,7 @@
               </div>
             </div>
 
-            <div class="pt-2 px-0.5 border-t border-gray-100 flex justify-between items-center text-[10px] text-gray-400 font-medium">
+            <div class="pt-2 px-0.5 border-t border-gray-100 flex justify-between items-center text-xs text-gray-400 font-medium">
               <span class="flex items-center gap-1">
                 <lucide-icon name="clock" [size]="11" [strokeWidth]="2" />
                 {{ formatBookingTime(item.start_time) }}
@@ -153,7 +166,7 @@
             </div>
 
             @if (item.deposit_reference) {
-              <p class="text-[10px] text-gray-400 italic px-0.5">Ref: {{ item.deposit_reference }}</p>
+              <p class="text-xs text-gray-400 italic px-0.5">Ref: {{ item.deposit_reference }}</p>
             }
           </div>
         }
@@ -175,10 +188,15 @@
     <div
       class="fixed inset-0 bg-ink/65 flex items-end sm:items-center justify-center z-50 p-4"
       (click)="closeVerify()"
+      (keydown.escape)="closeVerify()"
     >
       <div
         class="bg-white rounded-2xl w-full max-w-sm p-5 space-y-4 shadow-xl"
         (click)="$event.stopPropagation()"
+        cdkTrapFocus
+        cdkTrapFocusAutoCapture
+        role="dialog"
+        aria-modal="true"
       >
         <div>
           <h3 class="text-base font-bold text-ink">Verify deposit</h3>
@@ -188,7 +206,7 @@
         </div>
 
         <div>
-          <label class="block text-[10px] font-bold uppercase tracking-wider text-ink mb-1">
+          <label class="block text-xs font-bold uppercase tracking-wider text-ink mb-1">
             Transaction ref or notes (optional)
           </label>
           <input
@@ -221,6 +239,21 @@
               <lucide-icon name="check" [size]="13" [strokeWidth]="2" />
             }
             Mark received
+          </button>
+        </div>
+
+        <!-- Edge case: a partial or disputed transfer that shouldn't be
+             confirmed as the full deposit yet. Deliberately a plain text
+             link, not a third button of equal weight - most transfers are
+             the full amount and never need this. -->
+        <div class="text-center pt-1">
+          <button
+            type="button"
+            (click)="markPartial()"
+            [disabled]="verifying()"
+            class="text-[11px] text-gray-400 underline decoration-gray-300 hover:text-gray-600 disabled:opacity-50"
+          >
+            Only part of it arrived? Mark as partially received
           </button>
         </div>
       </div>

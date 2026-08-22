@@ -8,7 +8,12 @@ import {
 import { HttpErrorResponse } from '@angular/common/http';
 import { LucideAngularModule } from 'lucide-angular';
 
-import { ArtistDataService, BookingDataService } from '@bedge/shared';
+import {
+  ArtistDataService,
+  BookingDataService,
+  BadgeComponent,
+  bookingStatusTone,
+} from '@bedge/shared';
 import type { WaitlistEntryResponse } from '@bedge/shared';
 
 /**
@@ -22,10 +27,14 @@ import type { WaitlistEntryResponse } from '@bedge/shared';
   selector: 'bedge-waitlist',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, BadgeComponent],
   templateUrl: './waitlist.component.html',
 })
 export class WaitlistComponent implements OnInit {
+  /** Shared across bookings, client-detail and waitlist so the same
+   *  status can never render differently on different screens. */
+  protected readonly statusTone = bookingStatusTone;
+
   private readonly artistSvc = inject(ArtistDataService);
   private readonly bookingSvc = inject(BookingDataService);
 
@@ -41,16 +50,6 @@ export class WaitlistComponent implements OnInit {
     return status.split('_').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ');
   }
 
-  statusClass(status: string): string {
-    switch (status) {
-      case 'notified':
-        return 'bg-[#16a34a]/10 text-[#16a34a]';
-      case 'expired':
-        return 'bg-gray-100 text-gray-400';
-      default:
-        return 'bg-gray-100 text-gray-600';
-    }
-  }
 
   formatDate(dateStr: string): string {
     // requested_date is a bare YYYY-MM-DD, not a full timestamp - no

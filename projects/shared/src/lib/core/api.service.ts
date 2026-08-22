@@ -39,6 +39,32 @@ export function extractApiErrorMessage(err: HttpErrorResponse, fallback: string)
   return fallback;
 }
 
+/**
+ * Extracts field-level errors as a `{ field: message }` map, for forms that
+ * highlight the specific input rather than only showing one combined
+ * banner. `extractApiErrorMessage` already joins every detail into one
+ * string - correct for a form with no per-field error slots, but it
+ * silently drops WHICH field was wrong. A form that has {{ fieldErrors()[x]
+ * }} slots and never calls this ends up with a state signal that's always
+ * empty: no compile error, no runtime error, just a banner that never gets
+ * more specific than "please check the highlighted fields" - exactly what
+ * happened on the onboarding wizard before this existed.
+ *
+ * Field names come straight from the Go validator (`fe.Field()`), which
+ * uses the STRUCT field name, not the JSON tag - "Handle", not "handle".
+ * Callers must key their lookups the same way the backend actually sends
+ * them, not assume camelCase or the wire format.
+ */
+export function extractFieldErrors(err: HttpErrorResponse): Record<string, string> {
+  const apiError = (err.error as { error?: ApiErrorBody } | undefined)?.error;
+  const details = apiError?.details ?? [];
+  const result: Record<string, string> = {};
+  for (const d of details) {
+    result[d.field] = d.message;
+  }
+  return result;
+}
+
 /** A list result carrying both the items and pagination metadata. */
 export interface ListResult<T> {
   readonly items: T[];

@@ -8,8 +8,28 @@ import {
 } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 
-import { AuthStore, ArtistDataService, BookingDataService } from '@bedge/shared';
+import {
+  AuthStore,
+  ArtistDataService,
+  BookingDataService,
+  BadgeComponent,
+  ButtonComponent,
+  InputDirective,
+  bookingStatusTone,
+  extractApiErrorMessage,
+} from '@bedge/shared';
 import type { EnrichedBooking, BookingStatus } from '@bedge/shared';
+
+/** Statuses an artist can still cancel from - mirrors the backend's own
+ *  CancelBooking check exactly (repository.go: everything except
+ *  completed/cancelled/expired/no_show/refund_due/refunded). Kept in sync
+ *  deliberately with customer-pwa's booking-detail.page.ts, which documents
+ *  the same rule for the customer-facing side - a mismatch here would show
+ *  a Cancel button that then fails server-side, or hide one that would
+ *  have worked. Before this existed, there was no Cancel action anywhere
+ *  in artist-dashboard at all - confirmed by checking both this list and
+ *  Calendar's day-view popover, neither had one. */
+const CANCELLABLE_STATUSES = new Set(['held', 'pending', 'approved', 'deposit_paid', 'confirmed']);
 
 /** Status filter tab shown in the UI. '' means all statuses. */
 interface StatusTab {
@@ -32,9 +52,14 @@ interface StatusTab {
   selector: 'bedge-bookings',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [BadgeComponent, ButtonComponent, InputDirective],
   templateUrl: './bookings.component.html',
 })
 export class BookingsComponent implements OnInit {
+  /** Shared across bookings, client-detail and waitlist so the same
+   *  status can never render differently on different screens. */
+  protected readonly statusTone = bookingStatusTone;
+
   private readonly auth = inject(AuthStore);
   private readonly artistSvc = inject(ArtistDataService);
   private readonly bookingSvc = inject(BookingDataService);
@@ -61,6 +86,15 @@ export class BookingsComponent implements OnInit {
 
   /** Pagination cursor for the next page. */
   private nextCursor = signal<string | undefined>(undefined);
+
+  /** Which single booking, if any, is showing its "are you sure?" cancel
+   *  row - same inline-confirm pattern as my-orders.page.ts and
+   *  portfolio.component.ts, not a bottom sheet: this screen is a grid of
+   *  cards, not a single-item detail page. */
+  readonly confirmingCancelId = signal<string | null>(null);
+  readonly cancelReason = signal('');
+  readonly cancellingId = signal<string | null>(null);
+  readonly cancelError = signal<string | null>(null);
 
   // ── Computed ─────────────────────────────────────────────────────────────
 
@@ -126,6 +160,45 @@ export class BookingsComponent implements OnInit {
       next: () => this.loadBookings(),
       error: () => this.errorMessage.set('Failed to mark no-show.'),
     });
+  }
+
+  /** First tap: arm the inline "are you sure?" row for this card. */
+  askToCancel(bookingId: string): void {
+    this.cancelReason.set('');
+    this.cancelError.set(null);
+    this.confirmingCancelId.set(bookingId);
+  }
+
+  dismissCancel(): void {
+    this.confirmingCancelId.set(null);
+  }
+
+  /** Second tap: actually cancel. Unlike a customer cancelling (refund
+   *  only outside the 24h window), an artist cancelling always refunds a
+   *  positive deposit - see CancelBooking's own doc comment in
+   *  internal/booking/service.go for why; nothing to preview here, the
+   *  server's behaviour is unconditional. */
+  confirmCancel(booking: EnrichedBooking): void {
+    if (this.cancellingId()) return;
+
+    this.cancellingId.set(booking.id);
+    this.cancelError.set(null);
+
+    this.bookingSvc.cancel(booking.id, { reason: this.cancelReason().trim() || undefined }).subscribe({
+      next: () => {
+        this.cancellingId.set(null);
+        this.confirmingCancelId.set(null);
+        this.loadBookings();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.cancellingId.set(null);
+        this.cancelError.set(extractApiErrorMessage(err, 'Could not cancel this booking. Please try again.'));
+      },
+    });
+  }
+
+  canCancel(booking: EnrichedBooking): boolean {
+    return CANCELLABLE_STATUSES.has(booking.status);
   }
 
   // ── Private helpers ───────────────────────────────────────────────────────
@@ -201,19 +274,6 @@ export class BookingsComponent implements OnInit {
   }
 
   /** Returns a Tailwind colour class for a booking status badge. */
-  statusClass(status: BookingStatus | string): string {
-    switch (status) {
-      case 'pending':      return 'bg-amber-100 text-amber-800';
-      case 'approved':     return 'bg-blue-100 text-blue-800';
-      case 'deposit_paid': return 'bg-blue-100 text-blue-800';
-      case 'confirmed':    return 'bg-green-100 text-green-800';
-      case 'completed':    return 'bg-gray-100 text-gray-600';
-      case 'cancelled':    return 'bg-red-100 text-red-700';
-      case 'no_show':      return 'bg-red-100 text-red-700';
-      case 'refund_due':   return 'bg-orange-100 text-orange-800';
-      default:             return 'bg-gray-100 text-gray-500';
-    }
-  }
 
   /** Human-readable label for a booking status. */
   statusLabel(status: string): string {
@@ -238,13 +298,17 @@ export class BookingsComponent implements OnInit {
     return booking.status === 'pending';
   }
 
-  /** Returns true if the complete action is valid. */
+  /** Returns true if the complete action is valid. Mirrors the backend's
+   *  own start_time guard (booking/service.go's CompleteBooking) - a
+   *  service can't be completed before it has even started. */
   canComplete(booking: EnrichedBooking): boolean {
-    return booking.status === 'confirmed';
+    return booking.status === 'confirmed' && new Date(booking.start_time) <= new Date();
   }
 
-  /** Returns true if no-show can be marked. */
+  /** Returns true if no-show can be marked. Mirrors the backend's own
+   *  start_time guard (booking/service.go's MarkNoShow) - a customer can't
+   *  be a no-show for an appointment that hasn't happened yet. */
   canMarkNoShow(booking: EnrichedBooking): boolean {
-    return booking.status === 'confirmed';
+    return booking.status === 'confirmed' && new Date(booking.start_time) <= new Date();
   }
 }

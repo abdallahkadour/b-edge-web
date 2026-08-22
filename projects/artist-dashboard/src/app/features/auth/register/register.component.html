@@ -1,0 +1,149 @@
+<main class="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+  <div class="w-full max-w-sm">
+    <!-- Wordmark -->
+    <div class="text-center mb-10">
+      <h1 class="text-2xl font-semibold tracking-tight text-ink">B-Edge</h1>
+      <p class="mt-1 text-sm text-gray-500">Beauty at the Edge</p>
+    </div>
+
+    <bedge-card>
+      <h2 class="text-lg font-semibold text-ink mb-6">Create your artist account</h2>
+
+      <!-- Server error -->
+      @if (errorMessage(); as message) {
+        <div
+          class="mb-5 rounded-lg bg-danger-light px-4 py-3 text-sm text-danger-dark"
+          role="alert"
+        >
+          {{ message }}
+        </div>
+      }
+
+      <div>
+        <!-- Name -->
+        <div class="mb-4">
+          <label for="name" class="block text-sm font-medium text-gray-700 mb-1.5">
+            Name
+          </label>
+          <input
+            id="name"
+            type="text"
+            bedgeInput
+            [invalid]="touched() && !isNameValid()"
+            [value]="name()"
+            (input)="name.set($any($event.target).value)"
+            (keydown.enter)="submit()"
+            autocomplete="name"
+            [attr.aria-invalid]="touched() && !isNameValid()"
+            class="h-11"
+            placeholder="Your name"
+          />
+          <div class="mt-1.5 h-4">
+            @if (touched() && !isNameValid()) {
+              <p class="text-xs text-danger leading-4">Enter your name.</p>
+            }
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div class="mb-4">
+          <label for="email" class="block text-sm font-medium text-gray-700 mb-1.5">
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            bedgeInput
+            [invalid]="touched() && !isEmailValid()"
+            [value]="email()"
+            (input)="email.set($any($event.target).value)"
+            (keydown.enter)="submit()"
+            autocomplete="email"
+            [attr.aria-invalid]="touched() && !isEmailValid()"
+            class="h-11"
+            placeholder="you@example.com"
+          />
+          <div class="mt-1.5 h-4">
+            @if (touched() && !isEmailValid()) {
+              <p class="text-xs text-danger leading-4">
+                @if (email().trim().length === 0) {
+                  Email is required.
+                } @else {
+                  Enter a valid email address.
+                }
+              </p>
+            }
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="mb-4">
+          <label for="password" class="block text-sm font-medium text-gray-700 mb-1.5">
+            Password
+          </label>
+          <input
+            id="password"
+            type="password"
+            bedgeInput
+            [invalid]="touched() && !isPasswordValid()"
+            [value]="password()"
+            (input)="password.set($any($event.target).value)"
+            (keydown.enter)="submit()"
+            autocomplete="new-password"
+            [attr.aria-invalid]="touched() && !isPasswordValid()"
+            class="h-11"
+            placeholder="At least 8 characters"
+          />
+          <div class="mt-1.5 h-4">
+            @if (touched() && !isPasswordValid()) {
+              <p class="text-xs text-danger leading-4">Password must be at least 8 characters.</p>
+            }
+          </div>
+        </div>
+
+        <!-- Confirm password -->
+        <div class="mb-6">
+          <label for="confirm-password" class="block text-sm font-medium text-gray-700 mb-1.5">
+            Confirm password
+          </label>
+          <input
+            id="confirm-password"
+            type="password"
+            bedgeInput
+            [invalid]="touched() && !isConfirmValid()"
+            [value]="confirmPassword()"
+            (input)="confirmPassword.set($any($event.target).value)"
+            (keydown.enter)="submit()"
+            autocomplete="new-password"
+            [attr.aria-invalid]="touched() && !isConfirmValid()"
+            class="h-11"
+            placeholder="••••••••"
+          />
+          <div class="mt-1.5 h-4">
+            @if (touched() && !isConfirmValid()) {
+              <p class="text-xs text-danger leading-4">Passwords do not match.</p>
+            }
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <bedge-button
+          [fullWidth]="true"
+          [loading]="loading()"
+          (click)="submit()"
+        >
+          {{ loading() ? 'Creating account…' : 'Create account' }}
+        </bedge-button>
+      </div>
+
+      <!-- Already have an account -->
+      <div class="mt-5 text-center">
+        <span class="text-sm text-gray-500">Already have an account? </span>
+        <a
+          routerLink="/login"
+          class="text-sm text-ink font-medium hover:underline"
+        >Sign in</a>
+      </div>
+    </bedge-card>
+  </div>
+</main>

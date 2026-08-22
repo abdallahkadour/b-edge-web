@@ -1,0 +1,9 @@
+@if (rateLimitStore.active()) {
+  <div
+    role="alert"
+    class="fixed top-0 inset-x-0 z-[60] bg-amber-50 border-b border-amber-200 px-4 py-2.5
+           text-center text-xs font-medium text-amber-800"
+  >
+    You're making requests too quickly. Please wait a moment and try again.
+  </div>
+}

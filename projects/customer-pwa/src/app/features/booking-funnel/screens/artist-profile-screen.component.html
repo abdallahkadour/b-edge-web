@@ -1,4 +1,18 @@
 <div class="relative flex flex-col min-h-full bg-gray-50 text-ink pb-[92px]">
+  <!-- Back to Discover - fixed, not part of the scrolling hero, since most
+       visitors reach this screen via a shared link with no Discover entry
+       in their browser history to fall back on. Dark translucent circle
+       works over both the photo hero and the plain background when there
+       is no avatar. -->
+  <button
+    type="button"
+    (click)="goHome.emit()"
+    class="fixed top-4 left-4 z-20 w-9 h-9 rounded-full bg-ink/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-ink/70 transition-colors"
+    aria-label="Back to Discover"
+  >
+    <lucide-icon name="arrow-left" [size]="18" [strokeWidth]="2.5" />
+  </button>
+
   <!-- Hero - omitted entirely when the artist has no avatar, rather than
        leaving a 300px empty grey block. -->
   @if (artist().avatar_url) {

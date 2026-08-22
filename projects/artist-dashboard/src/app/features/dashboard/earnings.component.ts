@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 
-import { EarningsDataService } from '@bedge/shared';
+import { CardComponent, EarningsDataService } from '@bedge/shared';
 import type { EarningsSummary, DailyEarnings } from '@bedge/shared';
 
 /** A bar in the 7-day chart. */
@@ -26,6 +26,7 @@ interface ChartBar {
   selector: 'bedge-earnings',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [CardComponent],
   templateUrl: './earnings.component.html',
 })
 export class EarningsComponent implements OnInit {

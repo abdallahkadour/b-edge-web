@@ -6,7 +6,9 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "preview:customer-pwa": "ng build customer-pwa --configuration development && npx --yes serve -s dist/customer-pwa/browser -l 4200",
+    "preview:artist-dashboard": "ng build artist-dashboard --configuration development && npx --yes serve -s dist/artist-dashboard/browser -l 4300"
   },
   "private": true,
   "packageManager": "npm@11.6.2",
@@ -19,6 +21,7 @@
     "@angular/platform-browser": "^21.2.0",
     "@angular/router": "^21.2.0",
     "lucide-angular": "^1.0.0",
+    "maplibre-gl": "^6.4.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },

@@ -1,2 +1,18 @@
-<router-outlet />
-<app-install-prompt />
+<!--
+  On a phone-width viewport this wrapper is invisible (full width, no
+  border/shadow) - nothing changes for the vast majority of real visitors.
+  Above md: it becomes a centered, phone-width "card" instead of the app's
+  content pinning to the left edge with most of a desktop screen left
+  empty. `contain: layout` is load-bearing, not decorative: it makes this
+  element the containing block for every `position: fixed` descendant in
+  the whole app (back buttons, sticky bottom CTAs, bottom nav, the two
+  banners below) per the CSS Containment spec, so those anchor to the
+  frame's edges instead of escaping to the true (much wider) viewport -
+  without it, a fixed bottom bar would still stretch edge-to-edge across
+  the full desktop window while the content above it stayed narrow.
+-->
+<div class="md:max-w-[480px] md:mx-auto md:min-h-screen md:shadow-2xl md:[contain:layout] bg-white">
+  <bedge-rate-limit-banner />
+  <router-outlet />
+  <app-install-prompt />
+</div>

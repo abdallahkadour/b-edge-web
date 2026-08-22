@@ -10,6 +10,10 @@ export interface Review {
   readonly artist_id: string;
   readonly rating: number; // 1–5
   readonly comment?: string;
+  /** Irrelevant on the public endpoint (only visible reviews are ever
+   *  returned there); load-bearing on the artist's own moderation view -
+   *  it's what a hide/show toggle actually reflects. */
+  readonly is_visible: boolean;
   readonly created_at: string;
 }
 
@@ -42,6 +46,12 @@ export interface ReviewBookingContext {
   readonly store_name: string;
   readonly start_time: string; // ISO 8601 UTC
   readonly final_price: string; // decimal as string
+  /** True if this booking already has a review. The link isn't single-use
+   *  (review_token is never cleared), so the landing screen uses this to
+   *  show its "submitted" state immediately rather than only after a
+   *  second submit attempt bounces off the 409 the backend already returns
+   *  for a duplicate. */
+  readonly already_reviewed: boolean;
 }
 
 /** POST /reviews/by-token/:token request body (Go review.SubmitReviewByTokenRequest). */

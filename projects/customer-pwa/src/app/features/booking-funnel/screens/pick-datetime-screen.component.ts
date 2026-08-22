@@ -9,8 +9,14 @@ import {
   signal,
 } from '@angular/core';
 import { LucideAngularModule } from 'lucide-angular';
+import { A11yModule } from '@angular/cdk/a11y';
 
-import { BookingDataService, isValidLocalPhone } from '@bedge/shared';
+import {
+  BookingDataService,
+  ButtonComponent,
+  InputDirective,
+  isValidLocalPhone,
+} from '@bedge/shared';
 import type { Store, TimeSlot } from '@bedge/shared';
 
 /** One cell in the horizontal 28-day strip. */
@@ -79,7 +85,7 @@ function storeHour24(iso: string): number {
 @Component({
   selector: 'app-pick-datetime-screen',
   standalone: true,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, A11yModule, ButtonComponent, InputDirective],
   templateUrl: './pick-datetime-screen.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

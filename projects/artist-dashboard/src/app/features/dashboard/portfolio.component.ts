@@ -8,15 +8,23 @@ import {
 import { HttpErrorResponse } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
 
-import { MediaDataService, CloudinaryUploadService } from '@bedge/shared';
+import {
+  MediaDataService,
+  CloudinaryUploadService,
+  extractApiErrorMessage,
+  validateImageFile,
+  resizeImageToFit,
+} from '@bedge/shared';
 import type { MediaItem } from '@bedge/shared';
 
 /**
  * Portfolio photo manager — embedded in the Profile screen.
  *
  * Flow for adding a photo:
- *  1. User picks a file from their device.
- *  2. File uploads directly to Cloudinary (browser → Cloudinary, unsigned preset).
+ *  1. User picks a file; validateImageFile() checks type and the 15MB
+ *     limit, offering a resize instead of a flat rejection when over it.
+ *  2. File uploads to our own backend (CloudinaryUploadService), which
+ *     validates/re-encodes it before forwarding a clean copy to Cloudinary.
  *  3. The returned Cloudinary URL + public_id are POSTed to our Go API.
  *  4. The portfolio grid refreshes.
  *
@@ -42,6 +50,11 @@ export class PortfolioComponent implements OnInit {
   /** True while a file is uploading (Cloudinary + API call). */
   readonly uploading = signal(false);
   readonly uploadError = signal<string | null>(null);
+
+  /** Set when a picked file is over the 15MB limit - see profile.component.ts's
+   *  identical fields for why this holds the file rather than just erroring. */
+  readonly pendingOversizedFile = signal<File | null>(null);
+  readonly pendingOversizedSizeMB = signal(0);
 
   /** ID of the photo currently being deleted, or null. */
   readonly deletingId = signal<string | null>(null);
@@ -82,16 +95,43 @@ export class PortfolioComponent implements OnInit {
     // Reset the input so selecting the same file again re-triggers change.
     input.value = '';
 
-    if (!file.type.startsWith('image/')) {
-      this.uploadError.set('Please select an image file.');
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      this.uploadError.set('Image must be smaller than 10MB.');
+    this.uploadError.set(null);
+    this.pendingOversizedFile.set(null);
+
+    const result = validateImageFile(file);
+    if (result.ok) {
+      this.uploadFile(file);
       return;
     }
 
-    this.uploadFile(file);
+    if (result.reason === 'too-large') {
+      this.pendingOversizedFile.set(file);
+      this.pendingOversizedSizeMB.set(result.sizeMB);
+      return;
+    }
+
+    this.uploadError.set(result.message);
+  }
+
+  /** Person accepted the resize offer. */
+  confirmResize(): void {
+    const file = this.pendingOversizedFile();
+    if (!file) return;
+
+    this.pendingOversizedFile.set(null);
+    this.uploading.set(true);
+    this.uploadError.set(null);
+
+    resizeImageToFit(file)
+      .then((resized) => this.uploadFile(resized))
+      .catch(() => {
+        this.uploading.set(false);
+        this.uploadError.set('Could not resize that image. Please try a smaller photo.');
+      });
+  }
+
+  dismissOversized(): void {
+    this.pendingOversizedFile.set(null);
   }
 
   /** Delete a photo from the portfolio. */
@@ -170,9 +210,12 @@ export class PortfolioComponent implements OnInit {
             },
           });
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
+        // A real backend error now (upload goes through our own API, see
+        // CloudinaryUploadService's doc comment) - surfaces the actual
+        // reason instead of a generic fallback.
         this.uploading.set(false);
-        this.uploadError.set('Upload failed. Check your connection and try again.');
+        this.uploadError.set(extractApiErrorMessage(err, 'Upload failed. Check your connection and try again.'));
       },
     });
   }

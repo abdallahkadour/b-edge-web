@@ -13,7 +13,10 @@ import { LucideAngularModule } from 'lucide-angular';
 import {
   ProductDataService,
   ArtistDataService,
+  ButtonComponent,
   CartStore,
+  InputDirective,
+  LocationMapComponent,
   extractApiErrorMessage,
   isValidLocalPhone,
 } from '@bedge/shared';
@@ -30,7 +33,7 @@ import {
 @Component({
   selector: 'app-cart-page',
   standalone: true,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, ButtonComponent, InputDirective, LocationMapComponent],
   templateUrl: './cart.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -45,6 +48,9 @@ export class CartPage implements OnInit {
   readonly name = signal('');
   readonly phoneDigits = signal('');
   readonly deliveryNotes = signal('');
+  /** Set only once the customer confirms a pin - null means "no location
+   *  chosen yet", not "(0,0)", so canPlace() can tell the two apart. */
+  readonly deliveryLocation = signal<{ lat: number; lng: number } | null>(null);
   readonly touched = signal(false);
 
   readonly placing = signal(false);
@@ -55,7 +61,23 @@ export class CartPage implements OnInit {
 
   ngOnInit(): void {
     this.artistSvc.getStoresByArtist(this.artistId()).subscribe({
-      next: (stores) => this.salonId.set(stores?.[0]?.salon_id ?? null),
+      next: (stores) => {
+        const salonId = stores?.[0]?.salon_id ?? null;
+        this.salonId.set(salonId);
+
+        // This page can be reached directly - a bookmarked cart URL, or a
+        // browser restoring the tab after being backgrounded - without
+        // ever having passed through the shop catalogue first. If the
+        // cart currently only holds lines persisted from a previous
+        // session, reconcile them here too, using this salon's live
+        // product data. A no-op if the cart is already populated or empty.
+        if (salonId) {
+          this.productSvc.getSalonProducts(salonId).subscribe({
+            next: (items) => this.cart.reconcile(items ?? []),
+            error: () => {}, // best-effort - checkout still works either way
+          });
+        }
+      },
       error: () => this.salonId.set(null),
     });
   }
@@ -69,11 +91,25 @@ export class CartPage implements OnInit {
   }
 
   protected canPlace(): boolean {
-    return !this.cart.isEmpty() && this.isNameValid() && this.isPhoneValid() && !this.placing();
+    return (
+      !this.cart.isEmpty() &&
+      this.isNameValid() &&
+      this.isPhoneValid() &&
+      this.deliveryLocation() !== null &&
+      !this.placing()
+    );
   }
 
   onPhoneInput(value: string): void {
     this.phoneDigits.set(value.replace(/\D/g, '').slice(0, 8));
+  }
+
+  onLocationConfirmed(location: { lat: number; lng: number }): void {
+    this.deliveryLocation.set(location);
+  }
+
+  changeLocation(): void {
+    this.deliveryLocation.set(null);
   }
 
   goBack(): void {
@@ -94,6 +130,9 @@ export class CartPage implements OnInit {
       return;
     }
 
+    const location = this.deliveryLocation();
+    if (!location) return; // canPlace() already gates this - defensive only
+
     this.placing.set(true);
     this.errorMessage.set(null);
 
@@ -105,6 +144,8 @@ export class CartPage implements OnInit {
         // phone in this app is stored, so a customer's orders and bookings
         // resolve to the same identity.
         phone: this.phoneDigits(),
+        delivery_lat: location.lat,
+        delivery_lng: location.lng,
         delivery_notes: this.deliveryNotes().trim() || undefined,
         items: this.cart.toOrderItems(),
       })

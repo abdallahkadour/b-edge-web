@@ -38,6 +38,9 @@
 ./projects/artist-dashboard/src/app/app.ts
 ./projects/artist-dashboard/src/app/features
 ./projects/artist-dashboard/src/app/features/.DS_Store
+./projects/artist-dashboard/src/app/features/admin
+./projects/artist-dashboard/src/app/features/admin/admin.page.html
+./projects/artist-dashboard/src/app/features/admin/admin.page.ts
 ./projects/artist-dashboard/src/app/features/auth
 ./projects/artist-dashboard/src/app/features/auth/.DS_Store
 ./projects/artist-dashboard/src/app/features/auth/login
@@ -74,6 +77,9 @@
 ./projects/artist-dashboard/src/app/features/dashboard/services.component.ts
 ./projects/artist-dashboard/src/app/features/dashboard/waitlist.component.html
 ./projects/artist-dashboard/src/app/features/dashboard/waitlist.component.ts
+./projects/artist-dashboard/src/app/features/onboarding
+./projects/artist-dashboard/src/app/features/onboarding/onboarding.page.html
+./projects/artist-dashboard/src/app/features/onboarding/onboarding.page.ts
 ./projects/artist-dashboard/src/environments
 ./projects/artist-dashboard/src/environments/environment.prod.ts
 ./projects/artist-dashboard/src/environments/environment.ts
@@ -147,6 +153,7 @@
 ./projects/customer-pwa/src/app/shared/install-prompt.component.html
 ./projects/customer-pwa/src/app/shared/install-prompt.component.ts
 ./projects/customer-pwa/src/environments
+./projects/customer-pwa/src/environments/environment.prod.ts
 ./projects/customer-pwa/src/environments/environment.ts
 ./projects/customer-pwa/src/index.html
 ./projects/customer-pwa/src/main.ts
@@ -164,6 +171,7 @@
 ./projects/shared/src/lib/.DS_Store
 ./projects/shared/src/lib/core
 ./projects/shared/src/lib/core/.DS_Store
+./projects/shared/src/lib/core/admin-data.service.ts
 ./projects/shared/src/lib/core/api.service.ts
 ./projects/shared/src/lib/core/artist-data.service.ts
 ./projects/shared/src/lib/core/auth-error.interceptor.ts
@@ -171,6 +179,7 @@
 ./projects/shared/src/lib/core/auth.interceptor.ts
 ./projects/shared/src/lib/core/auth.store.ts
 ./projects/shared/src/lib/core/booking-data.service.ts
+./projects/shared/src/lib/core/booking-status.util.ts
 ./projects/shared/src/lib/core/cart.store.ts
 ./projects/shared/src/lib/core/client-data.service.ts
 ./projects/shared/src/lib/core/cloudinary-upload.service.ts
@@ -181,9 +190,12 @@
 ./projects/shared/src/lib/core/discovery-data.service.ts
 ./projects/shared/src/lib/core/earnings-data.service.ts
 ./projects/shared/src/lib/core/media-data.service.ts
+./projects/shared/src/lib/core/onboarding-data.service.ts
+./projects/shared/src/lib/core/phone.util.ts
 ./projects/shared/src/lib/core/product-data.service.ts
 ./projects/shared/src/lib/core/review-data.service.ts
 ./projects/shared/src/lib/models
+./projects/shared/src/lib/models/admin.model.ts
 ./projects/shared/src/lib/models/api-response.model.ts
 ./projects/shared/src/lib/models/artist.model.ts
 ./projects/shared/src/lib/models/auth.model.ts
@@ -195,6 +207,7 @@
 ./projects/shared/src/lib/models/enriched-booking.model.ts
 ./projects/shared/src/lib/models/index.ts
 ./projects/shared/src/lib/models/media.model.ts
+./projects/shared/src/lib/models/onboarding.model.ts
 ./projects/shared/src/lib/models/product.model.ts
 ./projects/shared/src/lib/models/review.model.ts
 ./projects/shared/src/lib/models/waitlist.model.ts
@@ -202,10 +215,48 @@
 ./projects/shared/src/lib/tokens
 ./projects/shared/src/lib/tokens/.DS_Store
 ./projects/shared/src/lib/tokens/api-config.token.ts
+./projects/shared/src/lib/ui
+./projects/shared/src/lib/ui/badge.component.ts
+./projects/shared/src/lib/ui/button.component.ts
+./projects/shared/src/lib/ui/card.component.ts
+./projects/shared/src/lib/ui/index.ts
+./projects/shared/src/lib/ui/input.directive.ts
 ./projects/shared/src/public-api.ts
 ./projects/shared/tsconfig.lib.json
 ./projects/shared/tsconfig.lib.prod.json
 ./projects/shared/tsconfig.spec.json
+./screenshort-review
+./screenshort-review/artist-00-login.png
+./screenshort-review/artist-01-bookings.png
+./screenshort-review/artist-02-calendar.png
+./screenshort-review/artist-03-waitlist.png
+./screenshort-review/artist-04-products.png
+./screenshort-review/artist-05-orders.png
+./screenshort-review/artist-06-deposits.png
+./screenshort-review/artist-07-clients.png
+./screenshort-review/artist-08-client-detail.png
+./screenshort-review/artist-09-earnings.png
+./screenshort-review/artist-10-services.png
+./screenshort-review/artist-11-hours.png
+./screenshort-review/artist-12-profile.png
+./screenshort-review/artist-13-admin-anonymous.png
+./screenshort-review/artist-14-onboarding-anonymous.png
+./screenshort-review/customer-00-discover.png
+./screenshort-review/customer-01-funnel-profile.png
+./screenshort-review/customer-02-funnel-select-service.png
+./screenshort-review/customer-03-funnel-pick-datetime.png
+./screenshort-review/customer-04-funnel-guest-details.png
+./screenshort-review/customer-05-funnel-confirmed.png
+./screenshort-review/customer-06-reviews.png
+./screenshort-review/customer-07-login-phone-step.png
+./screenshort-review/customer-07b-login-code-step.png
+./screenshort-review/customer-08-shop.png
+./screenshort-review/customer-09-cart-empty.png
+./screenshort-review/customer-10-cart-with-item.png
+./screenshort-review/customer-11-order-confirmed.png
+./screenshort-review/customer-12-my-bookings-guarded-redirect.png
+./screenshort-review/customer-13-my-orders-guarded-redirect.png
+./screenshort-review/customer-14-not-found.png
 ./tailwind.config.js
 ./tests
 ./tests/example.spec.ts
@@ -307,6 +358,13 @@ export * from './lib/core/customer-auth-error.interceptor';
 export * from './lib/core/customer-auth.guard';
 export * from './lib/core/product-data.service';
 export * from './lib/core/cart.store';
+export * from './lib/core/onboarding-data.service';
+export * from './lib/core/admin-data.service';
+export * from './lib/core/phone.util';
+export * from './lib/core/booking-status.util';
+
+// UI primitives
+export * from './lib/ui';
 export * from './lib/core/auth.guard';
 
 // ── Data services ─────────────────────────────────────────────────────────────
@@ -318,6 +376,238 @@ export * from './lib/core/earnings-data.service';
 export * from './lib/core/client-data.service';
 export * from './lib/core/media-data.service';
 export * from './lib/core/cloudinary-upload.service';
+
+
+--- ./projects/shared/src/lib/ui/input.directive.ts ---
+import { Directive, computed, input } from '@angular/core';
+
+/**
+ * Text input styling, as a DIRECTIVE rather than a wrapper component.
+ *
+ * This is deliberate. A `<bedge-input>` wrapper would need
+ * ControlValueAccessor to work with forms, and this codebase uses both
+ * reactive forms (login) and template-driven ngModel (hours) - a wrapper
+ * would have to support both, and would silently break the `[value]` /
+ * `(input)` signal pattern used across the customer PWA. An attribute
+ * directive applies the styling to a real native input and stays out of
+ * the way of whichever forms API the component already uses.
+ *
+ * Usage: <input bedgeInput [invalid]="touched() && !isValid()" />
+ */
+@Directive({
+  selector: 'input[bedgeInput], textarea[bedgeInput]',
+  standalone: true,
+  host: { '[class]': 'classes()' },
+})
+export class InputDirective {
+  readonly invalid = input(false);
+
+  protected readonly classes = computed(() =>
+    [
+      'w-full px-3.5 rounded-lg border text-[15px] outline-none transition-colors',
+      'placeholder:text-gray-400 disabled:bg-gray-50 disabled:text-gray-400',
+      // Chrome autofill paints its own background over the design system;
+      // the shared stylesheet already neutralises this globally.
+      this.invalid() ? 'border-danger' : 'border-gray-200 focus:border-ink',
+    ].join(' '),
+  );
+}
+
+
+--- ./projects/shared/src/lib/ui/button.component.ts ---
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { LucideAngularModule } from 'lucide-angular';
+
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+export type ButtonSize = 'sm' | 'md' | 'lg';
+
+/**
+ * The one primary button.
+ *
+ * Before this existed there were 32 hand-written copies of essentially
+ * this button across the two apps, and they had already drifted: some
+ * `rounded`, some `rounded-lg`; three different heights for the same
+ * "full width primary" role; `disabled:opacity-40` in one place and
+ * `disabled:opacity-60` in another; `transition-all` versus
+ * `transition-opacity`. None of that was a decision - it was copy-paste
+ * entropy, and it is exactly what a customer reads as "slightly cheap"
+ * without being able to say why.
+ *
+ * Note what this does NOT do: it does not invent new design values. Every
+ * class below already exists in tailwind.config.js, which has a genuinely
+ * good token layer (ink, the gray scale, semantic success/danger). This
+ * component's job is to stop those tokens being recombined differently on
+ * every screen.
+ *
+ * Deliberately a component and not a directive: the loading spinner and
+ * the disabled-while-loading behaviour need real markup and logic, not
+ * just a class string.
+ */
+@Component({
+  selector: 'bedge-button',
+  standalone: true,
+  imports: [LucideAngularModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  // A custom element is display:inline by default, which silently breaks
+  // w-full, flex-1 and margins applied to the host. Match the inner
+  // button so layout classes behave as they read.
+  host: { '[class]': "fullWidth() ? 'block' : 'inline-block'" },
+  template: `
+    <button
+      [type]="type()"
+      [disabled]="disabled() || loading()"
+      [class]="classes()"
+    >
+      @if (loading()) {
+        <lucide-icon name="loader-2" [size]="iconSize()" [strokeWidth]="2" class="animate-spin" />
+      }
+      <ng-content />
+    </button>
+  `,
+})
+export class ButtonComponent {
+  readonly variant = input<ButtonVariant>('primary');
+  readonly size = input<ButtonSize>('md');
+  readonly type = input<'button' | 'submit'>('button');
+  readonly disabled = input(false);
+  readonly loading = input(false);
+  readonly fullWidth = input(false);
+
+  protected readonly iconSize = computed(() =>
+    this.size() === 'sm' ? 13 : this.size() === 'lg' ? 16 : 15,
+  );
+
+  protected readonly classes = computed(() => {
+    const base =
+      'inline-flex items-center justify-center gap-2 font-bold rounded-lg ' +
+      'transition-opacity disabled:opacity-40 disabled:cursor-not-allowed';
+
+    const sizes: Record<ButtonSize, string> = {
+      sm: 'h-9 px-4 text-xs',
+      md: 'h-11 px-5 text-[13px] uppercase tracking-wide',
+      lg: 'h-[52px] px-6 text-sm uppercase tracking-wide',
+    };
+
+    const variants: Record<ButtonVariant, string> = {
+      primary: 'bg-ink text-white hover:opacity-90',
+      secondary: 'bg-white text-ink border border-ink hover:bg-gray-50',
+      ghost: 'bg-white text-ink border border-gray-200 hover:bg-gray-50',
+      danger: 'bg-white text-danger-dark border border-danger-light hover:bg-red-50',
+    };
+
+    return [
+      base,
+      sizes[this.size()],
+      variants[this.variant()],
+      this.fullWidth() ? 'w-full' : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
+  });
+}
+
+
+--- ./projects/shared/src/lib/ui/badge.component.ts ---
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+
+export type BadgeTone = 'neutral' | 'success' | 'ink' | 'warning' | 'danger' | 'muted';
+
+/**
+ * Status pill.
+ *
+ * The tone-per-status mapping was previously reimplemented as a switch
+ * statement inside three separate components (orders, my-orders,
+ * products), each with its own copy of the colour strings. They already
+ * disagreed in small ways, which matters more here than for buttons: a
+ * customer looking at "Confirmed" in green on one screen and grey on
+ * another has a reason to doubt what they are being told.
+ *
+ * Tone is intentionally decoupled from any specific domain status. The
+ * mapping from an order status to a tone belongs in the component that
+ * knows about orders - this only owns how a given tone looks.
+ */
+@Component({
+  selector: 'bedge-badge',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `<span [class]="classes()"><ng-content /></span>`,
+})
+export class BadgeComponent {
+  readonly tone = input<BadgeTone>('neutral');
+
+  protected readonly classes = computed(() => {
+    const base =
+      'inline-block text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full';
+
+    const tones: Record<BadgeTone, string> = {
+      neutral: 'bg-gray-100 text-gray-600',
+      success: 'bg-success/10 text-success-dark',
+      ink: 'bg-ink/10 text-ink',
+      warning: 'bg-warning-light text-warning-dark',
+      danger: 'bg-danger-light text-danger-dark',
+      // muted is for terminal, non-happy states (cancelled, returned) -
+      // visibly present but deliberately receding.
+      muted: 'bg-gray-100 text-gray-400',
+    };
+
+    return `${base} ${tones[this.tone()]}`;
+  });
+}
+
+
+--- ./projects/shared/src/lib/ui/index.ts ---
+/**
+ * @bedge/shared UI primitives.
+ *
+ * Scope note: this is deliberately four primitives, not a component
+ * library. They were chosen by auditing what is actually duplicated in
+ * this codebase today (32 buttons, status pills reimplemented in three
+ * components, card shells with four different border shades), not by
+ * copying a list from a design system blog post. Adding a component here
+ * that nothing uses yet would be the same technical debt in the other
+ * direction.
+ */
+export * from './button.component';
+export * from './badge.component';
+export * from './card.component';
+export * from './input.directive';
+
+
+--- ./projects/shared/src/lib/ui/card.component.ts ---
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+
+/**
+ * Surface container.
+ *
+ * The card shell (`bg-white border border-gray-* rounded-* p-*`) appeared
+ * with four different border shades and three different radii across the
+ * two apps. One of those, `border-gray-150`, is not a real Tailwind class
+ * and never was - it silently rendered with no border at all. That is the
+ * failure mode this component exists to prevent: a typo in a class string
+ * produces no error, no warning, and a slightly wrong screen nobody
+ * notices for months.
+ */
+@Component({
+  selector: 'bedge-card',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `<div [class]="classes()"><ng-content /></div>`,
+})
+export class CardComponent {
+  /** `padded` is the default; `flush` is for cards owning their own layout. */
+  readonly padding = input<'padded' | 'flush'>('padded');
+  readonly interactive = input(false);
+
+  protected readonly classes = computed(() =>
+    [
+      'bg-white border border-gray-200 rounded-xl',
+      this.padding() === 'padded' ? 'p-4' : '',
+      this.interactive() ? 'hover:border-gray-300 transition-colors cursor-pointer' : '',
+    ]
+      .filter(Boolean)
+      .join(' '),
+  );
+}
 
 
 --- ./projects/shared/src/lib/core/api.service.ts ---
@@ -360,6 +650,32 @@ export function extractApiErrorMessage(err: HttpErrorResponse, fallback: string)
   }
   if (apiError.message) return apiError.message;
   return fallback;
+}
+
+/**
+ * Extracts field-level errors as a `{ field: message }` map, for forms that
+ * highlight the specific input rather than only showing one combined
+ * banner. `extractApiErrorMessage` already joins every detail into one
+ * string - correct for a form with no per-field error slots, but it
+ * silently drops WHICH field was wrong. A form that has {{ fieldErrors()[x]
+ * }} slots and never calls this ends up with a state signal that's always
+ * empty: no compile error, no runtime error, just a banner that never gets
+ * more specific than "please check the highlighted fields" - exactly what
+ * happened on the onboarding wizard before this existed.
+ *
+ * Field names come straight from the Go validator (`fe.Field()`), which
+ * uses the STRUCT field name, not the JSON tag - "Handle", not "handle".
+ * Callers must key their lookups the same way the backend actually sends
+ * them, not assume camelCase or the wire format.
+ */
+export function extractFieldErrors(err: HttpErrorResponse): Record<string, string> {
+  const apiError = (err.error as { error?: ApiErrorBody } | undefined)?.error;
+  const details = apiError?.details ?? [];
+  const result: Record<string, string> = {};
+  for (const d of details) {
+    result[d.field] = d.message;
+  }
+  return result;
 }
 
 /** A list result carrying both the items and pagination metadata. */
@@ -664,53 +980,72 @@ export class CustomerAuthStore {
 
 
 --- ./projects/shared/src/lib/core/cloudinary-upload.service.ts ---
-import { Injectable } from '@angular/core';
-import { Observable, from } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { Observable, from, firstValueFrom } from 'rxjs';
 
-/** Result of a successful Cloudinary unsigned upload. */
+import { ApiService } from './api.service';
+
+/** Result of a successful Cloudinary upload. */
 export interface CloudinaryUploadResult {
   url: string;
   cloudinaryId: string;
 }
 
+/** What GET /media/signature returns. Deliberately contains no secret. */
+interface UploadSignature {
+  signature: string;
+  timestamp: number;
+  api_key: string;
+  cloud_name: string;
+  folder: string;
+}
+
 /**
- * Uploads images directly from the browser to Cloudinary using an unsigned
- * upload preset. This bypasses the Go backend entirely for the file bytes
- * only the resulting URL is later sent to POST /api/v1/media.
+ * Uploads images from the browser to Cloudinary using a SIGNED upload.
  *
- * Cloud name and upload preset come from environment config. The upload
- * preset MUST have "Signing Mode" set to "Unsigned" in the Cloudinary
- * dashboard, or every upload will fail with a 401.
+ * Previously this used an unsigned upload preset, with the cloud name and
+ * preset hardcoded in this file. Both shipped in the JS bundle, and an
+ * unsigned preset needs nothing else - so anyone who opened devtools could
+ * push unlimited content into the Cloudinary account with no
+ * authentication at all. That is a billing and content-moderation
+ * exposure, and it was the single hard blocker on going live.
+ *
+ * Now: the browser first asks our own backend for a short-lived signature
+ * (an authenticated, artist-only endpoint), then attaches it to the
+ * upload. Cloudinary rejects anything without a valid signature. The API
+ * secret stays on the server and is never sent to the client.
+ *
+ * The file bytes still travel browser -> Cloudinary directly, which is the
+ * point: authorisation control without proxying large uploads through Go.
  */
 @Injectable({ providedIn: 'root' })
 export class CloudinaryUploadService {
-  /** Cloudinary cloud name - see environment.ts. */
-  private readonly cloudName = 'mlop5tfg';
+  private readonly api = inject(ApiService);
 
-  /** Unsigned upload preset name - created in the Cloudinary dashboard. */
-  private readonly uploadPreset = 'bedge-media';
-
-  private get uploadUrl(): string {
-    return `https://api.cloudinary.com/v1_1/${this.cloudName}/image/upload`;
-  }
-
-  /**
-   * Upload a single image file directly to Cloudinary.
-   * Returns the public URL and the Cloudinary public_id (for later deletion).
-   */
   upload(file: File): Observable<CloudinaryUploadResult> {
     return from(this.uploadFile(file));
   }
 
   private async uploadFile(file: File): Promise<CloudinaryUploadResult> {
+    // Fetch a fresh signature per upload. Signatures are timestamped and
+    // single-purpose; caching one would only widen the window in which a
+    // leaked signature stays usable, for no real gain.
+    const sig = await firstValueFrom(
+      this.api.get<UploadSignature>('/media/signature'),
+    );
+
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('upload_preset', this.uploadPreset);
+    formData.append('api_key', sig.api_key);
+    formData.append('timestamp', String(sig.timestamp));
+    formData.append('signature', sig.signature);
+    // Must exactly match the folder the backend signed, or Cloudinary
+    // rejects the upload as a signature mismatch.
+    formData.append('folder', sig.folder);
 
-    const response = await fetch(this.uploadUrl, {
-      method: 'POST',
-      body: formData,
-    });
+    const uploadUrl = `https://api.cloudinary.com/v1_1/${sig.cloud_name}/image/upload`;
+
+    const response = await fetch(uploadUrl, { method: 'POST', body: formData });
 
     if (!response.ok) {
       const body = await response.text();
@@ -952,6 +1287,37 @@ export class ArtistDataService {
 }
 
 
+--- ./projects/shared/src/lib/core/onboarding-data.service.ts ---
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+
+import { ApiService } from './api.service';
+import type {
+  CompleteOnboardingRequest,
+  CompleteOnboardingResponse,
+  OnboardingStatus,
+} from '../models';
+
+/** Data-access for the artist self-service onboarding flow. */
+@Injectable({ providedIn: 'root' })
+export class OnboardingDataService {
+  private readonly api = inject(ApiService);
+
+  /** POST /onboarding/complete - creates salon + artist (pending) + one
+   *  store + one service in a single backend transaction. */
+  complete(req: CompleteOnboardingRequest): Observable<CompleteOnboardingResponse> {
+    return this.api.post<CompleteOnboardingResponse>('/onboarding/complete', req);
+  }
+
+  /** GET /onboarding/status - a 404 (via ApiService's error mapping) means
+   *  onboarding was never started; callers should treat that case
+   *  separately from a genuine pending/active/rejected status. */
+  getStatus(): Observable<OnboardingStatus> {
+    return this.api.get<OnboardingStatus>('/onboarding/status');
+  }
+}
+
+
 --- ./projects/shared/src/lib/core/earnings-data.service.ts ---
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
@@ -1062,6 +1428,152 @@ export const authErrorInterceptor: HttpInterceptorFn = (req, next) => {
     }),
   );
 };
+
+
+--- ./projects/shared/src/lib/core/phone.util.ts ---
+/**
+ * Phone number validation, in one place.
+ *
+ * This logic previously existed as three byte-identical copies of
+ * `isValidLocalPhone` (customer-login, cart, guest-details) plus a fourth
+ * inline regex in pick-datetime-screen. Four copies of a rule means four
+ * places to miss when the rule changes - and it will change the first time
+ * B-Edge accepts a number that isn't Lebanese.
+ *
+ * Scope, deliberately: B-Edge is Lebanon-only today. Deposits move over
+ * OMT and Whish, both Lebanon-only rails, and OTP codes go out over
+ * WhatsApp to a local number. Accepting arbitrary international numbers
+ * would let someone book who cannot actually pay or be reached, which is a
+ * worse failure than rejecting them at the form. When that changes,
+ * this file is the only thing that changes with it.
+ */
+
+/** Lebanese subscriber numbers are 7 or 8 digits after the +961 prefix. */
+const LOCAL_PHONE_PATTERN = /^\d{7,8}$/;
+
+/** Max digits a local number can have - used to cap input length. */
+export const LOCAL_PHONE_MAX_DIGITS = 8;
+
+/**
+ * True when `digitsOnly` is a plausible Lebanese subscriber number.
+ *
+ * Expects digits ONLY, with no +961 prefix, spaces or punctuation - use
+ * `stripToDigits()` on raw input first.
+ */
+export function isValidLocalPhone(digitsOnly: string): boolean {
+  return LOCAL_PHONE_PATTERN.test(digitsOnly);
+}
+
+/**
+ * Strips everything except digits and caps the result at the maximum
+ * local length. Safe to call on every keystroke of a phone input.
+ */
+export function stripToDigits(raw: string): string {
+  return raw.replace(/\D/g, '').slice(0, LOCAL_PHONE_MAX_DIGITS);
+}
+
+
+--- ./projects/shared/src/lib/core/admin-data.service.ts ---
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+
+import { ApiService } from './api.service';
+import type { PendingArtist, DecisionRequest } from '../models';
+
+/** Data-access for the admin review queue. Every endpoint here requires
+ *  role='admin' server-side - there is no client-side enforcement to rely
+ *  on, this service just wraps the calls. */
+@Injectable({ providedIn: 'root' })
+export class AdminDataService {
+  private readonly api = inject(ApiService);
+
+  getPendingArtists(): Observable<PendingArtist[]> {
+    return this.api.getArray<PendingArtist>('/admin/artists/pending');
+  }
+
+  /** POST /admin/artists/:id/approve - returns 204 No Content, hence
+   *  `command()` rather than `post()`. post<T>() unwraps `res.data`, which
+   *  would throw on a genuine empty-body 204: Angular's HttpClient returns
+   *  `null` as the response body for 204s, and `null.data` is a runtime
+   *  error, not an empty value. Caught before shipping by checking the
+   *  Go handler's actual response (`response.NoContent` sends no body at
+   *  all) rather than assuming post<void>() would degrade gracefully. */
+  approveArtist(artistId: string): Observable<void> {
+    return this.api.command(`/admin/artists/${artistId}/approve`, 'POST');
+  }
+
+  rejectArtist(artistId: string, req: DecisionRequest = {}): Observable<void> {
+    return this.api.command(`/admin/artists/${artistId}/reject`, 'POST', req);
+  }
+}
+
+
+--- ./projects/shared/src/lib/core/booking-status.util.ts ---
+import type { BadgeTone } from '../ui';
+
+/**
+ * Maps a booking status to a badge tone.
+ *
+ * This existed as three separate switch statements (bookings,
+ * client-detail, waitlist) and they had already drifted: `confirmed`
+ * rendered `text-green-800` on one screen and `text-green-700` on
+ * another, `pending` was `amber-800` versus `amber-700`, and the waitlist
+ * hardcoded `#16a34a` instead of using any token at all. All three also
+ * reached for raw Tailwind palette colours (blue-100, amber-100) rather
+ * than the semantic tokens that already existed in tailwind.config.js.
+ *
+ * On the blue states: `approved` and `deposit_paid` previously rendered
+ * blue, but the brand palette is deliberately restrained - ink and gray,
+ * with exactly three functional colours (success, danger, warning). Rather
+ * than introduce a fourth, both map to `ink`: they are active, in-progress
+ * states, which is what the ink accent means everywhere else in the app.
+ *
+ * Kept separate from the ORDER status mapping deliberately. Bookings and
+ * orders share some words ("confirmed", "cancelled") but not the same
+ * lifecycle - collapsing them into one function would force a false
+ * abstraction that breaks the first time either state machine changes.
+ */
+export function bookingStatusTone(status: string): BadgeTone {
+  switch (status) {
+    // Waiting on the artist to act.
+    case 'pending':
+      return 'warning';
+
+    // Active and progressing: approved, awaiting or holding a deposit.
+    case 'approved':
+    case 'deposit_paid':
+    case 'notified':
+      return 'ink';
+
+    // Locked in.
+    case 'confirmed':
+      return 'success';
+
+    // Finished successfully - present but receding.
+    case 'completed':
+      return 'neutral';
+
+    // Something went wrong and money may be owed.
+    case 'cancelled':
+    case 'no_show':
+      return 'danger';
+    case 'refund_due':
+      return 'warning';
+
+    // Terminal and inactive.
+    case 'expired':
+      return 'muted';
+
+    default:
+      return 'neutral';
+  }
+}
+
+/** Turns a snake_case status into a human label ("no_show" -> "No show"). */
+export function formatStatusLabel(status: string): string {
+  const spaced = status.replace(/_/g, ' ');
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
 
 
 --- ./projects/shared/src/lib/core/booking-data.service.ts ---
@@ -1499,26 +2011,53 @@ export interface CartLine {
   readonly quantity: number;
 }
 
+/** What actually persists to localStorage - never a full Product. */
+interface PersistedLine {
+  productId: string;
+  quantity: number;
+}
+
 /** Hard cap per line, matching the backend's own `max=50` validation on
  *  OrderItemRequest.Quantity. Enforced here purely so the UI can't offer
  *  something the server would reject. */
 const MAX_QUANTITY_PER_LINE = 50;
 
+const STORAGE_KEY = 'bedge_cart';
+
 /**
  * Holds the shopping cart while a customer moves between the catalogue,
- * the cart, and checkout.
+ * the cart, and checkout - and now survives an accidental refresh or the
+ * browser backgrounding the tab, which on mobile happens constantly.
  *
- * Deliberately in-memory only, no localStorage. Two reasons: artifacts of
- * a stale cart (a product that has since been deactivated or repriced) are
- * a worse experience than an empty one, and every price shown here is
- * advisory anyway - the server recomputes the real total from current
- * product rows at order time, so nothing here is ever authoritative.
+ * The earlier version was deliberately in-memory only, reasoning that a
+ * stale cart (holding a product that has since been deactivated or
+ * repriced) is worse than an empty one. That reasoning was correct but
+ * incomplete - it treated "persist" and "trust what was persisted" as the
+ * same decision, when they don't have to be.
+ *
+ * What persists to localStorage is only `{productId, quantity}` pairs,
+ * never a full Product. On reload, those pairs sit in `_pending` - inert,
+ * not yet shown as cart lines - until `reconcile()` is called with a
+ * FRESH product list from the server. Reconcile rebuilds each line from
+ * current data and silently drops anything no longer active. The
+ * customer's line-item selections survive a refresh; stale prices and
+ * dead products never do.
  */
 @Injectable({ providedIn: 'root' })
 export class CartStore {
   private readonly _lines = signal<CartLine[]>([]);
 
-  /** Current cart contents. */
+  /** Persisted IDs not yet matched against a fresh product list. Once
+   *  reconcile() runs for the first time, this is empty for the rest of
+   *  the session. */
+  private _pending: PersistedLine[] = [];
+
+  constructor() {
+    this._pending = this.readPersisted();
+  }
+
+  /** Current cart contents. Lines restored from a previous session are
+   *  NOT included here until reconcile() has run. */
   readonly lines = this._lines.asReadonly();
 
   /** Total number of individual items, for the header badge. */
@@ -1540,9 +2079,13 @@ export class CartStore {
       .toFixed(2),
   );
 
-  /** Quantity of a given product currently in the cart, or 0. */
+  /** Quantity of a given product currently in the cart, or 0. Checks
+   *  pending (not-yet-reconciled) lines too, so a product tile can show
+   *  the right stepper state even before reconcile() has run. */
   quantityOf(productId: string): number {
-    return this._lines().find((l) => l.product.id === productId)?.quantity ?? 0;
+    const active = this._lines().find((l) => l.product.id === productId);
+    if (active) return active.quantity;
+    return this._pending.find((p) => p.productId === productId)?.quantity ?? 0;
   }
 
   add(product: Product): void {
@@ -1557,6 +2100,7 @@ export class CartStore {
           : l,
       );
     });
+    this.persist();
   }
 
   /** Decrements by one, removing the line entirely when it reaches zero. */
@@ -1566,19 +2110,85 @@ export class CartStore {
         .map((l) => (l.product.id === productId ? { ...l, quantity: l.quantity - 1 } : l))
         .filter((l) => l.quantity > 0),
     );
+    this.persist();
   }
 
   remove(productId: string): void {
     this._lines.update((lines) => lines.filter((l) => l.product.id !== productId));
+    this.persist();
   }
 
   clear(): void {
     this._lines.set([]);
+    this._pending = [];
+    this.persist();
+  }
+
+  /**
+   * Rebuilds cart lines from a freshly-fetched product list - the ONLY
+   * path by which a persisted, previous-session cart becomes visible
+   * again. Call this once the current screen has its own product data
+   * (the shop catalogue and the cart page both already fetch it).
+   *
+   * Every field on the resulting line comes from `products`, not from
+   * whatever was in localStorage - price and availability are always
+   * today's, never a stale snapshot. A persisted line whose product is
+   * missing (deactivated, or belongs to a different salon's catalogue
+   * entirely) is dropped without comment; there is nothing useful to tell
+   * the customer about a product that no longer exists for them.
+   */
+  reconcile(products: readonly Product[]): void {
+    if (this._pending.length === 0) return;
+
+    const byId = new Map(products.map((p) => [p.id, p]));
+    const restored: CartLine[] = [];
+
+    for (const line of this._pending) {
+      const product = byId.get(line.productId);
+      if (!product || !product.is_active) continue;
+      restored.push({ product, quantity: Math.min(line.quantity, MAX_QUANTITY_PER_LINE) });
+    }
+
+    this._pending = [];
+    if (restored.length > 0) {
+      this._lines.set(restored);
+    }
   }
 
   /** Maps the cart to the shape PlaceOrderRequest expects. */
   toOrderItems(): { product_id: string; quantity: number }[] {
     return this._lines().map((l) => ({ product_id: l.product.id, quantity: l.quantity }));
+  }
+
+  private persist(): void {
+    const payload: PersistedLine[] = this._lines().map((l) => ({
+      productId: l.product.id,
+      quantity: l.quantity,
+    }));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    } catch {
+      // Private browsing, storage quota, or storage disabled entirely -
+      // the cart still works for the current session, it just won't
+      // survive a reload. Not worth surfacing to the customer.
+    }
+  }
+
+  private readPersisted(): PersistedLine[] {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter(
+        (p): p is PersistedLine =>
+          typeof p?.productId === 'string' && typeof p?.quantity === 'number' && p.quantity > 0,
+      );
+    } catch {
+      // Corrupt JSON from a previous version of this schema, or storage
+      // access denied - either way, starting empty is the safe default.
+      return [];
+    }
   }
 }
 
@@ -2459,6 +3069,59 @@ export const ARTIST_CATEGORIES = ['makeup', 'hair', 'nails', 'lashes', 'skincare
 export type ArtistCategory = (typeof ARTIST_CATEGORIES)[number];
 
 
+--- ./projects/shared/src/lib/models/onboarding.model.ts ---
+/**
+ * Onboarding domain models. Mirror the Go onboarding.* structs.
+ *
+ * ArtistCategory is deliberately NOT redefined here - it already exists in
+ * discovery.model.ts (ARTIST_CATEGORIES, used by Discover's category
+ * filter) with the identical five values, since both are the same concept:
+ * an artist's category. Defining a second, colliding type of the same name
+ * was a real bug, not a stylistic choice - caught by the build failing on
+ * the ambiguous re-export, not by review.
+ */
+// Imported, not re-exported - the barrel (index.ts) already exports
+// ArtistCategory via discovery.model.ts's own `export *`. Re-exporting it
+// again here is exactly what caused the original collision: two paths
+// providing the same named export to the same barrel is ambiguous
+// regardless of whether the second one is a fresh definition or a
+// re-export of the first.
+import type { ArtistCategory } from './discovery.model';
+
+/** POST /onboarding/complete request body. Deliberately minimal - see the
+ *  Go model's doc comment for why deposit fields are absent entirely
+ *  (server-side defaults apply; nothing to configure before a first
+ *  booking exists). */
+export interface CompleteOnboardingRequest {
+  handle: string;
+  bio?: string;
+  instagram?: string;
+  category: ArtistCategory;
+
+  salon_name: string;
+
+  store_name: string;
+  city: string;
+  address?: string;
+
+  service_name: string;
+  service_duration_min: number;
+  service_price: string;
+}
+
+export interface CompleteOnboardingResponse {
+  artist_id: string;
+  status: 'pending';
+}
+
+export type OnboardingStatusValue = 'pending' | 'active' | 'rejected';
+
+export interface OnboardingStatus {
+  status: OnboardingStatusValue;
+  created_at?: string;
+}
+
+
 --- ./projects/shared/src/lib/models/review.model.ts ---
 /**
  * Review domain models. Mirror the Go review response/request structs.
@@ -2513,6 +3176,28 @@ export interface SubmitReviewByTokenRequest {
 }
 
 
+--- ./projects/shared/src/lib/models/admin.model.ts ---
+/** Admin review-queue models. Mirror the Go admin.* structs. */
+
+export interface PendingArtist {
+  artist_id: string;
+  name: string;
+  email: string;
+  handle: string | null;
+  category: string | null;
+  bio: string | null;
+  salon_name: string;
+  store_name: string;
+  city: string;
+  service_name: string;
+  submitted_at: string;
+}
+
+export interface DecisionRequest {
+  reason?: string;
+}
+
+
 --- ./projects/shared/src/lib/models/index.ts ---
 /** Barrel file - re-exports every model for clean imports. */
 export * from './api-response.model';
@@ -2524,6 +3209,8 @@ export * from './review.model';
 export * from './customer-auth.model';
 export * from './waitlist.model';
 export * from './product.model';
+export * from './onboarding.model';
+export * from './admin.model';
 export * from './enriched-booking.model';
 export * from './earnings.model';
 export * from './client.model';
@@ -3263,7 +3950,7 @@ import {
 import { HttpErrorResponse } from '@angular/common/http';
 import { LucideAngularModule } from 'lucide-angular';
 
-import { ReviewDataService } from '@bedge/shared';
+import { InputDirective, ReviewDataService } from '@bedge/shared';
 import type { ReviewBookingContext } from '@bedge/shared';
 
 /**
@@ -3282,7 +3969,7 @@ import type { ReviewBookingContext } from '@bedge/shared';
 @Component({
   selector: 'app-leave-review-page',
   standalone: true,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, InputDirective],
   templateUrl: './leave-review.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -3415,7 +4102,7 @@ export class LeaveReviewPage implements OnInit {
     <div class="flex-1 px-5 py-5 pb-24 space-y-6">
 
       <!-- Booking summary card -->
-      <div class="bg-gray-50 border border-gray-150 rounded-xl p-3.5">
+      <div class="bg-gray-50 border border-gray-200 rounded-xl p-3.5">
         <span class="text-[9px] uppercase font-bold tracking-wider text-gray-400 mb-1 block">Your booking</span>
         <span class="text-sm font-extrabold text-ink block">{{ ctx.service_name }} with {{ ctx.artist_name }}</span>
         <span class="text-xs text-gray-400 font-medium mt-0.5 block">{{ ctx.store_name }} · ${{ ctx.final_price }}</span>
@@ -3450,11 +4137,12 @@ export class LeaveReviewPage implements OnInit {
         <label class="block text-xs font-bold text-ink uppercase tracking-wider">Write a comment</label>
         <div class="relative">
           <textarea
+            bedgeInput
             [value]="comment()"
             (input)="onCommentInput($any($event.target).value)"
             placeholder="Share details about your experience…"
             rows="4"
-            class="w-full p-3.5 border border-gray-200 text-ink bg-white placeholder:text-gray-300 text-sm focus:outline-none focus:border-ink transition-all resize-none rounded-lg"
+            class="p-3.5 text-sm resize-none"
           ></textarea>
           <div class="absolute bottom-2.5 right-3 text-[10px] text-gray-400 font-mono">
             {{ comment().length }}/250
@@ -3591,11 +4279,9 @@ export class LeaveReviewPage implements OnInit {
   </div>
 
   <div class="px-5 pb-8 flex flex-col gap-2">
-    <button
-      type="button"
-      (click)="viewMyOrders()"
-      class="w-full h-[52px] bg-white border border-ink text-ink font-bold text-sm uppercase tracking-wide rounded-lg hover:bg-gray-50"
-    >View my orders</button>
+    <bedge-button variant="secondary" size="lg" [fullWidth]="true" (click)="viewMyOrders()">
+      View my orders
+    </bedge-button>
     <button
       type="button"
       (click)="backToShop()"
@@ -3707,6 +4393,10 @@ export class ShopPage implements OnInit {
           next: (items) => {
             this.products.set(items ?? []);
             this.loading.set(false);
+            // Restore any cart lines persisted from a previous session,
+            // using THIS fresh product list so prices and availability are
+            // never stale. A no-op if there is nothing pending.
+            this.cart.reconcile(items ?? []);
           },
           error: () => {
             this.loading.set(false);
@@ -3743,15 +4433,12 @@ import { LucideAngularModule } from 'lucide-angular';
 import {
   ProductDataService,
   ArtistDataService,
+  ButtonComponent,
   CartStore,
+  InputDirective,
   extractApiErrorMessage,
+  isValidLocalPhone,
 } from '@bedge/shared';
-
-/** Lebanese mobile numbers run 7-8 digits after the +961 prefix. Same rule
- *  as guest-details-screen and customer-login, deliberately identical. */
-function isValidLocalPhone(digitsOnly: string): boolean {
-  return /^\d{7,8}$/.test(digitsOnly);
-}
 
 /**
  * Cart and checkout.
@@ -3765,7 +4452,7 @@ function isValidLocalPhone(digitsOnly: string): boolean {
 @Component({
   selector: 'app-cart-page',
   standalone: true,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, ButtonComponent, InputDirective],
   templateUrl: './cart.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -3790,7 +4477,23 @@ export class CartPage implements OnInit {
 
   ngOnInit(): void {
     this.artistSvc.getStoresByArtist(this.artistId()).subscribe({
-      next: (stores) => this.salonId.set(stores?.[0]?.salon_id ?? null),
+      next: (stores) => {
+        const salonId = stores?.[0]?.salon_id ?? null;
+        this.salonId.set(salonId);
+
+        // This page can be reached directly - a bookmarked cart URL, or a
+        // browser restoring the tab after being backgrounded - without
+        // ever having passed through the shop catalogue first. If the
+        // cart currently only holds lines persisted from a previous
+        // session, reconcile them here too, using this salon's live
+        // product data. A no-op if the cart is already populated or empty.
+        if (salonId) {
+          this.productSvc.getSalonProducts(salonId).subscribe({
+            next: (items) => this.cart.reconcile(items ?? []),
+            error: () => {}, // best-effort - checkout still works either way
+          });
+        }
+      },
       error: () => this.salonId.set(null),
     });
   }
@@ -3943,7 +4646,7 @@ export class CartPage implements OnInit {
       } @else {
         <div class="grid grid-cols-2 gap-3">
           @for (p of displayed(); track p.id) {
-            <div class="rounded-xl overflow-hidden border border-gray-100 flex flex-col">
+            <div class="rounded-xl overflow-hidden border border-gray-200 shadow-sm flex flex-col">
               <div class="aspect-square bg-gray-100 flex items-center justify-center text-gray-300">
                 @if (p.image_url) {
                   <img [src]="p.image_url" [alt]="p.name" class="w-full h-full object-cover" />
@@ -3955,15 +4658,15 @@ export class CartPage implements OnInit {
               <div class="p-2.5 flex-1 flex flex-col">
                 <h3 class="text-[14px] font-semibold text-ink leading-snug line-clamp-2">{{ p.name }}</h3>
 
-                <div class="flex items-end justify-between mt-2 pt-1">
+                <div class="flex items-end justify-between mt-auto pt-2">
                   <span class="text-[15px] font-bold text-ink">${{ p.price }}</span>
 
                   @if (cart.quantityOf(p.id) === 0) {
                     <button
                       type="button"
                       (click)="cart.add(p)"
-                      class="w-8 h-8 rounded-lg bg-ink text-white flex items-center justify-center hover:opacity-90 transition-opacity"
-                      aria-label="Add to cart"
+                      class="w-8 h-8 rounded-lg bg-ink text-white flex items-center justify-center hover:opacity-90 active:scale-90 transition-all"
+                      [attr.aria-label]="'Add ' + p.name + ' to cart'"
                     >
                       <lucide-icon name="plus" [size]="16" [strokeWidth]="2.5" />
                     </button>
@@ -3972,8 +4675,8 @@ export class CartPage implements OnInit {
                       <button
                         type="button"
                         (click)="cart.decrement(p.id)"
-                        class="w-6 h-6 rounded flex items-center justify-center text-ink hover:bg-gray-200"
-                        aria-label="Remove one"
+                        class="w-6 h-6 rounded flex items-center justify-center text-ink hover:bg-gray-200 active:scale-90 transition-transform"
+                        [attr.aria-label]="'Remove one ' + p.name"
                       >
                         <lucide-icon name="minus" [size]="14" [strokeWidth]="2.5" />
                       </button>
@@ -3981,8 +4684,8 @@ export class CartPage implements OnInit {
                       <button
                         type="button"
                         (click)="cart.add(p)"
-                        class="w-6 h-6 rounded flex items-center justify-center text-ink hover:bg-gray-200"
-                        aria-label="Add one"
+                        class="w-6 h-6 rounded flex items-center justify-center text-ink hover:bg-gray-200 active:scale-90 transition-transform"
+                        [attr.aria-label]="'Add one more ' + p.name"
                       >
                         <lucide-icon name="plus" [size]="14" [strokeWidth]="2.5" />
                       </button>
@@ -4040,11 +4743,9 @@ export class CartPage implements OnInit {
           <lucide-icon name="shopping-bag" [size]="22" [strokeWidth]="2" />
         </div>
         <p class="text-sm font-medium text-ink">Your cart is empty</p>
-        <button
-          type="button"
-          (click)="goBack()"
-          class="mt-4 px-4 py-2 border border-ink rounded-lg text-[13px] font-semibold text-ink"
-        >Browse the shop</button>
+        <bedge-button variant="secondary" size="sm" class="mt-4" (click)="goBack()">
+          Browse the shop
+        </bedge-button>
       </div>
     } @else {
 
@@ -4106,11 +4807,12 @@ export class CartPage implements OnInit {
           <label class="block text-xs font-medium text-ink mb-1">Full name</label>
           <input
             type="text"
+            bedgeInput
+            [invalid]="touched() && !isNameValid()"
             [value]="name()"
             (input)="name.set($any($event.target).value)"
             placeholder="Your name"
-            class="w-full h-11 px-3.5 border rounded-lg text-[15px] outline-none focus:border-ink"
-            [class]="touched() && !isNameValid() ? 'border-red-400' : 'border-gray-200'"
+            class="h-11"
           />
         </div>
 
@@ -4138,11 +4840,12 @@ export class CartPage implements OnInit {
         <div>
           <label class="block text-xs font-medium text-ink mb-1">Delivery notes (optional)</label>
           <textarea
+            bedgeInput
             rows="3"
             [value]="deliveryNotes()"
             (input)="deliveryNotes.set($any($event.target).value)"
             placeholder="Address, landmark, or any delivery instructions"
-            class="w-full p-3 border border-gray-200 rounded-lg text-sm outline-none focus:border-ink resize-none"
+            class="p-3 resize-none"
           ></textarea>
         </div>
       </div>
@@ -4170,19 +4873,14 @@ export class CartPage implements OnInit {
       <div class="flex justify-end mb-1.5">
         <span class="text-[11px] text-gray-500">Total ${{ cart.estimatedTotal() }}</span>
       </div>
-      <button
-        type="button"
+      <bedge-button
+        size="lg"
+        [fullWidth]="true"
+        [loading]="placing()"
         (click)="placeOrder()"
-        [disabled]="placing()"
-        class="w-full h-[52px] bg-ink hover:opacity-90 text-white font-bold text-sm uppercase tracking-wide rounded-lg transition-opacity flex items-center justify-center gap-2 disabled:opacity-40"
       >
-        @if (placing()) {
-          <lucide-icon name="loader-2" [size]="16" [strokeWidth]="2" class="animate-spin" />
-          <span>Placing order</span>
-        } @else {
-          <span>Place order</span>
-        }
-      </button>
+        {{ placing() ? 'Placing order' : 'Place order' }}
+      </bedge-button>
     </div>
   }
 
@@ -4201,7 +4899,7 @@ import {
 import { Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 
-import { ProductDataService } from '@bedge/shared';
+import { ButtonComponent, ProductDataService } from '@bedge/shared';
 import type { Order } from '@bedge/shared';
 
 /**
@@ -4216,7 +4914,7 @@ import type { Order } from '@bedge/shared';
 @Component({
   selector: 'app-order-confirmed-page',
   standalone: true,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, ButtonComponent],
   templateUrl: './order-confirmed.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -4346,15 +5044,15 @@ export class OrderConfirmedPage implements OnInit {
     @if (!loading()) {
       <div class="space-y-3">
         @for (o of filteredOrders(); track o.id) {
-          <div class="bg-white rounded-xl border border-gray-100 p-4">
+          <bedge-card>
             <div class="flex justify-between items-start">
               <div class="min-w-0">
                 <h3 class="text-sm font-bold text-ink">Order #{{ shortRef(o.id) }}</h3>
                 <p class="text-xs text-gray-400 mt-0.5 truncate">{{ itemSummary(o) }}</p>
               </div>
-              <span [class]="'text-[10px] font-bold uppercase px-2 py-1 rounded-full shrink-0 ' + statusClass(o.status)">
+              <bedge-badge [tone]="statusTone(o.status)" class="shrink-0">
                 {{ statusLabel(o.status) }}
-              </span>
+              </bedge-badge>
             </div>
 
             <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
@@ -4364,13 +5062,13 @@ export class OrderConfirmedPage implements OnInit {
 
             @if (canCancel(o)) {
               @if (confirmingId() !== o.id) {
-                <button
-                  type="button"
+                <bedge-button
+                  variant="danger"
+                  size="sm"
+                  [fullWidth]="true"
+                  class="block mt-3"
                   (click)="askToCancel(o.id)"
-                  class="w-full h-9 mt-3 text-xs font-semibold text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
-                >
-                  Cancel order
-                </button>
+                >Cancel order</bedge-button>
               } @else {
                 <div class="mt-3 pt-3 border-t border-gray-100">
                   <p class="text-xs text-gray-600 mb-2">Cancel order #{{ shortRef(o.id) }}?</p>
@@ -4378,30 +5076,27 @@ export class OrderConfirmedPage implements OnInit {
                     <p class="text-xs text-red-600 mb-2">{{ err }}</p>
                   }
                   <div class="flex gap-2">
-                    <button
-                      type="button"
+                    <bedge-button
+                      variant="danger"
+                      size="sm"
+                      class="flex-1"
+                      [fullWidth]="true"
+                      [loading]="cancellingId() === o.id"
                       (click)="confirmCancel(o)"
+                    >Yes, cancel</bedge-button>
+                    <bedge-button
+                      variant="ghost"
+                      size="sm"
+                      class="flex-1"
+                      [fullWidth]="true"
                       [disabled]="cancellingId() === o.id"
-                      class="flex-1 h-9 bg-red-600 hover:opacity-90 text-white text-xs font-bold rounded-lg transition-opacity disabled:opacity-50 flex items-center justify-center gap-1.5"
-                    >
-                      @if (cancellingId() === o.id) {
-                        <lucide-icon name="loader-2" [size]="13" [strokeWidth]="2" class="animate-spin" />
-                      }
-                      Yes, cancel
-                    </button>
-                    <button
-                      type="button"
                       (click)="dismissCancel()"
-                      [disabled]="cancellingId() === o.id"
-                      class="flex-1 h-9 bg-white border border-gray-200 text-ink text-xs font-semibold rounded-lg hover:bg-gray-50 disabled:opacity-50"
-                    >
-                      Never mind
-                    </button>
+                    >Never mind</bedge-button>
                   </div>
                 </div>
               }
             }
-          </div>
+          </bedge-card>
         }
 
         @if (filteredOrders().length === 0) {
@@ -4433,9 +5128,16 @@ import {
 } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { LucideAngularModule } from 'lucide-angular';
 
-import { ProductDataService, CustomerAuthStore, extractApiErrorMessage } from '@bedge/shared';
+import {
+  ProductDataService,
+  CustomerAuthStore,
+  extractApiErrorMessage,
+  ButtonComponent,
+  BadgeComponent,
+  CardComponent,
+} from '@bedge/shared';
+import type { BadgeTone } from '@bedge/shared';
 import type { Order, OrderStatus } from '@bedge/shared';
 
 type FilterTab = 'active' | 'delivered' | 'cancelled';
@@ -4456,7 +5158,7 @@ const CANCELLABLE_STATUSES = new Set<OrderStatus>(['placed', 'confirmed']);
 @Component({
   selector: 'app-my-orders-page',
   standalone: true,
-  imports: [LucideAngularModule],
+  imports: [ButtonComponent, BadgeComponent, CardComponent],
   templateUrl: './my-orders.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -4512,18 +5214,26 @@ export class MyOrdersPage implements OnInit {
     return status.charAt(0).toUpperCase() + status.slice(1);
   }
 
-  statusClass(status: string): string {
+  /**
+   * Maps an order status to a badge tone. Only the MAPPING lives here -
+   * how a tone actually looks is owned by BadgeComponent, so "confirmed"
+   * can never render green on one screen and grey on another.
+   *
+   * Note the previous version hardcoded '#16a34a' rather than using the
+   * `success` token that already existed in tailwind.config.js.
+   */
+  statusTone(status: string): BadgeTone {
     switch (status) {
       case 'confirmed':
       case 'delivered':
-        return 'bg-[#16a34a]/10 text-[#16a34a]';
+        return 'success';
       case 'shipped':
-        return 'bg-ink/10 text-ink';
+        return 'ink';
       case 'cancelled':
       case 'returned':
-        return 'bg-gray-100 text-gray-400';
+        return 'muted';
       default:
-        return 'bg-gray-100 text-gray-600';
+        return 'neutral';
     }
   }
 
@@ -4660,13 +5370,13 @@ export class MyOrdersPage implements OnInit {
       </div>
 
       @if (canCancel(b)) {
-        <button
-          type="button"
+        <bedge-button
+          variant="danger"
+          size="sm"
+          [fullWidth]="true"
+          class="block mt-4"
           (click)="openCancelSheet()"
-          class="w-full h-11 mt-4 text-sm font-semibold text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
-        >
-          Cancel booking
-        </button>
+        >Cancel booking</bedge-button>
       }
     }
 
@@ -4674,10 +5384,18 @@ export class MyOrdersPage implements OnInit {
 
   <!-- Cancel confirmation bottom sheet -->
   @if (showCancelSheet() && booking(); as b) {
-    <div class="fixed inset-0 bg-ink/60 flex items-end justify-center z-50" (click)="closeCancelSheet()">
+    <div
+      class="fixed inset-0 bg-ink/60 flex items-end justify-center z-50"
+      (click)="closeCancelSheet()"
+      (keydown.escape)="closeCancelSheet()"
+    >
       <div
         class="bg-white w-full max-w-lg rounded-t-2xl p-5 pb-8 shadow-xl"
         (click)="$event.stopPropagation()"
+        cdkTrapFocus
+        cdkTrapFocusAutoCapture
+        role="dialog"
+        aria-modal="true"
       >
         <div class="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4"></div>
 
@@ -4705,11 +5423,12 @@ export class MyOrdersPage implements OnInit {
         <div class="mt-4">
           <label class="block text-xs font-semibold text-ink mb-1.5">Reason for cancelling (optional)</label>
           <textarea
+            bedgeInput
             [value]="cancelReason()"
             (input)="cancelReason.set($any($event.target).value)"
             placeholder="Let them know why…"
             rows="3"
-            class="w-full p-3 border border-gray-200 rounded-lg text-sm text-ink placeholder-gray-400 outline-none focus:border-ink resize-none"
+            class="p-3 resize-none"
           ></textarea>
         </div>
 
@@ -4731,14 +5450,13 @@ export class MyOrdersPage implements OnInit {
             }
             Yes, cancel booking
           </button>
-          <button
-            type="button"
-            (click)="closeCancelSheet()"
+          <bedge-button
+            variant="ghost"
+            size="lg"
+            [fullWidth]="true"
             [disabled]="cancelling()"
-            class="w-full h-[52px] bg-white border border-gray-200 text-ink font-bold text-sm uppercase tracking-wide rounded-lg hover:bg-gray-50 disabled:opacity-60"
-          >
-            Keep my booking
-          </button>
+            (click)="closeCancelSheet()"
+          >Keep my booking</bedge-button>
         </div>
       </div>
     </div>
@@ -4759,8 +5477,15 @@ import {
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
+import { A11yModule } from '@angular/cdk/a11y';
 
-import { BookingDataService, extractApiErrorMessage } from '@bedge/shared';
+import {
+  BookingDataService,
+  ButtonComponent,
+  InputDirective,
+  extractApiErrorMessage,
+  formatStatusLabel,
+} from '@bedge/shared';
 import type { EnrichedBooking } from '@bedge/shared';
 
 /** Statuses a customer can still act on - mirrors the backend's own
@@ -4779,7 +5504,7 @@ const REFUND_WINDOW_HOURS = 24;
 @Component({
   selector: 'app-booking-detail-page',
   standalone: true,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, A11yModule, ButtonComponent, InputDirective],
   templateUrl: './booking-detail.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -4818,9 +5543,7 @@ export class BookingDetailPage implements OnInit {
     return hoursUntil > REFUND_WINDOW_HOURS;
   }
 
-  statusLabel(status: string): string {
-    return status.split('_').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ');
-  }
+  protected readonly statusLabel = formatStatusLabel;
 
   formatDateTime(iso: string): string {
     return new Intl.DateTimeFormat('en-GB', {
@@ -4965,9 +5688,9 @@ export class BookingDetailPage implements OnInit {
                 <h3 class="text-sm font-bold text-ink">{{ b.service_name }}</h3>
                 <p class="text-xs text-gray-400 mt-0.5">with {{ b.artist_name }} · {{ b.store_name }}</p>
               </div>
-              <span class="text-[10px] font-bold uppercase px-2 py-1 rounded-full bg-gray-100 text-gray-600 shrink-0">
+              <bedge-badge [tone]="statusTone(b.status)" class="shrink-0">
                 {{ statusLabel(b.status) }}
-              </span>
+              </bedge-badge>
             </div>
 
             <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
@@ -5010,7 +5733,13 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 
-import { BookingDataService, CustomerAuthStore } from '@bedge/shared';
+import {
+  BadgeComponent,
+  BookingDataService,
+  CustomerAuthStore,
+  bookingStatusTone,
+  formatStatusLabel,
+} from '@bedge/shared';
 import type { EnrichedBooking } from '@bedge/shared';
 
 type FilterTab = 'upcoming' | 'past' | 'cancelled';
@@ -5026,7 +5755,7 @@ const PAST_STATUSES = new Set(['completed', 'no_show']);
 @Component({
   selector: 'app-my-bookings-page',
   standalone: true,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, BadgeComponent],
   templateUrl: './my-bookings.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -5039,6 +5768,9 @@ export class MyBookingsPage implements OnInit {
   readonly errorMessage = signal<string | null>(null);
   readonly bookings = signal<EnrichedBooking[]>([]);
   readonly activeTab = signal<FilterTab>('upcoming');
+
+  protected readonly statusTone = bookingStatusTone;
+  protected readonly statusLabel = formatStatusLabel;
 
   ngOnInit(): void {
     this.load();
@@ -5057,10 +5789,6 @@ export class MyBookingsPage implements OnInit {
   countFor(tab: FilterTab): number {
     const set = tab === 'upcoming' ? UPCOMING_STATUSES : tab === 'past' ? PAST_STATUSES : CANCELLED_STATUSES;
     return this.bookings().filter((b) => set.has(b.status)).length;
-  }
-
-  statusLabel(status: string): string {
-    return status.split('_').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ');
   }
 
   formatDateTime(iso: string): string {
@@ -5157,9 +5885,14 @@ export class MyBookingsPage implements OnInit {
             class="w-full h-full px-3.5 bg-white text-[15px] placeholder-gray-400 outline-none"
           />
         </div>
-        @if (touched() && !isPhoneValid()) {
-          <span class="text-xs text-red-500">Enter a valid 7–8 digit phone number</span>
-        }
+        <!-- Fixed-height slot so the button below doesn't jump down the
+             moment validation kicks in - this exact file and this exact
+             gap were called out by name in the code review this fixes. -->
+        <div class="h-4 mt-1">
+          @if (touched() && !isPhoneValid()) {
+            <span class="text-xs text-red-500 leading-4">Enter a valid 7–8 digit phone number</span>
+          }
+        </div>
       </div>
 
       @if (error(); as err) {
@@ -5174,17 +5907,12 @@ export class MyBookingsPage implements OnInit {
 
       <div class="flex-1"></div>
 
-      <button
-        type="button"
+      <bedge-button
+        size="lg"
+        [fullWidth]="true"
+        [loading]="loading()"
         (click)="requestCode()"
-        [disabled]="loading()"
-        class="w-full h-[52px] bg-ink hover:opacity-90 text-white font-bold text-sm tracking-wide uppercase rounded-lg transition-opacity flex items-center justify-center gap-2 disabled:opacity-60"
-      >
-        @if (loading()) {
-          <lucide-icon name="loader-2" [size]="16" [strokeWidth]="2" class="animate-spin" />
-        }
-        Send code
-      </button>
+      >Send code</bedge-button>
     }
 
     @if (step() === 'code') {
@@ -5212,9 +5940,11 @@ export class MyBookingsPage implements OnInit {
           class="w-full h-14 px-4 text-center text-2xl font-mono tracking-[0.5em] bg-white border rounded-lg outline-none transition-all focus:border-ink"
           [class]="touched() && !isCodeValid() ? 'border-red-400' : 'border-gray-200'"
         />
-        @if (touched() && !isCodeValid()) {
-          <span class="text-xs text-red-500">Enter the 6-digit code</span>
-        }
+        <div class="h-4 mt-1">
+          @if (touched() && !isCodeValid()) {
+            <span class="text-xs text-red-500 leading-4">Enter the 6-digit code</span>
+          }
+        </div>
       </div>
 
       @if (error(); as err) {
@@ -5235,17 +5965,12 @@ export class MyBookingsPage implements OnInit {
 
       <div class="flex-1"></div>
 
-      <button
-        type="button"
+      <bedge-button
+        size="lg"
+        [fullWidth]="true"
+        [loading]="loading()"
         (click)="verifyCode()"
-        [disabled]="loading()"
-        class="w-full h-[52px] bg-ink hover:opacity-90 text-white font-bold text-sm tracking-wide uppercase rounded-lg transition-opacity flex items-center justify-center gap-2 disabled:opacity-60"
-      >
-        @if (loading()) {
-          <lucide-icon name="loader-2" [size]="16" [strokeWidth]="2" class="animate-spin" />
-        }
-        Verify
-      </button>
+      >Verify</bedge-button>
     }
 
   </div>
@@ -5264,13 +5989,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 
-import { CustomerAuthStore, extractApiErrorMessage } from '@bedge/shared';
-
-/** Lebanese mobile numbers run 7-8 digits after the +961 prefix, digits only.
- *  Same validation as guest-details-screen - deliberately kept identical. */
-function isValidLocalPhone(digitsOnly: string): boolean {
-  return /^\d{7,8}$/.test(digitsOnly);
-}
+import {
+  ButtonComponent,
+  CustomerAuthStore,
+  extractApiErrorMessage,
+  isValidLocalPhone,
+} from '@bedge/shared';
 
 /** How long the "Resend code" link stays disabled after a send. Purely a
  *  UI courtesy - the real 3-per-5-min limit is enforced server-side. */
@@ -5291,7 +6015,7 @@ const RESEND_COOLDOWN_SECONDS = 30;
 @Component({
   selector: 'app-customer-login-page',
   standalone: true,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, ButtonComponent],
   templateUrl: './customer-login.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -5726,15 +6450,11 @@ import {
 } from '@angular/core';
 import { LucideAngularModule } from 'lucide-angular';
 
+import { isValidLocalPhone } from '@bedge/shared';
 import type { Service } from '@bedge/shared';
 
 /** The store's timezone. See pick-datetime-screen for why this isn't the browser's. */
 const STORE_TIMEZONE = 'Asia/Beirut';
-
-/** Lebanese mobile numbers run 7-8 digits after the +961 prefix, digits only. */
-function isValidLocalPhone(digitsOnly: string): boolean {
-  return /^\d{7,8}$/.test(digitsOnly);
-}
 
 /**
  * Step 4 of the guest funnel — contact details and final submit.
@@ -6672,10 +7392,18 @@ export class SelectServiceScreenComponent {
 
   <!-- Waitlist join modal -->
   @if (showWaitlistForm()) {
-    <div class="fixed inset-0 bg-ink/60 flex items-end justify-center z-50" (click)="closeWaitlistForm()">
+    <div
+      class="fixed inset-0 bg-ink/60 flex items-end justify-center z-50"
+      (click)="closeWaitlistForm()"
+      (keydown.escape)="closeWaitlistForm()"
+    >
       <div
         class="bg-white w-full max-w-lg rounded-t-2xl p-5 pb-8 shadow-xl"
         (click)="$event.stopPropagation()"
+        cdkTrapFocus
+        cdkTrapFocusAutoCapture
+        role="dialog"
+        aria-modal="true"
       >
         <div class="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4"></div>
 
@@ -6689,10 +7417,11 @@ export class SelectServiceScreenComponent {
             <label class="block text-xs font-medium text-ink mb-1">Your name</label>
             <input
               type="text"
+              bedgeInput
               [value]="waitlistName()"
               (input)="waitlistName.set($any($event.target).value)"
               placeholder="Your name"
-              class="w-full h-11 px-3.5 border border-gray-200 rounded-lg text-[15px] outline-none focus:border-ink"
+              class="h-11"
             />
           </div>
 
@@ -6721,17 +7450,14 @@ export class SelectServiceScreenComponent {
           </div>
         }
 
-        <button
-          type="button"
+        <bedge-button
+          size="lg"
+          [fullWidth]="true"
+          class="block mt-5"
+          [loading]="waitlistSubmitting()"
+          [disabled]="!isWaitlistNameValid() || !isWaitlistPhoneValid()"
           (click)="submitWaitlist()"
-          [disabled]="waitlistSubmitting() || !isWaitlistNameValid() || !isWaitlistPhoneValid()"
-          class="w-full h-[52px] mt-5 bg-ink hover:opacity-90 text-white font-bold text-sm uppercase tracking-wide rounded-lg transition-opacity flex items-center justify-center gap-2 disabled:opacity-40"
-        >
-          @if (waitlistSubmitting()) {
-            <lucide-icon name="loader-2" [size]="16" [strokeWidth]="2" class="animate-spin" />
-          }
-          Join waitlist
-        </button>
+        >Join waitlist</bedge-button>
       </div>
     </div>
   }
@@ -6750,8 +7476,14 @@ import {
   signal,
 } from '@angular/core';
 import { LucideAngularModule } from 'lucide-angular';
+import { A11yModule } from '@angular/cdk/a11y';
 
-import { BookingDataService } from '@bedge/shared';
+import {
+  BookingDataService,
+  ButtonComponent,
+  InputDirective,
+  isValidLocalPhone,
+} from '@bedge/shared';
 import type { Store, TimeSlot } from '@bedge/shared';
 
 /** One cell in the horizontal 28-day strip. */
@@ -6820,7 +7552,7 @@ function storeHour24(iso: string): number {
 @Component({
   selector: 'app-pick-datetime-screen',
   standalone: true,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, A11yModule, ButtonComponent, InputDirective],
   templateUrl: './pick-datetime-screen.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -6858,7 +7590,7 @@ export class PickDatetimeScreenComponent {
   protected readonly waitlistJoined = signal(false);
   protected readonly waitlistError = signal<string | null>(null);
 
-  protected readonly isWaitlistPhoneValid = () => /^\d{7,8}$/.test(this.waitlistPhoneDigits());
+  protected readonly isWaitlistPhoneValid = () => isValidLocalPhone(this.waitlistPhoneDigits());
   protected readonly isWaitlistNameValid = () => this.waitlistName().trim().length >= 2;
 
   openWaitlistForm(): void {
@@ -7224,12 +7956,28 @@ export class ReviewsPage implements OnInit {
     this.loading.set(true);
     this.errorMessage.set(null);
 
+    // The route param can be a UUID or a handle (e.g. /book/rania/reviews).
+    // GetPublicReviewsByArtist only accepts a genuine UUID - unlike
+    // /artists/:id and its siblings, it has no handle-resolution fallback -
+    // so the raw param must be resolved here first, the same pattern
+    // already required for guest slot holds and the media portfolio call.
+    // Reaching this screen via a handle 400'd every time before this fix.
     this.artistSvc.getArtistById(this.artistId()).subscribe({
-      next: (artist) => this.artistName.set(artist.name),
-      error: () => {}, // name is a nice-to-have on this screen, not essential
+      next: (artist) => {
+        this.artistName.set(artist.name);
+        this.loadReviews(artist.id);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.loading.set(false);
+        this.errorMessage.set(
+          err.status === 0 ? 'Cannot reach the server.' : 'Failed to load reviews.',
+        );
+      },
     });
+  }
 
-    this.reviewSvc.getPublicReviewsByArtist(this.artistId()).subscribe({
+  private loadReviews(resolvedArtistId: string): void {
+    this.reviewSvc.getPublicReviewsByArtist(resolvedArtistId).subscribe({
       next: (items) => {
         this.reviews.set(items ?? []);
         this.loading.set(false);
@@ -7344,20 +8092,33 @@ interface BeforeInstallPromptEvent extends Event {
 
 const DISMISSED_KEY = 'bedge_install_dismissed';
 
+type InstallMode =
+  | 'none'      // nothing to show: already installed, dismissed, or unsupported
+  | 'chromium'  // beforeinstallprompt available - a real, programmatic Install button
+  | 'ios';      // Safari on iOS - manual Share -> Add to Home Screen instructions
+
 /**
  * A dismissible "Add to home screen" banner, mounted once in the app root
  * so it persists across every route.
  *
- * Chrome and Edge fire `beforeinstallprompt` when a page qualifies as an
- * installable PWA (manifest + HTTPS, or localhost for dev) and the browser
- * would otherwise show its own small mini-infobar. Calling
- * `event.preventDefault()` suppresses that default UI so this banner can
- * offer the same action on B-Edge's own terms instead - offered once,
- * dismissible, and not shown again this browser once dismissed.
+ * Two genuinely different install paths, not one path with a missing
+ * fallback:
  *
- * Safari never fires this event at all - iOS installation is a manual
- * "Share > Add to Home Screen" action with no programmatic trigger, so
- * this component simply never shows there. That's expected, not a bug.
+ * Chrome and Edge fire `beforeinstallprompt` when a page qualifies as an
+ * installable PWA. Calling `event.preventDefault()` suppresses the
+ * browser's own mini-infobar so this banner can offer the same action on
+ * B-Edge's own terms - a real button that triggers the native install
+ * flow.
+ *
+ * Safari on iOS never fires that event, full stop - there is no
+ * programmatic install API on iOS at all. The only way to add a page to
+ * the home screen there is a manual "tap Share, then Add to Home Screen"
+ * action, which is a UI convention Apple owns, not something a page can
+ * trigger. The previous version of this component correctly documented
+ * that Safari never fires the event, then stopped there - which meant
+ * iOS users, roughly half of B-Edge's likely customer base, saw nothing
+ * at all rather than instructions for the path that actually works for
+ * them.
  */
 @Component({
   selector: 'app-install-prompt',
@@ -7367,23 +8128,26 @@ const DISMISSED_KEY = 'bedge_install_dismissed';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InstallPromptComponent {
-  readonly visible = signal(false);
+  readonly mode = signal<InstallMode>('none');
   private deferredEvent: BeforeInstallPromptEvent | null = null;
 
   constructor() {
     if (localStorage.getItem(DISMISSED_KEY) === '1') return;
+    if (this.isRunningStandalone()) return;
+
+    if (this.isIOS()) {
+      // No event to wait for - iOS never fires beforeinstallprompt, so
+      // show the manual instructions immediately rather than waiting
+      // forever for something that will never happen.
+      this.mode.set('ios');
+      return;
+    }
 
     window.addEventListener('beforeinstallprompt', (event: Event) => {
       event.preventDefault();
       this.deferredEvent = event as BeforeInstallPromptEvent;
-      this.visible.set(true);
+      this.mode.set('chromium');
     });
-
-    // If the app is already running as an installed PWA, there is nothing
-    // to prompt for - standalone display mode means it was already added.
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      this.visible.set(false);
-    }
   }
 
   async install(): Promise<void> {
@@ -7394,37 +8158,73 @@ export class InstallPromptComponent {
     // leaving a banner that can no longer do anything.
     await this.deferredEvent.userChoice;
     this.deferredEvent = null;
-    this.visible.set(false);
+    this.mode.set('none');
   }
 
   dismiss(): void {
     localStorage.setItem(DISMISSED_KEY, '1');
-    this.visible.set(false);
+    this.mode.set('none');
+  }
+
+  /** iPadOS 13+ reports itself as "Macintosh" with touch support, so
+   *  checking the UA string alone misses iPads. maxTouchPoints catches
+   *  that case without needing a UA parsing library for one signal. */
+  private isIOS(): boolean {
+    const ua = navigator.userAgent;
+    const isAppleTouchDevice = /iPad|iPhone|iPod/.test(ua);
+    const isDesktopSafariReportingAsIpad =
+      ua.includes('Macintosh') && navigator.maxTouchPoints > 1;
+    return isAppleTouchDevice || isDesktopSafariReportingAsIpad;
+  }
+
+  /** Two different signals because iOS Safari historically only reliably
+   *  supports the non-standard `navigator.standalone`, while
+   *  `display-mode: standalone` is the standard the rest of the web uses. */
+  private isRunningStandalone(): boolean {
+    const nav = navigator as Navigator & { standalone?: boolean };
+    return nav.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
   }
 }
 
 
 --- ./projects/customer-pwa/src/app/shared/install-prompt.component.html ---
 <!-- Install prompt banner - persists across routes, dismissible -->
-@if (visible()) {
+@if (mode() !== 'none') {
   <div class="fixed bottom-0 left-0 right-0 z-40 bg-ink text-white px-4 py-3 flex items-center gap-3">
     <div class="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
-      <lucide-icon name="download" [size]="18" [strokeWidth]="2" />
+      @if (mode() === 'ios') {
+        <lucide-icon name="share" [size]="18" [strokeWidth]="2" />
+      } @else {
+        <lucide-icon name="download" [size]="18" [strokeWidth]="2" />
+      }
     </div>
+
     <div class="flex-1 min-w-0">
-      <p class="text-[13px] font-semibold leading-tight">Add B-Edge to your home screen</p>
-      <p class="text-[11px] text-white/60 mt-0.5">Book faster, no browser tabs</p>
+      @if (mode() === 'ios') {
+        <p class="text-[13px] font-semibold leading-tight">Add B-Edge to your home screen</p>
+        <p class="text-[11px] text-white/60 mt-0.5">
+          Tap <lucide-icon name="share" [size]="11" [strokeWidth]="2.5" class="inline -translate-y-px" />
+          then "Add to Home Screen"
+        </p>
+      } @else {
+        <p class="text-[13px] font-semibold leading-tight">Add B-Edge to your home screen</p>
+        <p class="text-[11px] text-white/60 mt-0.5">Book faster, no browser tabs</p>
+      }
     </div>
+
     <button
       type="button"
       (click)="dismiss()"
-      class="text-[11px] text-white/60 font-medium px-2 py-1.5"
-    >Not now</button>
-    <button
-      type="button"
-      (click)="install()"
-      class="text-[12px] font-bold bg-white text-ink px-3.5 py-1.5 rounded-lg shrink-0"
-    >Install</button>
+      class="text-[11px] text-white/60 font-medium px-2 py-1.5 shrink-0"
+    >{{ mode() === 'ios' ? 'Got it' : 'Not now' }}</button>
+
+    @if (mode() === 'chromium') {
+      <button
+        type="button"
+        (click)="install()"
+        class="text-[12px] font-bold bg-white text-ink px-3.5 py-1.5 rounded-lg shrink-0"
+      >Install</button>
+    }
   </div>
 }
 
@@ -7456,6 +8256,7 @@ import {
   Image,
   Download,
   WifiOff,
+  Share,
   Minus,
   Plus,
   ShoppingBag,
@@ -7514,6 +8315,7 @@ export const appConfig: ApplicationConfig = {
         Image,
         Download,
         WifiOff,
+        Share,
         Minus,
         Plus,
         ShoppingBag,
@@ -7552,11 +8354,27 @@ import { App } from './app/app';
 bootstrapApplication(App, appConfig).catch((err) => console.error(err));
 
 
+--- ./projects/customer-pwa/src/environments/environment.prod.ts ---
+/**
+ * Production environment for the customer PWA.
+ *
+ * Swapped in for environment.ts by the `fileReplacements` block in
+ * angular.json under the production configuration. Without that block this
+ * file is dead code and `ng build --configuration production` would ship
+ * the development config, including whatever local IP was last used for
+ * device testing.
+ */
+export const environment = {
+  production: true,
+  apiBaseUrl: 'https://api.b-edge.com/api/v1',
+};
+
+
 --- ./projects/customer-pwa/src/environments/environment.ts ---
 /** Development environment for the customer PWA. */
 export const environment = {
   production: false,
-  apiBaseUrl: 'http://172.20.10.2:3000/api/v1',
+  apiBaseUrl: 'http://localhost:3000/api/v1',
 };
 
 
@@ -7677,6 +8495,22 @@ import { authGuard } from '@bedge/shared';
  *   /profile       — artist profile + portfolio
  */
 export const routes: Routes = [
+  {
+    path: 'onboarding',
+    canActivate: [authGuard(['artist'])],
+    loadComponent: () =>
+      import('./features/onboarding/onboarding.page').then((m) => m.OnboardingPage),
+  },
+  {
+    // Admin gets its OWN top-level route, not a child of /dashboard - at
+    // most two admin accounts will ever exist (cmd/seedadmin), and their
+    // whole job is one screen: the pending-review queue. The 13-item
+    // artist dashboard sidebar is chrome built for a different actor.
+    path: 'admin',
+    canActivate: [authGuard(['admin'])],
+    loadComponent: () =>
+      import('./features/admin/admin.page').then((m) => m.AdminPage),
+  },
   {
     path: 'login',
     loadComponent: () =>
@@ -7800,42 +8634,48 @@ export class App {
 
 
 --- ./projects/artist-dashboard/src/app/features/auth/login/login.component.ts ---
-import {
-  ChangeDetectionStrategy,
-  Component,
-  effect,
-  inject,
-  signal,
-} from '@angular/core';
-import {
-  NonNullableFormBuilder,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 
-import { AuthStore } from '@bedge/shared';
+import {
+  AuthStore,
+  ButtonComponent,
+  CardComponent,
+  InputDirective,
+  extractApiErrorMessage,
+} from '@bedge/shared';
+
+/** Loose enough to reject "not an email" without rejecting anything the
+ *  backend's own `validator:"email"` tag would actually accept. */
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
  * Login screen for the artist dashboard.
  *
- * Typed reactive form, signal-driven loading/error state, OnPush change
- * detection. On success it navigates to the returnUrl (set by the auth guard)
- * or falls back to /dashboard.
+ * Plain signals with `[value]`/`(input)` bindings, not Angular forms - this
+ * used to be a typed ReactiveFormsModule form, the one outlier against
+ * every other form in this codebase (onboarding, hours, services,
+ * client-detail, profile, clients all use this same signal pattern).
+ * Converted to match on Aug 15, 2026 rather than converting the other five.
  */
 @Component({
   selector: 'bedge-login',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [RouterLink, ButtonComponent, CardComponent, InputDirective],
   templateUrl: './login.component.html',
 })
 export class LoginComponent {
-  private readonly fb = inject(NonNullableFormBuilder);
   private readonly auth = inject(AuthStore);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+
+  readonly email = signal('');
+  readonly password = signal('');
+
+  /** Set true on the first submit attempt - field errors stay hidden until then. */
+  readonly touched = signal(false);
 
   /** True while the login request is in flight. Disables the form + button. */
   readonly loading = signal(false);
@@ -7843,67 +8683,59 @@ export class LoginComponent {
   /** A human-readable error message, or null when there is none. */
   readonly errorMessage = signal<string | null>(null);
 
-  /** Typed login form. Non-nullable so values are always strings. */
-  readonly form = this.fb.group({
-    email: this.fb.control('', {
-      validators: [Validators.required, Validators.email],
-    }),
-    password: this.fb.control('', {
-      validators: [Validators.required],
-    }),
-  });
+  isEmailValid(): boolean {
+    return EMAIL_PATTERN.test(this.email().trim());
+  }
 
-  constructor() {
-    // Sync form enabled/disabled state with the loading signal.
-    effect(() => {
-      if (this.loading()) {
-        this.form.disable();
-      } else {
-        this.form.enable();
-      }
-    });
+  isPasswordValid(): boolean {
+    return this.password().length > 0;
   }
 
   /** Submit the form: validate, call the API, handle success and failure. */
   submit(): void {
+    this.touched.set(true);
     this.errorMessage.set(null);
 
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
-    }
+    if (!this.isEmailValid() || !this.isPasswordValid()) return;
 
     this.loading.set(true);
-    const { email, password } = this.form.getRawValue();
 
-    this.auth.login({ email, password }).subscribe({
+    this.auth.login({ email: this.email().trim(), password: this.password() }).subscribe({
       next: () => {
-        const returnUrl =
-          this.route.snapshot.queryParamMap.get('returnUrl') ?? '/dashboard';
         // Reset loading before navigating so the button is never left stuck
         // if navigation is cancelled or loops.
         this.loading.set(false);
+
+        // Admin ALWAYS goes to /admin, ignoring returnUrl entirely - an
+        // admin account has no legitimate onboarded artist profile behind
+        // it, so a returnUrl pointing into /dashboard (from an old
+        // bookmark, or a link shared before this role existed) would land
+        // them on a shell with nothing real to show. Artists keep the
+        // normal returnUrl-or-/dashboard behaviour; DashboardLayoutComponent
+        // has its own check that redirects to /onboarding if their
+        // profile isn't active yet, so that case doesn't need duplicating
+        // here too.
+        if (this.auth.role() === 'admin') {
+          this.router.navigateByUrl('/admin');
+          return;
+        }
+
+        const returnUrl =
+          this.route.snapshot.queryParamMap.get('returnUrl') ?? '/dashboard';
         this.router.navigateByUrl(returnUrl);
       },
       error: (err: HttpErrorResponse) => {
         this.loading.set(false);
-        this.errorMessage.set(this.readableError(err));
+        this.errorMessage.set(
+          extractApiErrorMessage(
+            err,
+            err.status === 0
+              ? 'Cannot reach the server. Check your connection and try again.'
+              : 'Something went wrong while signing in. Please try again.',
+          ),
+        );
       },
     });
-  }
-
-  /** Translate an HTTP error into a message a person can act on. */
-  private readableError(err: HttpErrorResponse): string {
-    if (err.status === 401) {
-      return 'Incorrect email or password. Please try again.';
-    }
-    if (err.status === 403) {
-      return 'This account has been frozen. Contact support to reactivate it.';
-    }
-    if (err.status === 0) {
-      return 'Cannot reach the server. Check your connection and try again.';
-    }
-    return 'Something went wrong while signing in. Please try again.';
   }
 }
 
@@ -7917,8 +8749,7 @@ export class LoginComponent {
       <p class="mt-1 text-sm text-gray-500">Beauty at the Edge</p>
     </div>
 
-    <!-- Card -->
-    <div class="bg-white rounded-lg border border-gray-200 p-8 shadow-sm">
+    <bedge-card>
       <h2 class="text-lg font-semibold text-ink mb-6">Sign in</h2>
 
       <!-- Server error -->
@@ -7931,7 +8762,7 @@ export class LoginComponent {
         </div>
       }
 
-      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div>
         <!-- Email -->
         <div class="mb-4">
           <label for="email" class="block text-sm font-medium text-gray-700 mb-1.5">
@@ -7940,25 +8771,29 @@ export class LoginComponent {
           <input
             id="email"
             type="email"
-            formControlName="email"
+            bedgeInput
+            [invalid]="touched() && !isEmailValid()"
+            [value]="email()"
+            (input)="email.set($any($event.target).value)"
+            (keydown.enter)="submit()"
             autocomplete="email"
-            [attr.aria-invalid]="
-              form.controls.email.touched && form.controls.email.invalid
-            "
-            class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-ink
-                   placeholder:text-gray-400 focus:border-ink focus:outline-none
-                   focus:ring-1 focus:ring-ink disabled:bg-gray-100"
+            [attr.aria-invalid]="touched() && !isEmailValid()"
+            class="h-11"
             placeholder="you@example.com"
           />
-          @if (form.controls.email.touched && form.controls.email.invalid) {
-            <p class="mt-1.5 text-xs text-danger">
-              @if (form.controls.email.hasError('required')) {
-                Email is required.
-              } @else {
-                Enter a valid email address.
-              }
-            </p>
-          }
+          <!-- Fixed-height slot, always present, so the field below never
+               jumps up or down depending on whether an error is showing. -->
+          <div class="mt-1.5 h-4">
+            @if (touched() && !isEmailValid()) {
+              <p class="text-xs text-danger leading-4">
+                @if (email().trim().length === 0) {
+                  Email is required.
+                } @else {
+                  Enter a valid email address.
+                }
+              </p>
+            }
+          </div>
         </div>
 
         <!-- Password -->
@@ -7969,33 +8804,32 @@ export class LoginComponent {
           <input
             id="password"
             type="password"
-            formControlName="password"
+            bedgeInput
+            [invalid]="touched() && !isPasswordValid()"
+            [value]="password()"
+            (input)="password.set($any($event.target).value)"
+            (keydown.enter)="submit()"
             autocomplete="current-password"
-            [attr.aria-invalid]="
-              form.controls.password.touched && form.controls.password.invalid
-            "
-            class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-ink
-                   placeholder:text-gray-400 focus:border-ink focus:outline-none
-                   focus:ring-1 focus:ring-ink disabled:bg-gray-100"
+            [attr.aria-invalid]="touched() && !isPasswordValid()"
+            class="h-11"
             placeholder="••••••••"
           />
-          @if (form.controls.password.touched && form.controls.password.hasError('required')) {
-            <p class="mt-1.5 text-xs text-danger">Password is required.</p>
-          }
+          <div class="mt-1.5 h-4">
+            @if (touched() && !isPasswordValid()) {
+              <p class="text-xs text-danger leading-4">Password is required.</p>
+            }
+          </div>
         </div>
 
         <!-- Submit -->
-        <button
-          type="submit"
-          class="w-full rounded-lg bg-ink px-4 py-2.5 text-sm font-medium text-white
-                 hover:bg-ink-800 focus:outline-none focus:ring-2 focus:ring-ink
-                 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed
-                 transition-colors"
-          [disabled]="loading()"
+        <bedge-button
+          [fullWidth]="true"
+          [loading]="loading()"
+          (click)="submit()"
         >
           {{ loading() ? 'Signing in…' : 'Sign in' }}
-        </button>
-      </form>
+        </bedge-button>
+      </div>
 
       <!-- Forgot password -->
       <div class="mt-5 text-center">
@@ -8006,9 +8840,279 @@ export class LoginComponent {
           Forgot password?
         </a>
       </div>
-    </div>
+    </bedge-card>
   </div>
 </main>
+
+
+--- ./projects/artist-dashboard/src/app/features/admin/admin.page.html ---
+<div class="min-h-screen bg-gray-50">
+
+  <div class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+    <div>
+      <h1 class="text-lg font-bold text-ink">Pending artists</h1>
+      <p class="text-xs text-gray-500 mt-0.5">
+        {{ pending().length }} awaiting review
+      </p>
+    </div>
+    <button type="button" (click)="logout()" class="text-xs text-gray-400 font-semibold underline">
+      Sign out
+    </button>
+  </div>
+
+  <div class="max-w-2xl mx-auto px-4 py-6">
+
+    @if (errorMessage(); as msg) {
+      <div class="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+        {{ msg }}
+      </div>
+    }
+
+    @if (loading()) {
+      <div class="space-y-3">
+        <div class="h-40 rounded-xl bg-gray-100 animate-pulse"></div>
+        <div class="h-40 rounded-xl bg-gray-100 animate-pulse"></div>
+      </div>
+    }
+
+    @if (!loading()) {
+      @if (pending().length === 0) {
+        <div class="py-16 text-center">
+          <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 mx-auto mb-3">
+            <lucide-icon name="check" [size]="20" [strokeWidth]="2" />
+          </div>
+          <p class="text-sm font-medium text-ink">Nothing waiting on you</p>
+          <p class="text-xs text-gray-400 mt-1">New applications will appear here.</p>
+        </div>
+      } @else {
+        <div class="space-y-4">
+          @for (artist of pending(); track artist.artist_id) {
+            <div class="bg-white border border-gray-200 rounded-xl p-5">
+
+              <div class="flex items-start justify-between">
+                <div>
+                  <h2 class="text-[15px] font-bold text-ink">{{ artist.name }}</h2>
+                  <p class="text-xs text-gray-400 mt-0.5">{{ artist.email }}</p>
+                </div>
+                <span class="text-[11px] text-gray-400 shrink-0">{{ formatDate(artist.submitted_at) }}</span>
+              </div>
+
+              <div class="mt-3 bg-gray-50 rounded-lg p-3 text-[13px] space-y-1.5">
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Handle</span>
+                  <span class="font-medium text-ink">{{ artist.handle || '\u2014' }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Category</span>
+                  <span class="font-medium text-ink">{{ artist.category || '\u2014' }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Business</span>
+                  <span class="font-medium text-ink">{{ artist.salon_name }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Location</span>
+                  <span class="font-medium text-ink">{{ artist.store_name }}, {{ artist.city }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-500">First service</span>
+                  <span class="font-medium text-ink">{{ artist.service_name }}</span>
+                </div>
+              </div>
+
+              @if (artist.bio) {
+                <p class="text-[13px] text-gray-600 italic mt-3">"{{ artist.bio }}"</p>
+              }
+
+              @if (confirmingRejectId() !== artist.artist_id) {
+                <div class="flex gap-2 mt-4 pt-4 border-t border-gray-100">
+                  <bedge-button
+                    class="flex-1"
+                    [fullWidth]="true"
+                    [loading]="busyId() === artist.artist_id"
+                    (click)="approve(artist)"
+                  >Approve</bedge-button>
+                  <bedge-button
+                    variant="danger"
+                    class="flex-1"
+                    [fullWidth]="true"
+                    [disabled]="busyId() === artist.artist_id"
+                    (click)="askToReject(artist.artist_id)"
+                  >Reject</bedge-button>
+                </div>
+              } @else {
+                <div class="mt-4 pt-4 border-t border-gray-100">
+                  <label class="block text-xs font-semibold text-ink mb-1">Reason (optional)</label>
+                  <textarea
+                    bedgeInput
+                    rows="2"
+                    [value]="rejectReason()"
+                    (input)="rejectReason.set($any($event.target).value)"
+                    placeholder="Visible only in the audit log, not to the artist"
+                  ></textarea>
+                  <div class="flex gap-2 mt-2">
+                    <bedge-button
+                      variant="danger"
+                      class="flex-1"
+                      [fullWidth]="true"
+                      [loading]="busyId() === artist.artist_id"
+                      (click)="confirmReject(artist)"
+                    >Confirm reject</bedge-button>
+                    <bedge-button
+                      variant="ghost"
+                      class="flex-1"
+                      [fullWidth]="true"
+                      [disabled]="busyId() === artist.artist_id"
+                      (click)="cancelReject()"
+                    >Cancel</bedge-button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    }
+
+  </div>
+</div>
+
+
+--- ./projects/artist-dashboard/src/app/features/admin/admin.page.ts ---
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  inject,
+  signal,
+} from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
+
+import {
+  AdminDataService,
+  AuthStore,
+  ButtonComponent,
+  InputDirective,
+  extractApiErrorMessage,
+} from '@bedge/shared';
+import type { PendingArtist } from '@bedge/shared';
+
+/**
+ * Admin review queue - the only screen an admin account sees.
+ *
+ * Deliberately a single flat page, not a dashboard shell with a sidebar.
+ * At most two admin accounts will ever exist (see cmd/seedadmin), and
+ * their entire job here is one decision, repeated: does this application
+ * go live. A 13-item sidebar built for artists running their own business
+ * would be actively wrong chrome for that.
+ */
+@Component({
+  selector: 'app-admin-page',
+  standalone: true,
+  imports: [LucideAngularModule, ButtonComponent, InputDirective],
+  templateUrl: './admin.page.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class AdminPage implements OnInit {
+  private readonly adminSvc = inject(AdminDataService);
+  private readonly auth = inject(AuthStore);
+  private readonly router = inject(Router);
+
+  readonly loading = signal(true);
+  readonly errorMessage = signal<string | null>(null);
+  readonly pending = signal<PendingArtist[]>([]);
+
+  /** Per-artist in-flight flag, so approving one card doesn't disable the
+   *  whole list. */
+  readonly busyId = signal<string | null>(null);
+
+  // Reject confirmation, inline on the card - matching the pattern used
+  // for order and portfolio-photo cancellation elsewhere in this app,
+  // rather than a native confirm() dialog.
+  readonly confirmingRejectId = signal<string | null>(null);
+  readonly rejectReason = signal('');
+
+  ngOnInit(): void {
+    this.load();
+  }
+
+  formatDate(iso: string): string {
+    return new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Asia/Beirut',
+      day: 'numeric', month: 'short', year: 'numeric',
+    }).format(new Date(iso));
+  }
+
+  approve(artist: PendingArtist): void {
+    if (this.busyId()) return;
+    this.busyId.set(artist.artist_id);
+    this.errorMessage.set(null);
+
+    this.adminSvc.approveArtist(artist.artist_id).subscribe({
+      next: () => {
+        this.busyId.set(null);
+        this.load();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.busyId.set(null);
+        this.errorMessage.set(extractApiErrorMessage(err, 'Could not approve this artist.'));
+      },
+    });
+  }
+
+  askToReject(artistId: string): void {
+    this.rejectReason.set('');
+    this.confirmingRejectId.set(artistId);
+  }
+
+  cancelReject(): void {
+    this.confirmingRejectId.set(null);
+  }
+
+  confirmReject(artist: PendingArtist): void {
+    if (this.busyId()) return;
+    this.busyId.set(artist.artist_id);
+    this.errorMessage.set(null);
+
+    const reason = this.rejectReason().trim();
+    this.adminSvc.rejectArtist(artist.artist_id, reason ? { reason } : {}).subscribe({
+      next: () => {
+        this.busyId.set(null);
+        this.confirmingRejectId.set(null);
+        this.load();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.busyId.set(null);
+        this.errorMessage.set(extractApiErrorMessage(err, 'Could not reject this artist.'));
+      },
+    });
+  }
+
+  logout(): void {
+    this.auth.logout().subscribe({
+      next: () => this.router.navigateByUrl('/login'),
+      error: () => this.router.navigateByUrl('/login'),
+    });
+  }
+
+  private load(): void {
+    this.loading.set(true);
+    this.adminSvc.getPendingArtists().subscribe({
+      next: (items) => {
+        this.pending.set(items ?? []);
+        this.loading.set(false);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.loading.set(false);
+        this.errorMessage.set(
+          err.status === 0 ? 'Cannot reach the server.' : 'Failed to load pending artists.',
+        );
+      },
+    });
+  }
+}
 
 
 --- ./projects/artist-dashboard/src/app/features/dashboard/hours.component.html ---
@@ -8087,10 +9191,9 @@ export class LoginComponent {
         <div class="flex flex-col gap-2 mb-8">
           @for (row of dayRows(); track row.dayOfWeek) {
             <div
-              class="border rounded-xl px-3 py-2.5 transition-colors"
+              class="border rounded-xl px-3 py-2.5 transition-colors bg-white"
               [class.border-gray-200]="!row.dirty"
               [class.border-gray-300]="row.dirty"
-              [class.bg-white]="true"
             >
               <!-- Desktop layout: grid -->
               <div class="hidden sm:grid grid-cols-[110px_100px_1fr_16px_1fr_72px] gap-x-3 items-center">
@@ -8100,21 +9203,22 @@ export class LoginComponent {
 
                 <!-- Open / Closed toggle -->
                 <select
-                  class="bedge-select text-sm"
-                  [ngModel]="row.isOpen"
-                  (ngModelChange)="row.isOpen = $event; markDirty(row)"
+                  class="w-full h-9 px-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-ink bg-white cursor-pointer"
+                  [value]="row.isOpen ? 'open' : 'closed'"
+                  (change)="setIsOpen(row, $any($event.target).value === 'open')"
                 >
-                  <option [ngValue]="true">Open</option>
-                  <option [ngValue]="false">Closed</option>
+                  <option value="open">Open</option>
+                  <option value="closed">Closed</option>
                 </select>
 
                 <!-- Open time -->
                 <input
                   type="time"
-                  class="bedge-input text-sm"
+                  bedgeInput
+                  class="h-9 text-sm"
                   [disabled]="!row.isOpen"
-                  [ngModel]="row.openTime"
-                  (ngModelChange)="row.openTime = $event; markDirty(row)"
+                  [value]="row.openTime"
+                  (input)="setOpenTime(row, $any($event.target).value)"
                 />
 
                 <span class="text-center text-gray-300 text-sm select-none">–</span>
@@ -8122,26 +9226,20 @@ export class LoginComponent {
                 <!-- Close time -->
                 <input
                   type="time"
-                  class="bedge-input text-sm"
+                  bedgeInput
+                  class="h-9 text-sm"
                   [disabled]="!row.isOpen"
-                  [ngModel]="row.closeTime"
-                  (ngModelChange)="row.closeTime = $event; markDirty(row)"
+                  [value]="row.closeTime"
+                  (input)="setCloseTime(row, $any($event.target).value)"
                 />
 
                 <!-- Save button -->
-                <button
-                  type="button"
-                  class="bedge-btn-sm transition-opacity"
-                  [disabled]="!row.dirty || row.saving"
-                  [class.opacity-30]="!row.dirty || row.saving"
+                <bedge-button
+                  size="sm"
+                  [disabled]="!row.dirty"
+                  [loading]="row.saving"
                   (click)="saveRow(row)"
-                >
-                  @if (row.saving) {
-                    <span class="animate-spin inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full"></span>
-                  } @else {
-                    Save
-                  }
-                </button>
+                >Save</bedge-button>
               </div>
 
               <!-- Mobile layout: stacked -->
@@ -8149,40 +9247,40 @@ export class LoginComponent {
                 <div class="flex items-center justify-between">
                   <span class="text-sm font-medium text-ink">{{ row.label }}</span>
                   <select
-                    class="bedge-select text-sm"
-                    [ngModel]="row.isOpen"
-                    (ngModelChange)="row.isOpen = $event; markDirty(row)"
+                    class="h-9 px-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-ink bg-white cursor-pointer"
+                    [value]="row.isOpen ? 'open' : 'closed'"
+                    (change)="setIsOpen(row, $any($event.target).value === 'open')"
                   >
-                    <option [ngValue]="true">Open</option>
-                    <option [ngValue]="false">Closed</option>
+                    <option value="open">Open</option>
+                    <option value="closed">Closed</option>
                   </select>
                 </div>
                 @if (row.isOpen) {
                   <div class="flex items-center gap-2">
                     <input
                       type="time"
-                      class="bedge-input text-sm flex-1"
-                      [ngModel]="row.openTime"
-                      (ngModelChange)="row.openTime = $event; markDirty(row)"
+                      bedgeInput
+                      class="h-9 text-sm flex-1"
+                      [value]="row.openTime"
+                      (input)="setOpenTime(row, $any($event.target).value)"
                     />
                     <span class="text-gray-300 text-sm">–</span>
                     <input
                       type="time"
-                      class="bedge-input text-sm flex-1"
-                      [ngModel]="row.closeTime"
-                      (ngModelChange)="row.closeTime = $event; markDirty(row)"
+                      bedgeInput
+                      class="h-9 text-sm flex-1"
+                      [value]="row.closeTime"
+                      (input)="setCloseTime(row, $any($event.target).value)"
                     />
                   </div>
                 }
                 @if (row.dirty) {
-                  <button
-                    type="button"
-                    class="bedge-btn-sm w-full"
-                    [disabled]="row.saving"
+                  <bedge-button
+                    size="sm"
+                    [fullWidth]="true"
+                    [loading]="row.saving"
                     (click)="saveRow(row)"
-                  >
-                    @if (row.saving) { Saving… } @else { Save }
-                  </button>
+                  >Save</bedge-button>
                 }
               </div>
 
@@ -8243,7 +9341,7 @@ export class LoginComponent {
                 </div>
                 <button
                   type="button"
-                  class="bedge-btn-icon text-gray-400 hover:text-danger-dark transition-colors"
+                  class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-50 transition-colors disabled:cursor-not-allowed text-gray-400 hover:text-danger-dark"
                   [disabled]="deletingExceptionId() === exc.id"
                   (click)="deleteException(exc)"
                   aria-label="Remove exception"
@@ -8268,36 +9366,35 @@ export class LoginComponent {
           <div class="hidden sm:grid grid-cols-[160px_1fr_140px_72px] gap-3 items-start">
             <input
               type="date"
-              class="bedge-input text-sm"
+              bedgeInput
+              class="h-9 text-sm"
               placeholder="Date"
-              [ngModel]="newExceptionDate()"
-              (ngModelChange)="newExceptionDate.set($event)"
+              [value]="newExceptionDate()"
+              (input)="newExceptionDate.set($any($event.target).value)"
             />
             <input
               type="text"
-              class="bedge-input text-sm"
+              bedgeInput
+              class="h-9 text-sm"
               placeholder="Reason (optional)"
               maxlength="255"
-              [ngModel]="newExceptionReason()"
-              (ngModelChange)="newExceptionReason.set($event)"
+              [value]="newExceptionReason()"
+              (input)="newExceptionReason.set($any($event.target).value)"
             />
             <select
-              class="bedge-select text-sm"
-              [ngModel]="newExceptionIsClosed() ? 'closed' : 'custom'"
-              (ngModelChange)="onIsClosedChange($event)"
+              class="h-9 px-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-ink bg-white cursor-pointer"
+              [value]="newExceptionIsClosed() ? 'closed' : 'custom'"
+              (change)="onIsClosedChange($any($event.target).value)"
             >
               <option value="closed">Closed</option>
               <option value="custom">Custom hours</option>
             </select>
-            <button
-              type="button"
-              class="bedge-btn-sm"
-              [disabled]="!canAddException() || addingException()"
-              [class.opacity-30]="!canAddException() || addingException()"
+            <bedge-button
+              size="sm"
+              [disabled]="!canAddException()"
+              [loading]="addingException()"
               (click)="addException()"
-            >
-              @if (addingException()) { Adding… } @else { Add }
-            </button>
+            >Add</bedge-button>
           </div>
 
           <!-- Custom hours sub-row (desktop) — only shown when "Custom hours" is selected -->
@@ -8306,16 +9403,18 @@ export class LoginComponent {
               <span class="text-xs text-gray-400 w-[160px]">Custom hours:</span>
               <input
                 type="time"
-                class="bedge-input text-sm w-[160px]"
-                [ngModel]="newExceptionOpenTime()"
-                (ngModelChange)="newExceptionOpenTime.set($event)"
+                bedgeInput
+                class="h-9 text-sm w-[160px]"
+                [value]="newExceptionOpenTime()"
+                (input)="newExceptionOpenTime.set($any($event.target).value)"
               />
               <span class="text-gray-300 text-sm">–</span>
               <input
                 type="time"
-                class="bedge-input text-sm w-[160px]"
-                [ngModel]="newExceptionCloseTime()"
-                (ngModelChange)="newExceptionCloseTime.set($event)"
+                bedgeInput
+                class="h-9 text-sm w-[160px]"
+                [value]="newExceptionCloseTime()"
+                (input)="newExceptionCloseTime.set($any($event.target).value)"
               />
             </div>
           }
@@ -8324,22 +9423,24 @@ export class LoginComponent {
           <div class="flex sm:hidden flex-col gap-2">
             <input
               type="date"
-              class="bedge-input text-sm"
-              [ngModel]="newExceptionDate()"
-              (ngModelChange)="newExceptionDate.set($event)"
+              bedgeInput
+              class="h-9 text-sm"
+              [value]="newExceptionDate()"
+              (input)="newExceptionDate.set($any($event.target).value)"
             />
             <input
               type="text"
-              class="bedge-input text-sm"
+              bedgeInput
+              class="h-9 text-sm"
               placeholder="Reason (optional)"
               maxlength="255"
-              [ngModel]="newExceptionReason()"
-              (ngModelChange)="newExceptionReason.set($event)"
+              [value]="newExceptionReason()"
+              (input)="newExceptionReason.set($any($event.target).value)"
             />
             <select
-              class="bedge-select text-sm"
-              [ngModel]="newExceptionIsClosed() ? 'closed' : 'custom'"
-              (ngModelChange)="onIsClosedChange($event)"
+              class="h-9 px-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-ink bg-white cursor-pointer"
+              [value]="newExceptionIsClosed() ? 'closed' : 'custom'"
+              (change)="onIsClosedChange($any($event.target).value)"
             >
               <option value="closed">Closed</option>
               <option value="custom">Custom hours</option>
@@ -8348,27 +9449,28 @@ export class LoginComponent {
               <div class="flex items-center gap-2">
                 <input
                   type="time"
-                  class="bedge-input text-sm flex-1"
-                  [ngModel]="newExceptionOpenTime()"
-                  (ngModelChange)="newExceptionOpenTime.set($event)"
+                  bedgeInput
+                  class="h-9 text-sm flex-1"
+                  [value]="newExceptionOpenTime()"
+                  (input)="newExceptionOpenTime.set($any($event.target).value)"
                 />
                 <span class="text-gray-300 text-sm">–</span>
                 <input
                   type="time"
-                  class="bedge-input text-sm flex-1"
-                  [ngModel]="newExceptionCloseTime()"
-                  (ngModelChange)="newExceptionCloseTime.set($event)"
+                  bedgeInput
+                  class="h-9 text-sm flex-1"
+                  [value]="newExceptionCloseTime()"
+                  (input)="newExceptionCloseTime.set($any($event.target).value)"
                 />
               </div>
             }
-            <button
-              type="button"
-              class="bedge-btn-sm w-full"
-              [disabled]="!canAddException() || addingException()"
+            <bedge-button
+              size="sm"
+              [fullWidth]="true"
+              [disabled]="!canAddException()"
+              [loading]="addingException()"
               (click)="addException()"
-            >
-              @if (addingException()) { Adding… } @else { Add special hours }
-            </button>
+            >Add special hours</bedge-button>
           </div>
 
           <!-- Add exception error -->
@@ -8418,11 +9520,9 @@ export class LoginComponent {
               <p class="text-sm font-bold text-ink">{{ e.customer_name }}</p>
               <p class="text-[11px] text-gray-400 font-medium">{{ e.service_name }}</p>
             </div>
-            <span
-              [class]="'text-[9px] font-bold uppercase px-2 py-1 rounded-full shrink-0 ' + statusClass(e.status)"
-            >
+            <bedge-badge [tone]="statusTone(e.status)" class="shrink-0">
               {{ statusLabel(e.status) }}
-            </span>
+            </bedge-badge>
           </div>
 
           <div class="pt-2.5 mt-2.5 border-t border-gray-100 flex justify-between items-center text-[11px] text-gray-400 font-medium">
@@ -8516,7 +9616,7 @@ export class LoginComponent {
     } @else {
       <div class="space-y-4 mt-5">
         @for (order of displayed(); track order.id) {
-          <div class="bg-white border border-gray-200 rounded-xl p-5">
+          <bedge-card>
 
             <!-- Top row -->
             <div class="flex items-start justify-between">
@@ -8528,9 +9628,9 @@ export class LoginComponent {
                   · {{ formatDate(order.created_at) }}
                 </div>
               </div>
-              <span [class]="'text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shrink-0 ' + statusClass(order.status)">
+              <bedge-badge [tone]="statusTone(order.status)" class="shrink-0">
                 {{ statusLabel(order.status) }}
-              </span>
+              </bedge-badge>
             </div>
 
             <!-- Line items -->
@@ -8578,40 +9678,25 @@ export class LoginComponent {
 
                 @switch (order.status) {
                   @case ('placed') {
-                    <button
-                      type="button"
-                      (click)="openConfirmModal(order)"
+                    <bedge-button
+                      size="sm"
                       [disabled]="busyOrderId() === order.id"
-                      class="h-9 px-4 bg-ink hover:opacity-90 text-white font-bold text-xs rounded-lg transition-opacity disabled:opacity-40"
-                    >
-                      Confirm payment
-                    </button>
+                      (click)="openConfirmModal(order)"
+                    >Confirm payment</bedge-button>
                   }
                   @case ('confirmed') {
-                    <button
-                      type="button"
+                    <bedge-button
+                      size="sm"
+                      [loading]="busyOrderId() === order.id"
                       (click)="markShipped(order)"
-                      [disabled]="busyOrderId() === order.id"
-                      class="h-9 px-4 bg-ink hover:opacity-90 text-white font-bold text-xs rounded-lg transition-opacity flex items-center gap-1.5 disabled:opacity-40"
-                    >
-                      @if (busyOrderId() === order.id) {
-                        <lucide-icon name="loader-2" [size]="13" [strokeWidth]="2" class="animate-spin" />
-                      }
-                      Mark shipped
-                    </button>
+                    >Mark shipped</bedge-button>
                   }
                   @case ('shipped') {
-                    <button
-                      type="button"
+                    <bedge-button
+                      size="sm"
+                      [loading]="busyOrderId() === order.id"
                       (click)="markDelivered(order)"
-                      [disabled]="busyOrderId() === order.id"
-                      class="h-9 px-4 bg-ink hover:opacity-90 text-white font-bold text-xs rounded-lg transition-opacity flex items-center gap-1.5 disabled:opacity-40"
-                    >
-                      @if (busyOrderId() === order.id) {
-                        <lucide-icon name="loader-2" [size]="13" [strokeWidth]="2" class="animate-spin" />
-                      }
-                      Mark delivered
-                    </button>
+                    >Mark delivered</bedge-button>
                   }
                   @case ('delivered') {
                     <div class="flex items-center gap-1 text-xs font-bold text-[#16a34a] px-2.5 py-1.5 bg-[#16a34a]/10 rounded-lg">
@@ -8622,7 +9707,7 @@ export class LoginComponent {
                 }
               </div>
             </div>
-          </div>
+          </bedge-card>
         }
       </div>
     }
@@ -8630,8 +9715,19 @@ export class LoginComponent {
 
   <!-- Confirm payment modal -->
   @if (modalOrder(); as order) {
-    <div class="fixed inset-0 z-50 bg-ink/40 flex items-center justify-center p-4" (click)="closeModal()">
-      <div class="bg-white border border-gray-200 rounded-2xl w-full max-w-[420px] shadow-xl overflow-hidden" (click)="$event.stopPropagation()">
+    <div
+      class="fixed inset-0 z-50 bg-ink/40 flex items-center justify-center p-4"
+      (click)="closeModal()"
+      (keydown.escape)="closeModal()"
+    >
+      <div
+        class="bg-white border border-gray-200 rounded-2xl w-full max-w-[420px] shadow-xl overflow-hidden"
+        (click)="$event.stopPropagation()"
+        cdkTrapFocus
+        cdkTrapFocusAutoCapture
+        role="dialog"
+        aria-modal="true"
+      >
         <div class="px-5 py-4 border-b border-gray-100">
           <h2 class="text-base font-bold text-ink">Confirm payment received</h2>
           <p class="text-xs text-gray-500 mt-0.5">
@@ -8643,11 +9739,12 @@ export class LoginComponent {
           <div>
             <label class="block text-xs font-semibold text-ink mb-1">Reference (optional)</label>
             <input
+              bedgeInput
               type="text"
               [value]="paymentReference()"
               (input)="paymentReference.set($any($event.target).value)"
               placeholder="Whish transaction number"
-              class="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm outline-none focus:border-ink"
+              class="h-11"
             />
             <p class="text-[11px] text-gray-400 mt-1.5">
               Only for your own records — the customer never sees this.
@@ -8662,25 +9759,17 @@ export class LoginComponent {
         </div>
 
         <div class="px-5 py-4 border-t border-gray-100 flex flex-col gap-2">
-          <button
-            type="button"
+          <bedge-button
+            [fullWidth]="true"
+            [loading]="busyOrderId() !== null"
             (click)="confirmPayment()"
+          >Confirm payment</bedge-button>
+          <bedge-button
+            variant="ghost"
+            [fullWidth]="true"
             [disabled]="busyOrderId() !== null"
-            class="w-full h-11 bg-ink hover:opacity-90 text-white font-bold text-[13px] uppercase tracking-wide rounded-lg transition-opacity flex items-center justify-center gap-2 disabled:opacity-40"
-          >
-            @if (busyOrderId() !== null) {
-              <lucide-icon name="loader-2" [size]="15" [strokeWidth]="2" class="animate-spin" />
-            }
-            Confirm payment
-          </button>
-          <button
-            type="button"
             (click)="closeModal()"
-            [disabled]="busyOrderId() !== null"
-            class="w-full h-11 bg-white border border-gray-200 text-ink font-bold text-[13px] uppercase tracking-wide rounded-lg hover:bg-gray-50 disabled:opacity-40"
-          >
-            Cancel
-          </button>
+          >Cancel</bedge-button>
         </div>
       </div>
     </div>
@@ -8711,12 +9800,11 @@ export class LoginComponent {
   <div class="mb-5">
     <input
       type="search"
-      [ngModel]="searchQuery()"
-      (ngModelChange)="onSearch($event)"
+      bedgeInput
+      [value]="searchQuery()"
+      (input)="onSearch($any($event.target).value)"
       placeholder="Search by name or service…"
-      class="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm
-             text-ink placeholder:text-gray-400 focus:border-ink focus:bg-white
-             focus:outline-none focus:ring-1 focus:ring-ink"
+      class="h-11 bg-gray-50 focus:bg-white"
     />
   </div>
 
@@ -8816,7 +9904,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 
-import { ClientDataService } from '@bedge/shared';
+import { ClientDataService, BadgeComponent, bookingStatusTone } from '@bedge/shared';
 import type { ClientProfile } from '@bedge/shared';
 
 /**
@@ -8827,10 +9915,14 @@ import type { ClientProfile } from '@bedge/shared';
   selector: 'bedge-client-detail',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule],
+  imports: [FormsModule, BadgeComponent],
   templateUrl: './client-detail.component.html',
 })
 export class ClientDetailComponent implements OnInit {
+  /** Shared across bookings, client-detail and waitlist so the same
+   *  status can never render differently on different screens. */
+  protected readonly statusTone = bookingStatusTone;
+
   private readonly clientSvc = inject(ClientDataService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -8932,16 +10024,6 @@ export class ClientDetailComponent implements OnInit {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
 
-  statusClass(status: string): string {
-    switch (status) {
-      case 'completed':  return 'bg-gray-100 text-gray-600';
-      case 'confirmed':  return 'bg-green-100 text-green-700';
-      case 'cancelled':  return 'bg-red-100 text-red-700';
-      case 'no_show':    return 'bg-red-100 text-red-700';
-      case 'pending':    return 'bg-amber-100 text-amber-700';
-      default:           return 'bg-gray-100 text-gray-500';
-    }
-  }
 
   statusLabel(status: string): string {
     const labels: Record<string, string> = {
@@ -8986,8 +10068,9 @@ import {
 } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { LucideAngularModule } from 'lucide-angular';
+import { A11yModule } from '@angular/cdk/a11y';
 
-import { ArtistDataService, BookingDataService } from '@bedge/shared';
+import { ArtistDataService, BadgeComponent, BookingDataService } from '@bedge/shared';
 import type { EnrichedBooking } from '@bedge/shared';
 import { environment } from '../../../environments/environment';
 
@@ -9023,7 +10106,7 @@ interface PositionedBooking {
   selector: 'bedge-calendar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, A11yModule, BadgeComponent],
   templateUrl: './calendar.component.html',
 })
 export class CalendarComponent implements OnInit {
@@ -9292,10 +10375,8 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
 
-import { ArtistDataService } from '@bedge/shared';
+import { ArtistDataService, ButtonComponent, InputDirective } from '@bedge/shared';
 import type {
   Store,
   BusinessHours,
@@ -9397,11 +10478,18 @@ function buildDayRows(apiHours: BusinessHours[]): DayRow[] {
  *
  * Store tabs load fresh hours and exceptions from the API on every switch so
  * the two stores stay fully independent.
+ *
+ * Plain signals with `[value]`/`(input)` bindings, not `FormsModule`/
+ * `ngModel` - converted Aug 15, 2026 to match the pattern every other
+ * migrated screen in this codebase uses (onboarding, products, and now
+ * this). The previous version's ngModel handlers mutated a DayRow object
+ * in place and relied on a later spread to pick up the mutation; the
+ * setter methods below go through `updateRow` directly instead.
  */
 @Component({
   selector: 'bedge-hours',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [ButtonComponent, InputDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './hours.component.html',
 })
@@ -9517,12 +10605,19 @@ export class HoursComponent implements OnInit {
   // Hours grid
   // ─────────────────────────────────────────────────────────────────────────
 
-  /**
-   * Called by the template when the user edits any field in a day row.
-   * Marks the row dirty so its Save button activates.
-   */
-  markDirty(row: DayRow): void {
-    this.updateRow(row.dayOfWeek, { dirty: true });
+  /** Sets whether a day is open, and marks the row dirty. */
+  setIsOpen(row: DayRow, isOpen: boolean): void {
+    this.updateRow(row.dayOfWeek, { isOpen, dirty: true });
+  }
+
+  /** Sets a day's open time, and marks the row dirty. */
+  setOpenTime(row: DayRow, openTime: string): void {
+    this.updateRow(row.dayOfWeek, { openTime, dirty: true });
+  }
+
+  /** Sets a day's close time, and marks the row dirty. */
+  setCloseTime(row: DayRow, closeTime: string): void {
+    this.updateRow(row.dayOfWeek, { closeTime, dirty: true });
   }
 
   /**
@@ -9707,8 +10802,9 @@ import {
 import { HttpErrorResponse } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
 import { LucideAngularModule } from 'lucide-angular';
+import { A11yModule } from '@angular/cdk/a11y';
 
-import { ArtistDataService, BookingDataService } from '@bedge/shared';
+import { ArtistDataService, BookingDataService, ButtonComponent } from '@bedge/shared';
 import type { EnrichedBooking } from '@bedge/shared';
 
 type QueueTab = 'pending' | 'received';
@@ -9731,7 +10827,7 @@ type QueueTab = 'pending' | 'received';
   selector: 'bedge-deposit-queue',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, ButtonComponent, A11yModule],
   templateUrl: './deposit-queue.component.html',
 })
 export class DepositQueueComponent implements OnInit {
@@ -9914,11 +11010,20 @@ import {
   signal,
 } from '@angular/core';
 import { Router } from '@angular/router';
-import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
+import {
+  Subject,
+  merge,
+  of,
+  debounceTime,
+  distinctUntilChanged,
+  switchMap,
+  tap,
+  catchError,
+  takeUntil,
+} from 'rxjs';
 
-import { ClientDataService } from '@bedge/shared';
+import { ClientDataService, InputDirective } from '@bedge/shared';
 import type { ClientCard } from '@bedge/shared';
 
 /**
@@ -9932,7 +11037,7 @@ import type { ClientCard } from '@bedge/shared';
   selector: 'bedge-clients',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule],
+  imports: [InputDirective],
   templateUrl: './clients.component.html',
 })
 export class ClientsComponent implements OnInit, OnDestroy {
@@ -9951,12 +11056,54 @@ export class ClientsComponent implements OnInit, OnDestroy {
   // ── Lifecycle ─────────────────────────────────────────────────────────────
 
   ngOnInit(): void {
-    // Debounce search input — avoid hammering the API on every keystroke
-    this.search$
-      .pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy$))
-      .subscribe((q) => this.load(q));
-
-    this.load();
+    // One stream drives every load, initial and search alike.
+    //
+    // switchMap is load-bearing: the previous version called .subscribe()
+    // and kicked off a SEPARATE http subscription per keystroke, so
+    // nothing cancelled in-flight requests. Typing "a" then "ab" could
+    // render "ab" and then have the slower "a" response overwrite it -
+    // the user sees results that do not match what is in the box.
+    // switchMap cancels the outstanding request whenever a newer one
+    // starts, so only the latest query can ever paint.
+    //
+    // catchError sits INSIDE switchMap deliberately. If it were on the
+    // outer pipe, the first failed request would terminate the whole
+    // stream and search would stay dead until the screen was reloaded -
+    // a worse bug than the one being fixed. Catching per-request keeps
+    // the outer stream alive for the next keystroke.
+    merge(
+      // Immediate first load, not subject to the 300ms debounce.
+      of(''),
+      this.search$.pipe(debounceTime(300), distinctUntilChanged()),
+    )
+      .pipe(
+        tap(() => {
+          this.loading.set(true);
+          this.errorMessage.set(null);
+        }),
+        switchMap((q) =>
+          this.clientSvc.listClients(q || undefined).pipe(
+            catchError((err: HttpErrorResponse) => {
+              this.loading.set(false);
+              this.errorMessage.set(
+                err.status === 0
+                  ? 'Cannot reach the server. Check your connection.'
+                  : 'Failed to load clients. Please try again.',
+              );
+              return of(null);
+            }),
+          ),
+        ),
+        takeUntil(this.destroy$),
+      )
+      .subscribe((data) => {
+        // null means the request failed and catchError already set the
+        // error message - leave the previous list in place rather than
+        // blanking the screen.
+        if (data === null) return;
+        this.clients.set(data ?? []);
+        this.loading.set(false);
+      });
   }
 
   ngOnDestroy(): void {
@@ -10011,25 +11158,6 @@ export class ClientsComponent implements OnInit, OnDestroy {
 
   // ── Private ───────────────────────────────────────────────────────────────
 
-  private load(q?: string): void {
-    this.loading.set(true);
-    this.errorMessage.set(null);
-
-    this.clientSvc.listClients(q).subscribe({
-      next: (data) => {
-        this.clients.set(data ?? []);
-        this.loading.set(false);
-      },
-      error: (err: HttpErrorResponse) => {
-        this.loading.set(false);
-        this.errorMessage.set(
-          err.status === 0
-            ? 'Cannot reach the server. Check your connection.'
-            : 'Failed to load clients. Please try again.',
-        );
-      },
-    });
-  }
 }
 
 
@@ -10044,9 +11172,17 @@ import {
 } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { LucideAngularModule } from 'lucide-angular';
+import { A11yModule } from '@angular/cdk/a11y';
 
-import { ProductDataService, extractApiErrorMessage } from '@bedge/shared';
-import type { EnrichedOrder, OrderStatus } from '@bedge/shared';
+import {
+  ProductDataService,
+  extractApiErrorMessage,
+  ButtonComponent,
+  BadgeComponent,
+  CardComponent,
+  InputDirective,
+} from '@bedge/shared';
+import type { EnrichedOrder, OrderStatus, BadgeTone } from '@bedge/shared';
 
 type FilterTab = 'placed' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
 
@@ -10063,7 +11199,7 @@ type FilterTab = 'placed' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
   selector: 'bedge-orders',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, ButtonComponent, BadgeComponent, CardComponent, InputDirective, A11yModule],
   templateUrl: './orders.component.html',
 })
 export class OrdersComponent implements OnInit {
@@ -10123,18 +11259,25 @@ export class OrdersComponent implements OnInit {
     return status.charAt(0).toUpperCase() + status.slice(1);
   }
 
-  statusClass(status: OrderStatus): string {
+  /**
+   * Maps an order status to a badge tone. This mapping is identical to the
+   * one in the customer-facing my-orders screen by design - the same order
+   * must not read as "Confirmed" in green to the artist and grey to the
+   * customer. Only the mapping lives here; BadgeComponent owns how a tone
+   * renders, so the two screens cannot drift apart again.
+   */
+  statusTone(status: OrderStatus): BadgeTone {
     switch (status) {
       case 'confirmed':
       case 'delivered':
-        return 'bg-[#16a34a]/10 text-[#16a34a]';
+        return 'success';
       case 'shipped':
-        return 'bg-ink/10 text-ink';
+        return 'ink';
       case 'cancelled':
       case 'returned':
-        return 'bg-gray-100 text-gray-400';
+        return 'muted';
       default:
-        return 'bg-gray-100 text-gray-600';
+        return 'neutral';
     }
   }
 
@@ -10371,9 +11514,9 @@ export class OrdersComponent implements OnInit {
         <div class="flex items-center justify-between py-2 border-b border-gray-100">
           <span class="text-sm text-gray-500">Verified</span>
           @if (profile()!.is_verified) {
-            <span class="text-xs px-2 py-0.5 rounded-full bg-success-light text-success-dark">Verified</span>
+            <bedge-badge tone="success">Verified</bedge-badge>
           } @else {
-            <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Not verified</span>
+            <bedge-badge tone="neutral">Not verified</bedge-badge>
           }
         </div>
 
@@ -10391,12 +11534,13 @@ export class OrdersComponent implements OnInit {
           <label class="block text-sm text-gray-500 mb-1.5" for="profile-bio">Bio</label>
           <textarea
             id="profile-bio"
-            class="bedge-input text-sm resize-none"
+            bedgeInput
+            class="text-sm resize-none"
             rows="4"
             maxlength="500"
             placeholder="Tell clients a bit about you and your work…"
-            [ngModel]="bio()"
-            (ngModelChange)="bio.set($event)"
+            [value]="bio()"
+            (input)="bio.set($any($event.target).value)"
           ></textarea>
           <p class="text-xs text-gray-300 mt-1 text-right">{{ bio().length }}/500</p>
         </div>
@@ -10414,8 +11558,8 @@ export class OrdersComponent implements OnInit {
               class="flex-1 px-3 py-2 text-sm text-ink bg-white outline-none placeholder-gray-300"
               placeholder="yourhandle"
               maxlength="255"
-              [ngModel]="instagram()"
-              (ngModelChange)="instagram.set($event)"
+              [value]="instagram()"
+              (input)="instagram.set($any($event.target).value)"
             />
           </div>
         </div>
@@ -10441,15 +11585,13 @@ export class OrdersComponent implements OnInit {
     }
 
     <!-- ── Save button ───────────────────────────────────────────────────── -->
-    <button
-      type="button"
-      class="bedge-btn-sm font-medium w-full sm:w-auto mb-8"
-      [disabled]="!isDirty || saving()"
-      [class.opacity-30]="!isDirty || saving()"
+    <bedge-button
+      [fullWidth]="true"
+      class="block mb-8"
+      [disabled]="!isDirty"
+      [loading]="saving()"
       (click)="save()"
-    >
-      @if (saving()) { Saving… } @else { Save changes }
-    </button>
+    >Save changes</bedge-button>
 
     <!-- ── Portfolio manager ─────────────────────────────────────────────── -->
     <bedge-portfolio />
@@ -10610,9 +11752,9 @@ export class OrdersComponent implements OnInit {
             </div>
             <div class="text-right flex-shrink-0 ml-3">
               <p class="text-sm font-semibold text-ink">${{ formatMoney(booking.final_price) }}</p>
-              <span [class]="'inline-flex mt-0.5 rounded-full px-2 py-0.5 text-xs font-medium ' + statusClass(booking.status)">
+              <bedge-badge [tone]="statusTone(booking.status)" class="mt-0.5">
                 {{ statusLabel(booking.status) }}
-              </span>
+              </bedge-badge>
             </div>
           </div>
           @if (!$last) {
@@ -10676,6 +11818,17 @@ export class PortfolioComponent implements OnInit {
   /** ID of the photo currently being deleted, or null. */
   readonly deletingId = signal<string | null>(null);
 
+  /**
+   * Which photo, if any, is currently asking "are you sure?".
+   *
+   * Deletion was previously a single tap that fired the HTTP call
+   * immediately - on a touch grid of small overlay buttons, one mis-tap
+   * permanently destroyed an artist's portfolio photo with no undo and no
+   * way to recover the original file. Destructive and irreversible needs a
+   * deliberate second action.
+   */
+  readonly confirmingDeleteId = signal<string | null>(null);
+
   /** ID of the photo currently being set as cover, or null. */
   readonly settingCoverId = signal<string | null>(null);
 
@@ -10714,7 +11867,20 @@ export class PortfolioComponent implements OnInit {
   }
 
   /** Delete a photo from the portfolio. */
+  /** First tap: arm the confirmation for this tile. */
+  askToDelete(photo: MediaItem): void {
+    this.error.set(null);
+    this.confirmingDeleteId.set(photo.id);
+  }
+
+  /** Backing out of a confirmation. */
+  cancelDelete(): void {
+    this.confirmingDeleteId.set(null);
+  }
+
+  /** Second tap: actually delete. */
   deletePhoto(photo: MediaItem): void {
+    this.confirmingDeleteId.set(null);
     this.deletingId.set(photo.id);
     this.mediaSvc.deletePhoto(photo.id).subscribe({
       next: () => {
@@ -10943,18 +12109,21 @@ export class PortfolioComponent implements OnInit {
     <div
       class="fixed inset-0 bg-ink/50 flex items-end justify-center z-50"
       (click)="closeDetail()"
+      (keydown.escape)="closeDetail()"
     >
       <div
         class="bg-white w-full max-w-lg rounded-t-2xl shadow-xl p-5 pb-8"
         (click)="$event.stopPropagation()"
+        cdkTrapFocus
+        cdkTrapFocusAutoCapture
+        role="dialog"
+        aria-modal="true"
       >
         <div class="w-12 h-1 bg-gray-200 rounded-full mx-auto mb-4"></div>
 
         <div class="flex justify-between items-start mb-4">
           <div>
-            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-[#16a34a]/10 text-[#16a34a] mb-1.5">
-              {{ statusLabel(b.status) }}
-            </span>
+            <div class="mb-1.5"><bedge-badge tone="success">{{ statusLabel(b.status) }}</bedge-badge></div>
             <h3 class="text-lg font-bold text-ink">{{ b.service_name }}</h3>
             <p class="text-xs text-gray-500 font-medium">{{ b.store_name }} · {{ b.store_city }}</p>
           </div>
@@ -11065,36 +12234,36 @@ export class PortfolioComponent implements OnInit {
     <!-- Stats row: Today / This week / This month -->
     <div class="grid grid-cols-3 gap-3 mb-4">
 
-      <div class="rounded-lg border border-gray-200 bg-white p-4 text-center">
+      <bedge-card class="text-center">
         <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Today</p>
         <p class="text-lg font-bold text-ink">${{ formatMoney(s.today.revenue) }}</p>
         <p class="text-xs text-gray-400 mt-0.5">{{ s.today.bookings_count }} bookings</p>
-      </div>
+      </bedge-card>
 
-      <div class="rounded-lg border border-gray-200 bg-white p-4 text-center">
+      <bedge-card class="text-center">
         <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">This week</p>
         <p class="text-lg font-bold text-ink">${{ formatMoney(s.this_week.revenue) }}</p>
         <p class="text-xs text-gray-400 mt-0.5">{{ s.this_week.bookings_count }} bookings</p>
-      </div>
+      </bedge-card>
 
-      <div class="rounded-lg border border-gray-200 bg-white p-4 text-center">
+      <bedge-card class="text-center">
         <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">This month</p>
         <p class="text-lg font-bold text-ink">${{ formatMoney(s.this_month.revenue) }}</p>
         <p class="text-xs text-gray-400 mt-0.5">{{ s.this_month.bookings_count }} bookings</p>
-      </div>
+      </bedge-card>
 
     </div>
 
     <!-- Additional stats row -->
     <div class="grid grid-cols-2 gap-3 mb-4">
-      <div class="rounded-lg border border-gray-200 bg-white p-4">
+      <bedge-card>
         <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Avg booking value</p>
         <p class="text-lg font-bold text-ink">${{ formatMoney(s.average_booking_value) }}</p>
-      </div>
-      <div class="rounded-lg border border-gray-200 bg-white p-4">
+      </bedge-card>
+      <bedge-card>
         <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Deposits collected</p>
         <p class="text-lg font-bold text-ink">${{ formatMoney(s.total_deposits) }}</p>
-      </div>
+      </bedge-card>
     </div>
 
     <!-- 7-day bar chart -->
@@ -11172,13 +12341,15 @@ export class PortfolioComponent implements OnInit {
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   inject,
+  signal,
 } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { tap } from 'rxjs';
 import { LucideAngularModule } from 'lucide-angular';
 
-import { AuthStore } from '@bedge/shared';
+import { AuthStore, OnboardingDataService } from '@bedge/shared';
 
 /** A single navigation item in the dashboard sidebar / bottom bar. */
 interface NavItem {
@@ -11210,12 +12381,57 @@ interface NavItem {
 export class DashboardLayoutComponent {
   private readonly auth: AuthStore = inject(AuthStore);
   private readonly router = inject(Router);
+  private readonly onboardingSvc = inject(OnboardingDataService);
 
   /** Authenticated user — null when unauthenticated (guard prevents this). */
   readonly user = this.auth.user;
 
-  /** Navigation items shared between the sidebar and the mobile bottom bar. */
-  readonly navItems: NavItem[] = [
+  /** True while status is confirmed 'pending' (not just "not yet checked" -
+   *  defaults false so the normal sidebar renders during the brief window
+   *  before the status check resolves, rather than flashing a restricted
+   *  state for every artist on every load). Drives both the nav
+   *  restriction and the banner below. */
+  readonly isPending = signal(false);
+
+  /** Profile is allow-listed for a pending artist specifically so photos
+   *  can be added while waiting for review, rather than the moment
+   *  they're approved and already publicly visible with an empty
+   *  gallery. Nothing on the backend needed to change for this - the
+   *  "my own profile" media/artist lookups were never status-gated in
+   *  the first place, only the PUBLIC ones (Discover, GetArtistByID)
+   *  were. This was purely a frontend gate being more restrictive than
+   *  it needed to be. */
+  private static readonly PENDING_ALLOWED_PATH = '/dashboard/profile';
+
+  constructor() {
+    // Safety net for the case the login redirect doesn't cover: a pending
+    // or not-yet-onboarded artist typing /dashboard/bookings directly, or
+    // reopening a bookmarked/stale tab. Every OTHER dashboard screen
+    // resolves its data by looking up the caller's artist_id in ways that
+    // implicitly assume a fully-set-up, reviewed profile (bookings,
+    // clients, earnings) - that lookup fails or returns nothing useful
+    // everywhere except Profile, which would otherwise read as the app
+    // being broken rather than as "you're not approved yet." Admins never
+    // onboard, so this check only runs for the artist role.
+    if (this.auth.role() === 'artist') {
+      this.onboardingSvc.getStatus().subscribe({
+        next: (status) => {
+          if (status.status === 'pending') {
+            this.isPending.set(true);
+            if (!this.router.url.startsWith(DashboardLayoutComponent.PENDING_ALLOWED_PATH)) {
+              this.router.navigateByUrl(DashboardLayoutComponent.PENDING_ALLOWED_PATH);
+            }
+          } else if (status.status !== 'active') {
+            this.router.navigateByUrl('/onboarding');
+          }
+        },
+        error: () => this.router.navigateByUrl('/onboarding'),
+      });
+    }
+  }
+
+  /** The full nav list, when a profile is reviewed and active. */
+  private readonly allNavItems: NavItem[] = [
     { path: '/dashboard/bookings', label: 'Bookings', icon: 'calendar-days' },
     { path: '/dashboard/calendar', label: 'Calendar', icon: 'calendar' },
     { path: '/dashboard/waitlist', label: 'Waitlist', icon: 'bell' },
@@ -11228,6 +12444,17 @@ export class DashboardLayoutComponent {
     { path: '/dashboard/hours',    label: 'Hours',    icon: 'clock' },
     { path: '/dashboard/profile',  label: 'Profile',  icon: 'user' },
   ];
+
+  /** Navigation items shared between the sidebar and the mobile bottom bar.
+   *  Collapsed to just Profile while pending - every other item points at
+   *  a screen whose data lookup assumes a fully-reviewed profile, and
+   *  offering navigation into a screen that's guaranteed to look broken
+   *  is worse than not offering it at all. */
+  readonly navItems = computed<NavItem[]>(() =>
+    this.isPending()
+      ? this.allNavItems.filter((item) => item.path === '/dashboard/profile')
+      : this.allNavItems,
+  );
 
   /**
    * Returns up to two uppercase initials from a display name.
@@ -11268,11 +12495,7 @@ export class DashboardLayoutComponent {
   <!-- ── Page header ────────────────────────────────────────────────────── -->
   <div class="flex items-center justify-between mb-6">
     <h1 class="text-xl font-semibold text-ink">Services</h1>
-    <button
-      type="button"
-      class="bedge-btn-sm flex items-center gap-1.5"
-      (click)="toggleAddForm()"
-    >
+    <bedge-button variant="ghost" size="sm" (click)="toggleAddForm()">
       @if (showAddForm()) {
         <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
         Cancel
@@ -11280,7 +12503,7 @@ export class DashboardLayoutComponent {
         <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
         Add service
       }
-    </button>
+    </bedge-button>
   </div>
 
   <!-- ── Loading ────────────────────────────────────────────────────────── -->
@@ -11339,15 +12562,15 @@ export class DashboardLayoutComponent {
 
               <!-- Active badge -->
               @if (svc.is_active) {
-                <span class="text-xs px-2 py-0.5 rounded-full bg-success-light text-success-dark">Active</span>
+                <bedge-badge tone="success">Active</bedge-badge>
               } @else {
-                <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Inactive</span>
+                <bedge-badge tone="neutral">Inactive</bedge-badge>
               }
 
               <!-- Edit -->
               <button
                 type="button"
-                class="bedge-btn-icon text-gray-400 hover:text-ink"
+                class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-50 transition-colors text-gray-400 hover:text-ink"
                 aria-label="Edit service"
                 (click)="startEdit(svc)"
               >
@@ -11360,7 +12583,7 @@ export class DashboardLayoutComponent {
               @if (svc.is_active) {
                 <button
                   type="button"
-                  class="bedge-btn-icon text-gray-400 hover:text-danger-dark transition-colors"
+                  class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-50 transition-colors disabled:cursor-not-allowed text-gray-400 hover:text-danger-dark"
                   aria-label="Deactivate service"
                   [disabled]="deletingId() === svc.id"
                   (click)="deleteService(svc)"
@@ -11393,20 +12616,22 @@ export class DashboardLayoutComponent {
                 <label class="block text-xs text-gray-400 mb-1">Name</label>
                 <input
                   type="text"
-                  class="bedge-input text-sm"
+                  bedgeInput
+                  class="h-9 text-sm"
                   maxlength="200"
-                  [ngModel]="editForm().name"
-                  (ngModelChange)="editForm.update(f => ({...f, name: $event}))"
+                  [value]="editForm().name"
+                  (input)="editForm.update(f => ({...f, name: $any($event.target).value}))"
                 />
               </div>
               <div>
                 <label class="block text-xs text-gray-400 mb-1">Price (USD)</label>
                 <input
                   type="text"
-                  class="bedge-input text-sm"
+                  bedgeInput
+                  class="h-9 text-sm"
                   placeholder="0.00"
-                  [ngModel]="editForm().price"
-                  (ngModelChange)="editForm.update(f => ({...f, price: $event}))"
+                  [value]="editForm().price"
+                  (input)="editForm.update(f => ({...f, price: $any($event.target).value}))"
                 />
               </div>
             </div>
@@ -11416,21 +12641,23 @@ export class DashboardLayoutComponent {
                 <label class="block text-xs text-gray-400 mb-1">Duration (min)</label>
                 <input
                   type="number"
-                  class="bedge-input text-sm"
+                  bedgeInput
+                  class="h-9 text-sm"
                   min="15"
                   max="480"
-                  [ngModel]="editForm().duration_min"
-                  (ngModelChange)="editForm.update(f => ({...f, duration_min: +$event}))"
+                  [value]="editForm().duration_min"
+                  (input)="editForm.update(f => ({...f, duration_min: +$any($event.target).value}))"
                 />
               </div>
               <div>
                 <label class="block text-xs text-gray-400 mb-1">Deposit (USD)</label>
                 <input
                   type="text"
-                  class="bedge-input text-sm"
+                  bedgeInput
+                  class="h-9 text-sm"
                   placeholder="0.00"
-                  [ngModel]="editForm().deposit_amount"
-                  (ngModelChange)="editForm.update(f => ({...f, deposit_amount: $event}))"
+                  [value]="editForm().deposit_amount"
+                  (input)="editForm.update(f => ({...f, deposit_amount: $any($event.target).value}))"
                 />
               </div>
             </div>
@@ -11438,30 +12665,25 @@ export class DashboardLayoutComponent {
             <div>
               <label class="block text-xs text-gray-400 mb-1">Description (optional)</label>
               <textarea
-                class="bedge-input text-sm resize-none"
+                bedgeInput
+                class="text-sm resize-none"
                 rows="2"
                 maxlength="500"
-                [ngModel]="editForm().description"
-                (ngModelChange)="editForm.update(f => ({...f, description: $event}))"
+                [value]="editForm().description"
+                (input)="editForm.update(f => ({...f, description: $any($event.target).value}))"
               ></textarea>
             </div>
 
             <div class="flex items-center justify-end gap-2">
-              <button
-                type="button"
-                class="bedge-btn-sm text-gray-500"
-                (click)="cancelEdit()"
-              >
+              <bedge-button variant="ghost" size="sm" (click)="cancelEdit()">
                 Cancel
-              </button>
-              <button
-                type="button"
-                class="bedge-btn-sm font-medium"
+              </bedge-button>
+              <bedge-button
+                size="sm"
+                [loading]="updating()"
                 [disabled]="updating()"
                 (click)="saveEdit(svc)"
-              >
-                @if (updating()) { Saving… } @else { Save }
-              </button>
+              >Save</bedge-button>
             </div>
 
             @if (updateErrors()[svc.id]) {
@@ -11488,21 +12710,23 @@ export class DashboardLayoutComponent {
             <label class="block text-xs text-gray-400 mb-1">Name</label>
             <input
               type="text"
-              class="bedge-input text-sm"
+              bedgeInput
+              class="h-9 text-sm"
               placeholder="e.g. Bridal Makeup"
               maxlength="200"
-              [ngModel]="addForm().name"
-              (ngModelChange)="addForm.update(f => ({...f, name: $event}))"
+              [value]="addForm().name"
+              (input)="addForm.update(f => ({...f, name: $any($event.target).value}))"
             />
           </div>
           <div>
             <label class="block text-xs text-gray-400 mb-1">Price (USD)</label>
             <input
               type="text"
-              class="bedge-input text-sm"
+              bedgeInput
+              class="h-9 text-sm"
               placeholder="0.00"
-              [ngModel]="addForm().price"
-              (ngModelChange)="addForm.update(f => ({...f, price: $event}))"
+              [value]="addForm().price"
+              (input)="addForm.update(f => ({...f, price: $any($event.target).value}))"
             />
           </div>
         </div>
@@ -11512,22 +12736,24 @@ export class DashboardLayoutComponent {
             <label class="block text-xs text-gray-400 mb-1">Duration (min)</label>
             <input
               type="number"
-              class="bedge-input text-sm"
+              bedgeInput
+              class="h-9 text-sm"
               placeholder="60"
               min="15"
               max="480"
-              [ngModel]="addForm().duration_min"
-              (ngModelChange)="addForm.update(f => ({...f, duration_min: +$event}))"
+              [value]="addForm().duration_min"
+              (input)="addForm.update(f => ({...f, duration_min: +$any($event.target).value}))"
             />
           </div>
           <div>
             <label class="block text-xs text-gray-400 mb-1">Deposit (USD)</label>
             <input
               type="text"
-              class="bedge-input text-sm"
+              bedgeInput
+              class="h-9 text-sm"
               placeholder="0.00"
-              [ngModel]="addForm().deposit_amount"
-              (ngModelChange)="addForm.update(f => ({...f, deposit_amount: $event}))"
+              [value]="addForm().deposit_amount"
+              (input)="addForm.update(f => ({...f, deposit_amount: $any($event.target).value}))"
             />
           </div>
         </div>
@@ -11535,32 +12761,26 @@ export class DashboardLayoutComponent {
         <div>
           <label class="block text-xs text-gray-400 mb-1">Description (optional)</label>
           <textarea
-            class="bedge-input text-sm resize-none"
+            bedgeInput
+            class="text-sm resize-none"
             rows="2"
             maxlength="500"
             placeholder="Short description of the service…"
-            [ngModel]="addForm().description"
-            (ngModelChange)="addForm.update(f => ({...f, description: $event}))"
+            [value]="addForm().description"
+            (input)="addForm.update(f => ({...f, description: $any($event.target).value}))"
           ></textarea>
         </div>
 
         <div class="flex items-center justify-end gap-2">
-          <button
-            type="button"
-            class="bedge-btn-sm text-gray-500"
-            (click)="toggleAddForm()"
-          >
+          <bedge-button variant="ghost" size="sm" (click)="toggleAddForm()">
             Cancel
-          </button>
-          <button
-            type="button"
-            class="bedge-btn-sm font-medium"
-            [disabled]="!canCreate() || creating()"
-            [class.opacity-30]="!canCreate() || creating()"
+          </bedge-button>
+          <bedge-button
+            size="sm"
+            [disabled]="!canCreate()"
+            [loading]="creating()"
             (click)="createService()"
-          >
-            @if (creating()) { Saving… } @else { Save service }
-          </button>
+          >Save service</bedge-button>
         </div>
 
         @if (addError()) {
@@ -11582,11 +12802,17 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { LucideAngularModule } from 'lucide-angular';
 
-import { ArtistDataService, CloudinaryUploadService } from '@bedge/shared';
+import {
+  ArtistDataService,
+  BadgeComponent,
+  ButtonComponent,
+  CloudinaryUploadService,
+  InputDirective,
+  extractApiErrorMessage,
+} from '@bedge/shared';
 import type { ArtistProfile } from '@bedge/shared';
 
 import { PortfolioComponent } from './portfolio.component';
@@ -11608,7 +12834,13 @@ import { PortfolioComponent } from './portfolio.component';
   selector: 'bedge-profile',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, PortfolioComponent, LucideAngularModule],
+  imports: [
+    PortfolioComponent,
+    LucideAngularModule,
+    ButtonComponent,
+    BadgeComponent,
+    InputDirective,
+  ],
   templateUrl: './profile.component.html',
 })
 export class ProfileComponent implements OnInit {
@@ -11677,9 +12909,9 @@ export class ProfileComponent implements OnInit {
         this.saved.set(true);
         setTimeout(() => this.saved.set(false), 3000);
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.saving.set(false);
-        this.saveError.set('Failed to save profile. Please try again.');
+        this.saveError.set(extractApiErrorMessage(err, 'Failed to save profile. Please try again.'));
       },
     });
   }
@@ -11717,9 +12949,9 @@ export class ProfileComponent implements OnInit {
         this.profile.update((prev) => (prev ? { ...prev, avatar_url: '' } : prev));
         this.avatarBusy.set(false);
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.avatarBusy.set(false);
-        this.avatarError.set('Failed to remove photo. Please try again.');
+        this.avatarError.set(extractApiErrorMessage(err, 'Failed to remove photo. Please try again.'));
       },
     });
   }
@@ -11742,13 +12974,20 @@ export class ProfileComponent implements OnInit {
             );
             this.avatarBusy.set(false);
           },
-          error: () => {
+          error: (err: HttpErrorResponse) => {
             this.avatarBusy.set(false);
-            this.avatarError.set('Photo uploaded but failed to save. Please try again.');
+            this.avatarError.set(
+              extractApiErrorMessage(err, 'Photo uploaded but failed to save. Please try again.'),
+            );
           },
         });
       },
       error: () => {
+        // Not HttpErrorResponse - CloudinaryUploadService throws a plain
+        // Error on a failed upload (see its doc comment), so there is no
+        // backend envelope here for extractApiErrorMessage to read. The
+        // underlying message is a raw Cloudinary HTTP status dump, not
+        // something to show a user directly.
         this.avatarBusy.set(false);
         this.avatarError.set('Upload failed. Check your connection and try again.');
       },
@@ -11783,10 +13022,15 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 
-import { ArtistDataService } from '@bedge/shared';
+import {
+  ArtistDataService,
+  BadgeComponent,
+  ButtonComponent,
+  InputDirective,
+  extractApiErrorMessage,
+} from '@bedge/shared';
 import type { Service, CreateServiceRequest, UpdateServiceRequest } from '@bedge/shared';
 
 /** Shape of the add/edit form. */
@@ -11810,7 +13054,7 @@ const emptyForm = (): ServiceForm => ({
   selector: 'bedge-services',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule],
+  imports: [ButtonComponent, BadgeComponent, InputDirective],
   templateUrl: './services.component.html',
 })
 export class ServicesComponent implements OnInit {
@@ -11882,7 +13126,9 @@ export class ServicesComponent implements OnInit {
       },
       error: (err: HttpErrorResponse) => {
         this.creating.set(false);
-        this.addError.set('Failed to create service. Check the values and try again.');
+        this.addError.set(
+          extractApiErrorMessage(err, 'Failed to create service. Check the values and try again.'),
+        );
       },
     });
   }
@@ -11924,9 +13170,12 @@ export class ServicesComponent implements OnInit {
         this.updating.set(false);
         this.editingId.set(null);
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.updating.set(false);
-        this.updateErrors.update((e) => ({ ...e, [svc.id]: 'Failed to save. Try again.' }));
+        this.updateErrors.update((e) => ({
+          ...e,
+          [svc.id]: extractApiErrorMessage(err, 'Failed to save. Try again.'),
+        }));
       },
     });
   }
@@ -11942,9 +13191,12 @@ export class ServicesComponent implements OnInit {
         );
         this.deletingId.set(null);
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.deletingId.set(null);
-        this.updateErrors.update((e) => ({ ...e, [svc.id]: 'Failed to deactivate.' }));
+        this.updateErrors.update((e) => ({
+          ...e,
+          [svc.id]: extractApiErrorMessage(err, 'Failed to deactivate.'),
+        }));
       },
     });
   }
@@ -11980,7 +13232,7 @@ import {
 } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 
-import { EarningsDataService } from '@bedge/shared';
+import { CardComponent, EarningsDataService } from '@bedge/shared';
 import type { EarningsSummary, DailyEarnings } from '@bedge/shared';
 
 /** A bar in the 7-day chart. */
@@ -11998,6 +13250,7 @@ interface ChartBar {
   selector: 'bedge-earnings',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [CardComponent],
   templateUrl: './earnings.component.html',
 })
 export class EarningsComponent implements OnInit {
@@ -12093,7 +13346,13 @@ import {
 } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 
-import { AuthStore, ArtistDataService, BookingDataService } from '@bedge/shared';
+import {
+  AuthStore,
+  ArtistDataService,
+  BookingDataService,
+  BadgeComponent,
+  bookingStatusTone,
+} from '@bedge/shared';
 import type { EnrichedBooking, BookingStatus } from '@bedge/shared';
 
 /** Status filter tab shown in the UI. '' means all statuses. */
@@ -12117,9 +13376,14 @@ interface StatusTab {
   selector: 'bedge-bookings',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [BadgeComponent],
   templateUrl: './bookings.component.html',
 })
 export class BookingsComponent implements OnInit {
+  /** Shared across bookings, client-detail and waitlist so the same
+   *  status can never render differently on different screens. */
+  protected readonly statusTone = bookingStatusTone;
+
   private readonly auth = inject(AuthStore);
   private readonly artistSvc = inject(ArtistDataService);
   private readonly bookingSvc = inject(BookingDataService);
@@ -12286,19 +13550,6 @@ export class BookingsComponent implements OnInit {
   }
 
   /** Returns a Tailwind colour class for a booking status badge. */
-  statusClass(status: BookingStatus | string): string {
-    switch (status) {
-      case 'pending':      return 'bg-amber-100 text-amber-800';
-      case 'approved':     return 'bg-blue-100 text-blue-800';
-      case 'deposit_paid': return 'bg-blue-100 text-blue-800';
-      case 'confirmed':    return 'bg-green-100 text-green-800';
-      case 'completed':    return 'bg-gray-100 text-gray-600';
-      case 'cancelled':    return 'bg-red-100 text-red-700';
-      case 'no_show':      return 'bg-red-100 text-red-700';
-      case 'refund_due':   return 'bg-orange-100 text-orange-800';
-      default:             return 'bg-gray-100 text-gray-500';
-    }
-  }
 
   /** Human-readable label for a booking status. */
   statusLabel(status: string): string {
@@ -12438,14 +13689,10 @@ export class BookingsComponent implements OnInit {
               }
             </div>
 
-            <button
-              type="button"
-              (click)="openVerify(item)"
-              class="w-full h-9 bg-ink hover:opacity-90 text-white font-bold text-[10px] uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 transition-opacity"
-            >
+            <bedge-button size="sm" [fullWidth]="true" (click)="openVerify(item)">
               <lucide-icon name="check" [size]="12" [strokeWidth]="2" />
               Verify payment
-            </button>
+            </bedge-button>
           </div>
         }
 
@@ -12513,10 +13760,15 @@ export class BookingsComponent implements OnInit {
     <div
       class="fixed inset-0 bg-ink/65 flex items-end sm:items-center justify-center z-50 p-4"
       (click)="closeVerify()"
+      (keydown.escape)="closeVerify()"
     >
       <div
         class="bg-white rounded-2xl w-full max-w-sm p-5 space-y-4 shadow-xl"
         (click)="$event.stopPropagation()"
+        cdkTrapFocus
+        cdkTrapFocusAutoCapture
+        role="dialog"
+        aria-modal="true"
       >
         <div>
           <h3 class="text-base font-bold text-ink">Verify deposit</h3>
@@ -12583,7 +13835,7 @@ export class BookingsComponent implements OnInit {
 
     <!-- Nav links -->
     <nav class="flex-1 px-3 py-4 space-y-1">
-      @for (item of navItems; track item.path) {
+      @for (item of navItems(); track item.path) {
         <a
           [routerLink]="item.path"
           routerLinkActive="bg-gray-100 text-ink font-medium"
@@ -12646,6 +13898,15 @@ export class BookingsComponent implements OnInit {
 
     <!-- Page content -->
     <main class="flex-1 px-4 py-6 md:px-8 pb-24 md:pb-8">
+      @if (isPending()) {
+        <div class="mb-5 rounded-xl bg-warning-light border border-warning px-4 py-3 flex items-start gap-3">
+          <lucide-icon name="clock" [size]="18" [strokeWidth]="2" class="text-warning-dark shrink-0 mt-0.5" />
+          <p class="text-[13px] text-warning-dark leading-relaxed">
+            Your application is still being reviewed. You can add photos and finish your
+            profile now - everything else unlocks once you're approved.
+          </p>
+        </div>
+      }
       <router-outlet />
     </main>
   </div>
@@ -12653,7 +13914,7 @@ export class BookingsComponent implements OnInit {
   <!-- ── Bottom nav (mobile only) ───────────────────────────────────────── -->
   <nav class="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-gray-200
               flex items-center justify-around px-2 py-2 z-10">
-    @for (item of navItems; track item.path) {
+    @for (item of navItems(); track item.path) {
       <a
         [routerLink]="item.path"
         routerLinkActive="text-ink"
@@ -12713,6 +13974,28 @@ export class BookingsComponent implements OnInit {
               class="w-full h-full object-cover"
             />
 
+            <!-- Delete confirmation, overlaid on the tile being deleted so
+                 it is unambiguous WHICH photo is about to go. -->
+            @if (confirmingDeleteId() === photo.id) {
+              <div class="absolute inset-0 z-10 bg-ink/85 flex flex-col items-center justify-center gap-2 px-2">
+                <p class="text-white text-[11px] font-semibold text-center leading-tight">
+                  Delete this photo?
+                </p>
+                <div class="flex gap-1.5">
+                  <button
+                    type="button"
+                    (click)="deletePhoto(photo)"
+                    class="px-2.5 py-1 rounded bg-white text-danger-dark text-[11px] font-bold hover:bg-gray-100"
+                  >Delete</button>
+                  <button
+                    type="button"
+                    (click)="cancelDelete()"
+                    class="px-2.5 py-1 rounded border border-white/40 text-white text-[11px] font-medium hover:bg-white/10"
+                  >Keep</button>
+                </div>
+              </div>
+            }
+
             <!-- Cover badge -->
             @if (isCover(photo)) {
               <span class="absolute top-1.5 left-1.5 bg-ink text-white text-[10px] font-medium px-2 py-0.5 rounded-full">
@@ -12743,7 +14026,7 @@ export class BookingsComponent implements OnInit {
 
               <button
                 type="button"
-                (click)="deletePhoto(photo)"
+                (click)="askToDelete(photo)"
                 [disabled]="deletingId() === photo.id"
                 class="w-7 h-7 rounded-full bg-white text-danger-dark flex items-center justify-center
                        text-xs hover:bg-gray-100 transition-colors disabled:opacity-50"
@@ -12812,7 +14095,12 @@ import {
 import { HttpErrorResponse } from '@angular/common/http';
 import { LucideAngularModule } from 'lucide-angular';
 
-import { ArtistDataService, BookingDataService } from '@bedge/shared';
+import {
+  ArtistDataService,
+  BookingDataService,
+  BadgeComponent,
+  bookingStatusTone,
+} from '@bedge/shared';
 import type { WaitlistEntryResponse } from '@bedge/shared';
 
 /**
@@ -12826,10 +14114,14 @@ import type { WaitlistEntryResponse } from '@bedge/shared';
   selector: 'bedge-waitlist',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, BadgeComponent],
   templateUrl: './waitlist.component.html',
 })
 export class WaitlistComponent implements OnInit {
+  /** Shared across bookings, client-detail and waitlist so the same
+   *  status can never render differently on different screens. */
+  protected readonly statusTone = bookingStatusTone;
+
   private readonly artistSvc = inject(ArtistDataService);
   private readonly bookingSvc = inject(BookingDataService);
 
@@ -12845,16 +14137,6 @@ export class WaitlistComponent implements OnInit {
     return status.split('_').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ');
   }
 
-  statusClass(status: string): string {
-    switch (status) {
-      case 'notified':
-        return 'bg-[#16a34a]/10 text-[#16a34a]';
-      case 'expired':
-        return 'bg-gray-100 text-gray-400';
-      default:
-        return 'bg-gray-100 text-gray-600';
-    }
-  }
 
   formatDate(dateStr: string): string {
     // requested_date is a bare YYYY-MM-DD, not a full timestamp - no
@@ -12905,12 +14187,15 @@ import {
 } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { LucideAngularModule } from 'lucide-angular';
+import { A11yModule } from '@angular/cdk/a11y';
 
 import {
   ProductDataService,
   CloudinaryUploadService,
   PRODUCT_CATEGORIES,
   extractApiErrorMessage,
+  ButtonComponent,
+  BadgeComponent,
 } from '@bedge/shared';
 import type { Product, ProductCategory } from '@bedge/shared';
 
@@ -12947,7 +14232,7 @@ const EMPTY_FORM: ProductForm = {
   selector: 'bedge-products',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, ButtonComponent, BadgeComponent, A11yModule],
   templateUrl: './products.component.html',
 })
 export class ProductsComponent implements OnInit {
@@ -13218,9 +14503,9 @@ export class ProductsComponent implements OnInit {
                 <p class="text-xs text-gray-400 mt-0.5">{{ booking.customer_phone }}</p>
               }
             </div>
-            <span [class]="'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ' + statusClass(booking.status)">
+            <bedge-badge [tone]="statusTone(booking.status)">
               {{ statusLabel(booking.status) }}
-            </span>
+            </bedge-badge>
           </div>
 
           <!-- Details row -->
@@ -13302,14 +14587,10 @@ export class ProductsComponent implements OnInit {
       <h1 class="text-xl font-semibold text-ink tracking-tight">Products</h1>
       <p class="text-sm text-gray-500 mt-0.5">Items you sell to clients</p>
     </div>
-    <button
-      type="button"
-      (click)="openAdd()"
-      class="h-10 px-4 bg-ink hover:opacity-90 text-white text-[13px] font-bold rounded-lg flex items-center gap-1.5 transition-opacity"
-    >
+    <bedge-button size="sm" (click)="openAdd()">
       <lucide-icon name="plus" [size]="16" [strokeWidth]="2" />
       Add product
-    </button>
+    </bedge-button>
   </div>
 
   <!-- Filter row -->
@@ -13376,13 +14657,7 @@ export class ProductsComponent implements OnInit {
         <p class="text-xs text-gray-400 mt-1 mb-4 max-w-xs">
           Add the products you sell so clients can order them
         </p>
-        <button
-          type="button"
-          (click)="openAdd()"
-          class="px-4 py-2 bg-ink hover:opacity-90 text-white text-[13px] font-bold rounded-lg transition-opacity"
-        >
-          Add product
-        </button>
+        <bedge-button size="sm" (click)="openAdd()">Add product</bedge-button>
       </div>
     } @else {
       <div class="bg-white border border-gray-200 rounded-xl overflow-hidden mt-6">
@@ -13423,13 +14698,9 @@ export class ProductsComponent implements OnInit {
                 <td class="py-3 px-4 text-center">
                   <button type="button" (click)="toggleActive(p)">
                     @if (p.is_active) {
-                      <span class="px-2.5 py-1 bg-[#16a34a]/10 text-[#16a34a] text-[10px] font-bold uppercase tracking-wider rounded-full">
-                        Active
-                      </span>
+                      <bedge-badge tone="success">Active</bedge-badge>
                     } @else {
-                      <span class="px-2.5 py-1 bg-gray-100 text-gray-400 text-[10px] font-bold uppercase tracking-wider rounded-full">
-                        Inactive
-                      </span>
+                      <bedge-badge tone="muted">Inactive</bedge-badge>
                     }
                   </button>
                 </td>
@@ -13454,8 +14725,19 @@ export class ProductsComponent implements OnInit {
 
   <!-- Add / Edit modal -->
   @if (modalOpen()) {
-    <div class="fixed inset-0 z-50 bg-ink/40 flex items-center justify-center p-4" (click)="closeModal()">
-      <div class="bg-white border border-gray-200 rounded-2xl max-w-md w-full shadow-xl overflow-hidden" (click)="$event.stopPropagation()">
+    <div
+      class="fixed inset-0 z-50 bg-ink/40 flex items-center justify-center p-4"
+      (click)="closeModal()"
+      (keydown.escape)="closeModal()"
+    >
+      <div
+        class="bg-white border border-gray-200 rounded-2xl max-w-md w-full shadow-xl overflow-hidden"
+        (click)="$event.stopPropagation()"
+        cdkTrapFocus
+        cdkTrapFocusAutoCapture
+        role="dialog"
+        aria-modal="true"
+      >
         <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
           <h2 class="text-base font-bold text-ink">
             {{ editingId() ? 'Edit product' : 'Add product' }}
@@ -13586,35 +14868,485 @@ export class ProductsComponent implements OnInit {
         </div>
 
         <div class="px-5 py-4 border-t border-gray-100 flex flex-col gap-2">
-          <button
-            type="button"
+          <bedge-button
+            [fullWidth]="true"
+            [loading]="saving()"
+            [disabled]="!isFormValid()"
             (click)="save()"
-            [disabled]="saving() || !isFormValid()"
-            class="w-full h-11 bg-ink hover:opacity-90 text-white font-bold text-[13px] uppercase tracking-wide rounded-lg transition-opacity flex items-center justify-center gap-2 disabled:opacity-40"
           >
             @if (saving()) {
-              <lucide-icon name="loader-2" [size]="15" [strokeWidth]="2" class="animate-spin" />
-              <span>Saving...</span>
+              Saving...
             } @else if (editingId()) {
-              <span>Save changes</span>
+              Save changes
             } @else {
-              <span>Add product</span>
+              Add product
             }
-          </button>
-          <button
-            type="button"
-            (click)="closeModal()"
+          </bedge-button>
+          <bedge-button
+            variant="ghost"
+            [fullWidth]="true"
             [disabled]="saving()"
-            class="w-full h-11 bg-white border border-gray-200 text-ink font-bold text-[13px] uppercase tracking-wide rounded-lg hover:bg-gray-50 disabled:opacity-40"
-          >
-            Cancel
-          </button>
+            (click)="closeModal()"
+          >Cancel</bedge-button>
         </div>
       </div>
     </div>
   }
 
 </div>
+
+
+--- ./projects/artist-dashboard/src/app/features/onboarding/onboarding.page.html ---
+<div class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+
+  @if (screenState() === 'loading') {
+    <div class="text-gray-400 text-sm">Loading...</div>
+  }
+
+  @if (screenState() === 'pending') {
+    <div class="bg-white rounded-2xl border border-gray-200 max-w-md w-full p-8 text-center">
+      <div class="w-14 h-14 rounded-full bg-warning-light flex items-center justify-center mx-auto mb-4">
+        <lucide-icon name="clock" [size]="24" [strokeWidth]="2" class="text-warning-dark" />
+      </div>
+      <h1 class="text-lg font-bold text-ink">Your application is under review</h1>
+      <p class="text-sm text-gray-500 mt-2 leading-relaxed">
+        Thanks for signing up. We review every new profile before it goes live,
+        usually within a day or two. You'll be able to log in here once it's approved.
+      </p>
+      <bedge-button variant="ghost" [fullWidth]="true" class="mt-6 block" (click)="logout()">
+        Sign out
+      </bedge-button>
+    </div>
+  }
+
+  @if (screenState() === 'rejected') {
+    <div class="bg-white rounded-2xl border border-gray-200 max-w-md w-full p-8 text-center">
+      <div class="w-14 h-14 rounded-full bg-danger-light flex items-center justify-center mx-auto mb-4">
+        <lucide-icon name="x" [size]="24" [strokeWidth]="2" class="text-danger-dark" />
+      </div>
+      <h1 class="text-lg font-bold text-ink">Your application wasn't approved</h1>
+      <p class="text-sm text-gray-500 mt-2 leading-relaxed">
+        Get in touch with us if you'd like to know more or apply again.
+      </p>
+      <bedge-button variant="ghost" [fullWidth]="true" class="mt-6 block" (click)="logout()">
+        Sign out
+      </bedge-button>
+    </div>
+  }
+
+  @if (screenState() === 'error') {
+    <div class="text-center">
+      <p class="text-sm text-gray-500">Something went wrong. Please refresh the page.</p>
+    </div>
+  }
+
+  @if (screenState() === 'form') {
+    <div class="bg-white rounded-2xl border border-gray-200 max-w-lg w-full my-8">
+      <div class="px-6 pt-6 pb-4 border-b border-gray-100">
+        <h1 class="text-lg font-bold text-ink">Set up your B-Edge profile</h1>
+        <p class="text-sm text-gray-500 mt-1">
+          Fill in the basics to get started - you can add more services, stores,
+          and hours once you're approved.
+        </p>
+      </div>
+
+      <div class="p-6 space-y-6">
+
+        <!-- Profile -->
+        <div class="space-y-3">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400">Profile</h2>
+
+          <div>
+            <label class="block text-xs font-semibold text-ink mb-1">Handle</label>
+            <div
+              class="flex items-center border rounded-lg h-11 overflow-hidden focus-within:border-ink"
+              [class]="fieldErrors()['Handle'] ? 'border-danger' : 'border-gray-200'"
+            >
+              <span class="px-3 text-sm text-gray-400 bg-gray-50 h-full flex items-center border-r border-gray-200">b-edge.com/book/</span>
+              <input
+                type="text"
+                [value]="handle()"
+                (input)="onHandleInput($any($event.target).value); clearFieldError('Handle')"
+                placeholder="your-name"
+                class="w-full h-full px-3 text-sm outline-none"
+              />
+            </div>
+            @if (fieldErrors()['Handle']; as err) {
+              <p class="text-[11px] text-danger mt-1">{{ err }}</p>
+            } @else {
+              <p class="text-[11px] text-gray-400 mt-1">Lowercase letters, numbers, and hyphens only.</p>
+            }
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-ink mb-1">Category</label>
+            <select
+              [value]="category()"
+              (change)="category.set($any($event.target).value); clearFieldError('Category')"
+              class="w-full h-11 px-3 border rounded-lg text-sm outline-none focus:border-ink bg-white"
+              [class]="fieldErrors()['Category'] ? 'border-danger' : 'border-gray-200'"
+            >
+              @for (cat of categories; track cat) {
+                <option [value]="cat">{{ cat.charAt(0).toUpperCase() + cat.slice(1) }}</option>
+              }
+            </select>
+            @if (fieldErrors()['Category']; as err) {
+              <p class="text-[11px] text-danger mt-1">{{ err }}</p>
+            }
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-ink mb-1">Bio (optional)</label>
+            <textarea
+              bedgeInput
+              rows="2"
+              [value]="bio()"
+              (input)="bio.set($any($event.target).value)"
+              placeholder="A line or two about you and your work"
+            ></textarea>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-ink mb-1">Instagram (optional)</label>
+            <input
+              bedgeInput
+              type="text"
+              [value]="instagram()"
+              (input)="instagram.set($any($event.target).value)"
+              placeholder="@yourhandle"
+              class="h-11"
+            />
+          </div>
+        </div>
+
+        <!-- Salon + store -->
+        <div class="space-y-3 pt-2 border-t border-gray-100">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400">Your business</h2>
+
+          <div>
+            <label class="block text-xs font-semibold text-ink mb-1">Business name</label>
+            <input
+              bedgeInput
+              type="text"
+              [value]="salonName()"
+              (input)="salonName.set($any($event.target).value)"
+              placeholder="e.g. Sarah Beauty Studio"
+              class="h-11"
+            />
+          </div>
+
+          <div class="flex gap-3">
+            <div class="flex-1">
+              <label class="block text-xs font-semibold text-ink mb-1">Store name</label>
+              <input
+                bedgeInput
+                type="text"
+                [value]="storeName()"
+                (input)="storeName.set($any($event.target).value)"
+                placeholder="Downtown"
+                class="h-11"
+              />
+            </div>
+            <div class="flex-1">
+              <label class="block text-xs font-semibold text-ink mb-1">City</label>
+              <input
+                bedgeInput
+                type="text"
+                [value]="city()"
+                (input)="city.set($any($event.target).value)"
+                placeholder="Beirut"
+                class="h-11"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-ink mb-1">Address (optional)</label>
+            <input
+              bedgeInput
+              type="text"
+              [value]="address()"
+              (input)="address.set($any($event.target).value)"
+              class="h-11"
+            />
+          </div>
+        </div>
+
+        <!-- First service -->
+        <div class="space-y-3 pt-2 border-t border-gray-100">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400">Your first service</h2>
+          <p class="text-[11px] text-gray-400 -mt-2">
+            Just one to get started - add the rest once you're approved.
+          </p>
+
+          <div>
+            <label class="block text-xs font-semibold text-ink mb-1">Service name</label>
+            <input
+              bedgeInput
+              type="text"
+              [value]="serviceName()"
+              (input)="serviceName.set($any($event.target).value)"
+              placeholder="e.g. Bridal Makeup"
+              class="h-11"
+            />
+          </div>
+
+          <div class="flex gap-3">
+            <div class="flex-1">
+              <label class="block text-xs font-semibold text-ink mb-1">Duration (minutes)</label>
+              <input
+                bedgeInput
+                type="number"
+                [value]="serviceDurationMin()"
+                (input)="serviceDurationMin.set($any($event.target).value)"
+                class="h-11"
+              />
+            </div>
+            <div class="flex-1">
+              <label class="block text-xs font-semibold text-ink mb-1">Price</label>
+              <div class="flex items-center border border-gray-200 rounded-lg h-11 overflow-hidden focus-within:border-ink">
+                <span class="px-2.5 text-sm text-gray-400 bg-gray-50 h-full flex items-center border-r border-gray-200">$</span>
+                <input
+                  type="text"
+                  inputmode="decimal"
+                  [value]="servicePrice()"
+                  (input)="servicePrice.set($any($event.target).value)"
+                  placeholder="50.00"
+                  class="w-full h-full px-2.5 text-sm outline-none"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        @if (errorMessage(); as msg) {
+          <div class="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+            {{ msg }}
+          </div>
+        }
+      </div>
+
+      <div class="px-6 pb-6">
+        <bedge-button
+          [fullWidth]="true"
+          [loading]="submitting()"
+          [disabled]="!isFormValid()"
+          (click)="submit()"
+        >Submit for review</bedge-button>
+      </div>
+    </div>
+  }
+
+</div>
+
+
+--- ./projects/artist-dashboard/src/app/features/onboarding/onboarding.page.ts ---
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  inject,
+  signal,
+} from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
+
+import {
+  OnboardingDataService,
+  AuthStore,
+  ButtonComponent,
+  InputDirective,
+  extractApiErrorMessage,
+  extractFieldErrors,
+  ARTIST_CATEGORIES,
+} from '@bedge/shared';
+import type { ArtistCategory, CompleteOnboardingRequest } from '@bedge/shared';
+
+type ScreenState = 'loading' | 'form' | 'pending' | 'rejected' | 'error';
+
+/**
+ * Self-service artist onboarding.
+ *
+ * One scrollable form, three visual sections, one submit - deliberately
+ * not a multi-step wizard with separate per-step submissions. Marketplace
+ * onboarding research converges on splitting "what's required to enter"
+ * from "what can be added later" and measuring success by time-to-first-
+ * listing, not by how complete a profile is on day one; a heavier,
+ * multi-page flow would work against exactly that. Business hours,
+ * additional services, and a second store are all added afterward from
+ * the screens that already exist for that.
+ *
+ * This same component also renders the "pending review" and "rejected"
+ * states - checked once on load via GET /onboarding/status - since they
+ * are the other two things that can be true instead of "show the form".
+ */
+@Component({
+  selector: 'app-onboarding-page',
+  standalone: true,
+  imports: [LucideAngularModule, ButtonComponent, InputDirective],
+  templateUrl: './onboarding.page.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class OnboardingPage implements OnInit {
+  private readonly onboardingSvc = inject(OnboardingDataService);
+  private readonly auth = inject(AuthStore);
+  private readonly router = inject(Router);
+
+  readonly categories = ARTIST_CATEGORIES; // shared with Discover's own category filter
+  readonly screenState = signal<ScreenState>('loading');
+
+  // Profile
+  readonly handle = signal('');
+  readonly bio = signal('');
+  readonly instagram = signal('');
+  readonly category = signal<ArtistCategory>('makeup');
+
+  // Salon + store
+  readonly salonName = signal('');
+  readonly storeName = signal('');
+  readonly city = signal('');
+  readonly address = signal('');
+
+  // First service
+  readonly serviceName = signal('');
+  readonly serviceDurationMin = signal('60');
+  readonly servicePrice = signal('');
+
+  readonly submitting = signal(false);
+  readonly errorMessage = signal<string | null>(null);
+  readonly fieldErrors = signal<Record<string, string>>({});
+
+  ngOnInit(): void {
+    this.onboardingSvc.getStatus().subscribe({
+      next: (status) => {
+        if (status.status === 'active') {
+          // Nothing to do here anymore - the normal dashboard is correct.
+          this.router.navigateByUrl('/dashboard');
+        } else if (status.status === 'pending') {
+          this.screenState.set('pending');
+        } else {
+          this.screenState.set('rejected');
+        }
+      },
+      error: (err: HttpErrorResponse) => {
+        // A 404 specifically means onboarding was never started - the
+        // expected case for a freshly-registered artist, not an error.
+        this.screenState.set(err.status === 404 ? 'form' : 'error');
+      },
+    });
+  }
+
+  /** Lowercases and strips anything the handle format wouldn't allow, live
+   *  as the person types - cheaper than letting them submit and bounce off
+   *  a validation error for something this mechanical. */
+  onHandleInput(value: string): void {
+    this.handle.set(
+      value.toLowerCase().replace(/[^a-z0-9-]/g, ''),
+    );
+  }
+
+  /** Clears one field's error the moment the person starts fixing it,
+   *  rather than leaving a red border and stale message sitting there
+   *  after they've already changed the value - a server-validated error
+   *  is only trustworthy up to the next edit. */
+  clearFieldError(field: string): void {
+    if (!this.fieldErrors()[field]) return;
+    const next = { ...this.fieldErrors() };
+    delete next[field];
+    this.fieldErrors.set(next);
+  }
+
+  isFormValid(): boolean {
+    return (
+      this.handle().trim().length >= 3 &&
+      this.salonName().trim().length >= 2 &&
+      this.storeName().trim().length >= 2 &&
+      this.city().trim().length >= 2 &&
+      this.serviceName().trim().length >= 2 &&
+      /^\d+(\.\d{1,2})?$/.test(this.servicePrice().trim()) &&
+      Number(this.serviceDurationMin()) >= 15 &&
+      Number(this.serviceDurationMin()) <= 480
+    );
+  }
+
+  submit(): void {
+    if (!this.isFormValid() || this.submitting()) return;
+
+    this.submitting.set(true);
+    this.errorMessage.set(null);
+    this.fieldErrors.set({});
+
+    const req: CompleteOnboardingRequest = {
+      handle: this.handle().trim(),
+      bio: this.bio().trim() || undefined,
+      instagram: this.instagram().trim() || undefined,
+      category: this.category(),
+      salon_name: this.salonName().trim(),
+      store_name: this.storeName().trim(),
+      city: this.city().trim(),
+      address: this.address().trim() || undefined,
+      service_name: this.serviceName().trim(),
+      service_duration_min: Number(this.serviceDurationMin()),
+      service_price: this.servicePrice().trim(),
+    };
+
+    this.onboardingSvc.complete(req).subscribe({
+      next: () => {
+        this.submitting.set(false);
+        this.screenState.set('pending');
+      },
+      error: (err: HttpErrorResponse) => {
+        this.submitting.set(false);
+        this.errorMessage.set(
+          extractApiErrorMessage(err, 'Could not submit your application. Please try again.'),
+        );
+
+        // extractFieldErrors() only ever populates from a 422's `details`
+        // array - struct-tag validation the client-side isFormValid()
+        // check let slip through. It does NOT cover the two errors this
+        // form is realistically most likely to hit: a bad handle format
+        // and a taken handle, both returned by the backend as a plain
+        // top-level message with no details array at all (see
+        // onboarding/service.go - Validate() and the ErrHandleTaken path
+        // both skip the field-error machinery entirely, since they're
+        // custom checks, not struct-tag ones). Both are special-cased
+        // here by error code so the SAME field-highlighting mechanism
+        // still works for the errors a person will actually see, not
+        // just the rarer struct-tag ones.
+        const fields = extractFieldErrors(err);
+        const code = (err.error as { error?: { code?: string } })?.error?.code;
+
+        // HANDLE_TAKEN, and the custom handle-format/category checks in
+        // Go's onboarding.CompleteOnboardingRequest.Validate(), all skip
+        // the struct-tag machinery and return a plain message with no
+        // `details` - so extractFieldErrors() alone won't populate
+        // anything for either. A keyword match on the message text is an
+        // honest heuristic here, not a real field code from the backend,
+        // because the backend genuinely doesn't send one for these two
+        // paths - flagged as a real limitation, not hidden as if this
+        // were a proper field-level error.
+        if (code === 'HANDLE_TAKEN' || code === 'VALIDATION_ERROR') {
+          const msg = extractApiErrorMessage(err, '');
+          const lower = msg.toLowerCase();
+          if (msg && !fields['Handle'] && lower.includes('handle')) {
+            fields['Handle'] = msg;
+          } else if (msg && !fields['Category'] && lower.includes('category')) {
+            fields['Category'] = msg;
+          }
+        }
+        this.fieldErrors.set(fields);
+      },
+    });
+  }
+
+  logout(): void {
+    this.auth.logout().subscribe({
+      next: () => this.router.navigateByUrl('/login'),
+      error: () => this.router.navigateByUrl('/login'),
+    });
+  }
+}
 
 
 --- ./projects/artist-dashboard/src/app/app.config.ts ---
@@ -13879,7 +15611,9 @@ test('get started link', async ({ page }) => {
                 "input": "projects/artist-dashboard/public"
               }
             ],
-            "styles": ["projects/artist-dashboard/src/styles.scss"]
+            "styles": [
+              "projects/artist-dashboard/src/styles.scss"
+            ]
           },
           "configurations": {
             "production": {
@@ -13895,7 +15629,13 @@ test('get started link', async ({ page }) => {
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "projects/artist-dashboard/src/environments/environment.ts",
+                  "with": "projects/artist-dashboard/src/environments/environment.prod.ts"
+                }
+              ]
             },
             "development": {
               "optimization": false,
@@ -13945,7 +15685,9 @@ test('get started link', async ({ page }) => {
                 "input": "projects/customer-pwa/public"
               }
             ],
-            "styles": ["projects/customer-pwa/src/styles.scss"]
+            "styles": [
+              "projects/customer-pwa/src/styles.scss"
+            ]
           },
           "configurations": {
             "production": {
@@ -13961,7 +15703,13 @@ test('get started link', async ({ page }) => {
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "projects/customer-pwa/src/environments/environment.ts",
+                  "with": "projects/customer-pwa/src/environments/environment.prod.ts"
+                }
+              ]
             },
             "development": {
               "optimization": false,

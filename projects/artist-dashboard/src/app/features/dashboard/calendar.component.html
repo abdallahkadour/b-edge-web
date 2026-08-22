@@ -37,7 +37,7 @@
           (click)="selectDay(i)"
           class="flex flex-col items-center py-1"
         >
-          <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{{ day.weekdayLabel }}</span>
+          <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">{{ day.weekdayLabel }}</span>
           <div
             [class]="selectedDayIndex() === i
               ? 'w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold mt-1.5 bg-ink text-white'
@@ -70,7 +70,7 @@
   }
 
   @if (!loading()) {
-    <p class="text-[10px] text-gray-400 font-medium mb-2 uppercase tracking-wide">
+    <p class="text-xs text-gray-400 font-medium mb-2 uppercase tracking-wide">
       Daily agenda · {{ selectedDayLabel() }}
     </p>
 
@@ -78,7 +78,7 @@
     <div class="relative border-l border-gray-200 rounded-lg" style="min-height: 200px;">
       @for (hour of hours; track hour) {
         <div class="h-14 border-b border-gray-100 relative flex items-start pl-2">
-          <span class="absolute -left-1 -translate-x-full text-[10px] font-mono font-medium text-gray-400 pr-1.5">
+          <span class="absolute -left-1 -translate-x-full text-xs font-mono font-medium text-gray-400 pr-1.5">
             {{ hour === 12 ? '12 PM' : hour > 12 ? (hour - 12) + ' PM' : hour + ' AM' }}
           </span>
         </div>
@@ -102,7 +102,7 @@
             </div>
             <p class="text-xs text-gray-300 font-medium mt-0.5 truncate">{{ item.booking.customer_name }}</p>
           </div>
-          <span class="text-[10px] font-mono text-gray-400 font-medium">
+          <span class="text-xs font-mono text-gray-400 font-medium">
             {{ item.startLabel }} – {{ item.endLabel }}
           </span>
         </button>
@@ -138,18 +138,21 @@
     <div
       class="fixed inset-0 bg-ink/50 flex items-end justify-center z-50"
       (click)="closeDetail()"
+      (keydown.escape)="closeDetail()"
     >
       <div
         class="bg-white w-full max-w-lg rounded-t-2xl shadow-xl p-5 pb-8"
         (click)="$event.stopPropagation()"
+        cdkTrapFocus
+        cdkTrapFocusAutoCapture
+        role="dialog"
+        aria-modal="true"
       >
         <div class="w-12 h-1 bg-gray-200 rounded-full mx-auto mb-4"></div>
 
         <div class="flex justify-between items-start mb-4">
           <div>
-            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-[#16a34a]/10 text-[#16a34a] mb-1.5">
-              {{ statusLabel(b.status) }}
-            </span>
+            <div class="mb-1.5"><bedge-badge tone="success">{{ statusLabel(b.status) }}</bedge-badge></div>
             <h3 class="text-lg font-bold text-ink">{{ b.service_name }}</h3>
             <p class="text-xs text-gray-500 font-medium">{{ b.store_name }} · {{ b.store_city }}</p>
           </div>

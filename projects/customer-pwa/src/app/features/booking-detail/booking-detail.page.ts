@@ -9,8 +9,15 @@ import {
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
+import { A11yModule } from '@angular/cdk/a11y';
 
-import { BookingDataService, extractApiErrorMessage } from '@bedge/shared';
+import {
+  BookingDataService,
+  ButtonComponent,
+  InputDirective,
+  extractApiErrorMessage,
+  formatStatusLabel,
+} from '@bedge/shared';
 import type { EnrichedBooking } from '@bedge/shared';
 
 /** Statuses a customer can still act on - mirrors the backend's own
@@ -29,7 +36,7 @@ const REFUND_WINDOW_HOURS = 24;
 @Component({
   selector: 'app-booking-detail-page',
   standalone: true,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, A11yModule, ButtonComponent, InputDirective],
   templateUrl: './booking-detail.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -68,9 +75,7 @@ export class BookingDetailPage implements OnInit {
     return hoursUntil > REFUND_WINDOW_HOURS;
   }
 
-  statusLabel(status: string): string {
-    return status.split('_').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ');
-  }
+  protected readonly statusLabel = formatStatusLabel;
 
   formatDateTime(iso: string): string {
     return new Intl.DateTimeFormat('en-GB', {

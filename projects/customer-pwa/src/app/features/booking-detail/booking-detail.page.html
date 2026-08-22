@@ -2,7 +2,7 @@
 <div class="min-h-screen bg-gray-50">
 
   <div class="h-14 px-4 flex items-center border-b border-gray-100 bg-white sticky top-0 z-10">
-    <button type="button" (click)="goBack()" class="p-1 -ml-1 text-gray-600">
+    <button type="button" (click)="goBack()" aria-label="Back" class="p-1 -ml-1 text-gray-600">
       <lucide-icon name="arrow-left" [size]="20" [strokeWidth]="2" />
     </button>
     <span class="text-sm font-bold text-ink mx-auto -translate-x-3">Your booking</span>
@@ -56,13 +56,13 @@
       </div>
 
       @if (canCancel(b)) {
-        <button
-          type="button"
+        <bedge-button
+          variant="danger"
+          size="sm"
+          [fullWidth]="true"
+          class="block mt-4"
           (click)="openCancelSheet()"
-          class="w-full h-11 mt-4 text-sm font-semibold text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
-        >
-          Cancel booking
-        </button>
+        >Cancel booking</bedge-button>
       }
     }
 
@@ -70,10 +70,18 @@
 
   <!-- Cancel confirmation bottom sheet -->
   @if (showCancelSheet() && booking(); as b) {
-    <div class="fixed inset-0 bg-ink/60 flex items-end justify-center z-50" (click)="closeCancelSheet()">
+    <div
+      class="fixed inset-0 bg-ink/60 flex items-end justify-center z-50"
+      (click)="closeCancelSheet()"
+      (keydown.escape)="closeCancelSheet()"
+    >
       <div
         class="bg-white w-full max-w-lg rounded-t-2xl p-5 pb-8 shadow-xl"
         (click)="$event.stopPropagation()"
+        cdkTrapFocus
+        cdkTrapFocusAutoCapture
+        role="dialog"
+        aria-modal="true"
       >
         <div class="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4"></div>
 
@@ -101,11 +109,12 @@
         <div class="mt-4">
           <label class="block text-xs font-semibold text-ink mb-1.5">Reason for cancelling (optional)</label>
           <textarea
+            bedgeInput
             [value]="cancelReason()"
             (input)="cancelReason.set($any($event.target).value)"
             placeholder="Let them know why…"
             rows="3"
-            class="w-full p-3 border border-gray-200 rounded-lg text-sm text-ink placeholder-gray-400 outline-none focus:border-ink resize-none"
+            class="p-3 resize-none"
           ></textarea>
         </div>
 
@@ -127,14 +136,13 @@
             }
             Yes, cancel booking
           </button>
-          <button
-            type="button"
-            (click)="closeCancelSheet()"
+          <bedge-button
+            variant="ghost"
+            size="lg"
+            [fullWidth]="true"
             [disabled]="cancelling()"
-            class="w-full h-[52px] bg-white border border-gray-200 text-ink font-bold text-sm uppercase tracking-wide rounded-lg hover:bg-gray-50 disabled:opacity-60"
-          >
-            Keep my booking
-          </button>
+            (click)="closeCancelSheet()"
+          >Keep my booking</bedge-button>
         </div>
       </div>
     </div>

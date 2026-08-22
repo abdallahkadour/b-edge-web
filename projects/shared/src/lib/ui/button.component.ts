@@ -61,9 +61,19 @@ export class ButtonComponent {
   );
 
   protected readonly classes = computed(() => {
+    // Solid disabled colors, not opacity. `disabled:opacity-40` on the
+    // primary variant's solid ink fill composites to roughly 2.8:1 against
+    // a white/gray-50 page - under WCAG 2.2's 3:1 minimum for UI
+    // components, and well under the 4.5:1 normal text needs (button
+    // labels here are never "large text" by the WCAG size threshold).
+    // gray-500-on-gray-100 measures ~4.85:1, clearing both. Overrides every
+    // variant's own bg/text/border uniformly via the disabled: pseudo-class,
+    // which Tailwind emits after the plain utilities regardless of class
+    // string order, so this doesn't need to be repeated per variant below.
     const base =
       'inline-flex items-center justify-center gap-2 font-bold rounded-lg ' +
-      'transition-opacity disabled:opacity-40 disabled:cursor-not-allowed';
+      'transition-opacity disabled:bg-gray-100 disabled:text-gray-500 ' +
+      'disabled:border-transparent disabled:cursor-not-allowed';
 
     const sizes: Record<ButtonSize, string> = {
       sm: 'h-9 px-4 text-xs',

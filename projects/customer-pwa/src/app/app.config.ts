@@ -24,6 +24,7 @@ import {
   Image,
   Download,
   WifiOff,
+  Share,
   Minus,
   Plus,
   ShoppingBag,
@@ -37,6 +38,7 @@ import {
   CustomerAuthStore,
   customerAuthInterceptor,
   customerAuthErrorInterceptor,
+  rateLimitInterceptor,
 } from '@bedge/shared';
 
 import { routes } from './app.routes';
@@ -56,7 +58,9 @@ export const appConfig: ApplicationConfig = {
     // the booking funnel, Discover, and the guest review link never touch
     // these interceptors' auth logic since they never send a token to
     // begin with. Only /my-bookings actually depends on this.
-    provideHttpClient(withInterceptors([customerAuthInterceptor, customerAuthErrorInterceptor])),
+    provideHttpClient(
+      withInterceptors([customerAuthInterceptor, customerAuthErrorInterceptor, rateLimitInterceptor]),
+    ),
 
     {
       provide: API_CONFIG,
@@ -82,6 +86,7 @@ export const appConfig: ApplicationConfig = {
         Image,
         Download,
         WifiOff,
+        Share,
         Minus,
         Plus,
         ShoppingBag,

@@ -58,6 +58,15 @@ export interface Store {
   readonly updated_at: string;
 }
 
+/** POST /artists/salon/stores request body. */
+export interface CreateStoreRequest {
+  name: string;      // 2–200
+  name_ar?: string;  // max 200
+  city: string;       // 2–100
+  address?: string;   // max 500
+  phone?: string;     // max 50
+}
+
 /** A salon service (Go artist.ServiceResponse). */
 export interface Service {
   readonly id: string;

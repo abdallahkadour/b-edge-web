@@ -6,17 +6,41 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
+import { LucideAngularModule } from 'lucide-angular';
+import { A11yModule } from '@angular/cdk/a11y';
 
-import { ArtistDataService } from '@bedge/shared';
+import {
+  ArtistDataService,
+  ButtonComponent,
+  InputDirective,
+  extractApiErrorMessage,
+} from '@bedge/shared';
 import type {
   Store,
   BusinessHours,
   BusinessHoursException,
   SetBusinessHoursRequest,
   CreateExceptionRequest,
+  CreateStoreRequest,
 } from '@bedge/shared';
+
+/** Working state for the "Add store" modal form. */
+interface NewStoreForm {
+  name: string;
+  nameAr: string;
+  city: string;
+  address: string;
+  phone: string;
+}
+
+const EMPTY_NEW_STORE: NewStoreForm = {
+  name: '',
+  nameAr: '',
+  city: '',
+  address: '',
+  phone: '',
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Local types
@@ -111,11 +135,18 @@ function buildDayRows(apiHours: BusinessHours[]): DayRow[] {
  *
  * Store tabs load fresh hours and exceptions from the API on every switch so
  * the two stores stay fully independent.
+ *
+ * Plain signals with `[value]`/`(input)` bindings, not `FormsModule`/
+ * `ngModel` - converted Aug 15, 2026 to match the pattern every other
+ * migrated screen in this codebase uses (onboarding, products, and now
+ * this). The previous version's ngModel handlers mutated a DayRow object
+ * in place and relied on a later spread to pick up the mutation; the
+ * setter methods below go through `updateRow` directly instead.
  */
 @Component({
   selector: 'bedge-hours',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [ButtonComponent, InputDirective, LucideAngularModule, A11yModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './hours.component.html',
 })
@@ -135,6 +166,13 @@ export class HoursComponent implements OnInit {
 
   /** Top-level error, e.g. "Could not load stores". */
   readonly storesError = signal<string | null>(null);
+
+  /** "Add store" modal state — lives here since this is where the store
+   *  list is actually loaded and rendered (as tabs), not on Profile. */
+  readonly addStoreOpen = signal(false);
+  readonly newStore = signal<NewStoreForm>({ ...EMPTY_NEW_STORE });
+  readonly addingStore = signal(false);
+  readonly addStoreError = signal<string | null>(null);
 
   // ── Business hours ────────────────────────────────────────────────────────
 
@@ -228,15 +266,77 @@ export class HoursComponent implements OnInit {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
+  // Add store
+  // ─────────────────────────────────────────────────────────────────────────
+
+  openAddStore(): void {
+    this.newStore.set({ ...EMPTY_NEW_STORE });
+    this.addStoreError.set(null);
+    this.addStoreOpen.set(true);
+  }
+
+  closeAddStore(): void {
+    if (this.addingStore()) return;
+    this.addStoreOpen.set(false);
+  }
+
+  patchNewStore<K extends keyof NewStoreForm>(key: K, value: NewStoreForm[K]): void {
+    this.newStore.update((f) => ({ ...f, [key]: value }));
+  }
+
+  /** Name and city are the only required fields on the backend
+   *  (CreateStoreRequest) - matches that, not a stricter invented rule. */
+  canSubmitNewStore(): boolean {
+    const f = this.newStore();
+    return f.name.trim().length >= 2 && f.city.trim().length >= 2;
+  }
+
+  submitAddStore(): void {
+    if (!this.canSubmitNewStore() || this.addingStore()) return;
+
+    const f = this.newStore();
+    const req: CreateStoreRequest = {
+      name: f.name.trim(),
+      name_ar: f.nameAr.trim() || undefined,
+      city: f.city.trim(),
+      address: f.address.trim() || undefined,
+      phone: f.phone.trim() || undefined,
+    };
+
+    this.addingStore.set(true);
+    this.addStoreError.set(null);
+
+    this.artistService.createStore(req).subscribe({
+      next: (store) => {
+        this.addingStore.set(false);
+        this.addStoreOpen.set(false);
+        this.stores.update((list) => [...list, store]);
+        this.selectStore(store);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.addingStore.set(false);
+        this.addStoreError.set(extractApiErrorMessage(err, 'Could not add this store. Please try again.'));
+      },
+    });
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
   // Hours grid
   // ─────────────────────────────────────────────────────────────────────────
 
-  /**
-   * Called by the template when the user edits any field in a day row.
-   * Marks the row dirty so its Save button activates.
-   */
-  markDirty(row: DayRow): void {
-    this.updateRow(row.dayOfWeek, { dirty: true });
+  /** Sets whether a day is open, and marks the row dirty. */
+  setIsOpen(row: DayRow, isOpen: boolean): void {
+    this.updateRow(row.dayOfWeek, { isOpen, dirty: true });
+  }
+
+  /** Sets a day's open time, and marks the row dirty. */
+  setOpenTime(row: DayRow, openTime: string): void {
+    this.updateRow(row.dayOfWeek, { openTime, dirty: true });
+  }
+
+  /** Sets a day's close time, and marks the row dirty. */
+  setCloseTime(row: DayRow, closeTime: string): void {
+    this.updateRow(row.dayOfWeek, { closeTime, dirty: true });
   }
 
   /**
@@ -247,8 +347,22 @@ export class HoursComponent implements OnInit {
     const store = this.selectedStore();
     if (!store) return;
 
-    this.updateRow(row.dayOfWeek, { saving: true });
     this.clearSaveError(row.dayOfWeek);
+
+    // Client-side pre-check, mirroring the backend's own rule (see
+    // SetBusinessHours's validation) - fails fast on the obviously wrong
+    // input rather than round-tripping to the API to find out. The
+    // backend still enforces this independently; this is a UX shortcut,
+    // not the actual guard. Only checked while the day is open - a
+    // closed day's open/close times are unused placeholders. A day open
+    // 19:00–10:00 used to save with a 204 and no error at all - this
+    // (plus the matching backend check) is the fix.
+    if (row.isOpen && row.closeTime <= row.openTime) {
+      this.setSaveError(row.dayOfWeek, 'Close time must be after open time.');
+      return;
+    }
+
+    this.updateRow(row.dayOfWeek, { saving: true });
 
     const req: SetBusinessHoursRequest = {
       day_of_week: row.dayOfWeek,
@@ -261,9 +375,9 @@ export class HoursComponent implements OnInit {
       next: () => {
         this.updateRow(row.dayOfWeek, { dirty: false, saving: false });
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.updateRow(row.dayOfWeek, { saving: false });
-        this.setSaveError(row.dayOfWeek, 'Save failed. Try again.');
+        this.setSaveError(row.dayOfWeek, extractApiErrorMessage(err, 'Save failed. Try again.'));
       },
     });
   }
@@ -312,14 +426,24 @@ export class HoursComponent implements OnInit {
     });
   }
 
-  /** Delete an exception by its date string. */
+  /** Delete an exception by its date string.
+   *
+   *  exception.exception_date arrives as a full ISO datetime (the backend's
+   *  `time.Time` field JSON-marshals as RFC3339, e.g. "2026-08-24T00:00:00Z"),
+   *  but DELETE /stores/:id/exceptions/:date parses its path param with the
+   *  strict Go layout "2006-01-02" - plain YYYY-MM-DD only. Passing the raw
+   *  ISO string 400s every time ("Date must be in YYYY-MM-DD format"),
+   *  meaning this action never worked at all until this truncation was
+   *  added - found by actually running it, not by reading the code. */
   deleteException(exception: BusinessHoursException): void {
     const store = this.selectedStore();
     if (!store) return;
 
     this.deletingExceptionId.set(exception.id);
 
-    this.artistService.deleteException(store.id, exception.exception_date).subscribe({
+    const dateOnly = exception.exception_date.slice(0, 10);
+
+    this.artistService.deleteException(store.id, dateOnly).subscribe({
       next: () => {
         this.exceptions.update((list) =>
           list.filter((e) => e.id !== exception.id),

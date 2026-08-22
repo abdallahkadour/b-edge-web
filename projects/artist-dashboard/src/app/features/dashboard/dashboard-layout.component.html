@@ -12,7 +12,7 @@
 
     <!-- Nav links -->
     <nav class="flex-1 px-3 py-4 space-y-1">
-      @for (item of navItems; track item.path) {
+      @for (item of navItems(); track item.path) {
         <a
           [routerLink]="item.path"
           routerLinkActive="bg-gray-100 text-ink font-medium"
@@ -55,7 +55,15 @@
   </aside>
 
   <!-- ── Main content area ───────────────────────────────────────────────── -->
-  <div class="flex-1 flex flex-col md:ml-56">
+  <!-- min-w-0 matters: this is a flex item of the outer row above, and a
+       flex item's default min-width is `auto` (its content's min-content
+       size), not 0. Without this, any descendant with a wide row of
+       un-shrunk children (e.g. a horizontally-scrollable status-filter
+       chip row) pushes THIS whole column wider than the viewport before
+       that descendant's own `overflow-x-auto` ever gets a chance to
+       constrain anything - the overflow leaks all the way out to the page
+       instead of scrolling inside its own row, at every breakpoint. -->
+  <div class="flex-1 flex flex-col md:ml-56 min-w-0">
 
     <!-- Mobile top bar -->
     <header class="md:hidden flex items-center justify-between px-4 py-4
@@ -75,25 +83,98 @@
 
     <!-- Page content -->
     <main class="flex-1 px-4 py-6 md:px-8 pb-24 md:pb-8">
+      @if (isPending()) {
+        <div class="mb-5 rounded-xl bg-warning-light border border-warning px-4 py-3 flex items-start gap-3">
+          <lucide-icon name="clock" [size]="18" [strokeWidth]="2" class="text-warning-dark shrink-0 mt-0.5" />
+          <p class="text-[13px] text-warning-dark leading-relaxed">
+            Your application is still being reviewed. You can add photos and finish your
+            profile now - everything else unlocks once you're approved.
+          </p>
+        </div>
+      }
       <router-outlet />
     </main>
   </div>
 
   <!-- ── Bottom nav (mobile only) ───────────────────────────────────────── -->
-  <nav class="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-gray-200
-              flex items-center justify-around px-2 py-2 z-10">
-    @for (item of navItems; track item.path) {
-      <a
-        [routerLink]="item.path"
-        routerLinkActive="text-ink"
-        [routerLinkActiveOptions]="{ exact: false }"
-        class="flex flex-col items-center gap-1 px-3 py-1 text-gray-400
-               hover:text-ink transition-colors"
+  @if (mobilePrimaryNavItems().length > 0) {
+    <nav class="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-gray-200
+                flex items-center justify-around px-2 py-2 z-10">
+      @for (item of mobilePrimaryNavItems(); track item.path) {
+        <a
+          [routerLink]="item.path"
+          routerLinkActive="text-ink"
+          [routerLinkActiveOptions]="{ exact: false }"
+          class="flex flex-col items-center gap-1 px-3 py-1 text-gray-400
+                 hover:text-ink transition-colors"
+        >
+          <lucide-icon [name]="item.icon" [size]="22" [strokeWidth]="2" />
+          <span class="text-xs font-medium">{{ item.label }}</span>
+        </a>
+      }
+      @if (mobileMoreNavItems().length > 0) {
+        <button
+          type="button"
+          (click)="toggleMore()"
+          [attr.aria-expanded]="moreOpen()"
+          aria-label="More sections"
+          class="flex flex-col items-center gap-1 px-3 py-1 text-gray-400
+                 hover:text-ink transition-colors"
+        >
+          <lucide-icon name="more-horizontal" [size]="22" [strokeWidth]="2" />
+          <span class="text-xs font-medium">More</span>
+        </button>
+      }
+    </nav>
+  }
+
+  <!-- ── "More" sheet (mobile only) - the rest of navItems() that don't
+       fit on the bottom bar. A fixed 4-item bar can't hold all 11
+       sections; this is where Waitlist/Products/Deposits/Earnings/
+       Services/Hours live instead of being rendered off-screen. ────── -->
+  @if (moreOpen()) {
+    <div
+      class="md:hidden fixed inset-0 z-50 bg-ink/40 flex items-end"
+      (click)="closeMore()"
+      (keydown.escape)="closeMore()"
+    >
+      <div
+        class="bg-white w-full rounded-t-2xl border-t border-gray-200 shadow-xl pb-[env(safe-area-inset-bottom)]"
+        (click)="$event.stopPropagation()"
+        cdkTrapFocus
+        cdkTrapFocusAutoCapture
+        role="dialog"
+        aria-modal="true"
+        aria-label="More sections"
       >
-        <lucide-icon [name]="item.icon" [size]="22" [strokeWidth]="2" />
-        <span class="text-[10px] font-medium">{{ item.label }}</span>
-      </a>
-    }
-  </nav>
+        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+          <h2 class="text-base font-bold text-ink">More</h2>
+          <button
+            type="button"
+            (click)="closeMore()"
+            aria-label="Close"
+            class="p-1 text-gray-400 hover:text-ink rounded-full hover:bg-gray-100"
+          >
+            <lucide-icon name="x" [size]="18" [strokeWidth]="2" />
+          </button>
+        </div>
+        <div class="grid grid-cols-3 gap-1 p-3">
+          @for (item of mobileMoreNavItems(); track item.path) {
+            <a
+              [routerLink]="item.path"
+              routerLinkActive="text-ink bg-gray-50"
+              [routerLinkActiveOptions]="{ exact: false }"
+              (click)="closeMore()"
+              class="flex flex-col items-center gap-1.5 px-2 py-3 rounded-lg text-gray-500
+                     hover:bg-gray-50 hover:text-ink transition-colors"
+            >
+              <lucide-icon [name]="item.icon" [size]="22" [strokeWidth]="2" />
+              <span class="text-xs font-medium">{{ item.label }}</span>
+            </a>
+          }
+        </div>
+      </div>
+    </div>
+  }
 
 </div>

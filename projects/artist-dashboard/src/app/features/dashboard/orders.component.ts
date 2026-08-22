@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { LucideAngularModule } from 'lucide-angular';
+import { A11yModule } from '@angular/cdk/a11y';
 
 import {
   ProductDataService,
@@ -16,6 +17,7 @@ import {
   BadgeComponent,
   CardComponent,
   InputDirective,
+  LocationMapComponent,
 } from '@bedge/shared';
 import type { EnrichedOrder, OrderStatus, BadgeTone } from '@bedge/shared';
 
@@ -34,7 +36,15 @@ type FilterTab = 'placed' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
   selector: 'bedge-orders',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [LucideAngularModule, ButtonComponent, BadgeComponent, CardComponent, InputDirective],
+  imports: [
+    LucideAngularModule,
+    ButtonComponent,
+    BadgeComponent,
+    CardComponent,
+    InputDirective,
+    LocationMapComponent,
+    A11yModule,
+  ],
   templateUrl: './orders.component.html',
 })
 export class OrdersComponent implements OnInit {
@@ -47,6 +57,15 @@ export class OrdersComponent implements OnInit {
 
   /** Per-order in-flight flag, so one card's spinner doesn't freeze the rest. */
   readonly busyOrderId = signal<string | null>(null);
+
+  /** At most one order's map is expanded at a time - each one instantiates
+   *  a real MapLibre map, so this keeps the list from ever rendering more
+   *  than one simultaneously. */
+  readonly expandedLocationOrderId = signal<string | null>(null);
+
+  toggleLocation(orderId: string): void {
+    this.expandedLocationOrderId.update((current) => (current === orderId ? null : orderId));
+  }
 
   // confirm-payment modal
   readonly modalOrder = signal<EnrichedOrder | null>(null);

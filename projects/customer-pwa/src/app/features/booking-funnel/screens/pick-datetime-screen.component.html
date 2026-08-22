@@ -142,10 +142,18 @@
 
   <!-- Waitlist join modal -->
   @if (showWaitlistForm()) {
-    <div class="fixed inset-0 bg-ink/60 flex items-end justify-center z-50" (click)="closeWaitlistForm()">
+    <div
+      class="fixed inset-0 bg-ink/60 flex items-end justify-center z-50"
+      (click)="closeWaitlistForm()"
+      (keydown.escape)="closeWaitlistForm()"
+    >
       <div
         class="bg-white w-full max-w-lg rounded-t-2xl p-5 pb-8 shadow-xl"
         (click)="$event.stopPropagation()"
+        cdkTrapFocus
+        cdkTrapFocusAutoCapture
+        role="dialog"
+        aria-modal="true"
       >
         <div class="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4"></div>
 
@@ -159,10 +167,11 @@
             <label class="block text-xs font-medium text-ink mb-1">Your name</label>
             <input
               type="text"
+              bedgeInput
               [value]="waitlistName()"
               (input)="waitlistName.set($any($event.target).value)"
               placeholder="Your name"
-              class="w-full h-11 px-3.5 border border-gray-200 rounded-lg text-[15px] outline-none focus:border-ink"
+              class="h-11"
             />
           </div>
 
@@ -191,17 +200,14 @@
           </div>
         }
 
-        <button
-          type="button"
+        <bedge-button
+          size="lg"
+          [fullWidth]="true"
+          class="block mt-5"
+          [loading]="waitlistSubmitting()"
+          [disabled]="!isWaitlistNameValid() || !isWaitlistPhoneValid()"
           (click)="submitWaitlist()"
-          [disabled]="waitlistSubmitting() || !isWaitlistNameValid() || !isWaitlistPhoneValid()"
-          class="w-full h-[52px] mt-5 bg-ink hover:opacity-90 text-white font-bold text-sm uppercase tracking-wide rounded-lg transition-opacity flex items-center justify-center gap-2 disabled:opacity-40"
-        >
-          @if (waitlistSubmitting()) {
-            <lucide-icon name="loader-2" [size]="16" [strokeWidth]="2" class="animate-spin" />
-          }
-          Join waitlist
-        </button>
+        >Join waitlist</bedge-button>
       </div>
     </div>
   }

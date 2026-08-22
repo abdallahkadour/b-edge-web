@@ -1,5 +1,5 @@
 <!-- Orders — product fulfilment queue -->
-<div>
+<div class="max-w-4xl mx-auto">
 
   <div class="mb-5">
     <h1 class="text-xl font-semibold text-ink tracking-tight">Orders</h1>
@@ -18,7 +18,7 @@
       >
         {{ tab.label }}
         @if (countFor(tab.key) > 0) {
-          <span class="ml-1 text-[11px]">({{ countFor(tab.key) }})</span>
+          <span class="ml-1 text-xs">({{ countFor(tab.key) }})</span>
         }
       </button>
     }
@@ -57,7 +57,7 @@
         <p class="text-xs text-gray-400 mt-0.5">Incoming client orders will appear here.</p>
       </div>
     } @else {
-      <div class="space-y-4 mt-5">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-5">
         @for (order of displayed(); track order.id) {
           <bedge-card>
 
@@ -65,7 +65,7 @@
             <div class="flex items-start justify-between">
               <div>
                 <h2 class="text-[15px] font-bold text-ink">{{ order.customer_name }}</h2>
-                <div class="text-[11px] text-gray-400 font-medium mt-0.5">
+                <div class="text-xs text-gray-400 font-medium mt-0.5">
                   Order #{{ shortRef(order.id) }}
                   @if (order.customer_phone) { · +961 {{ order.customer_phone }} }
                   · {{ formatDate(order.created_at) }}
@@ -96,8 +96,38 @@
               </div>
             }
 
+            @if (order.delivery_lat !== undefined && order.delivery_lng !== undefined) {
+              <button
+                type="button"
+                (click)="toggleLocation(order.id)"
+                class="mt-3 w-full flex items-center justify-between gap-2 text-xs font-semibold text-ink bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-2 hover:bg-gray-100 transition-colors"
+              >
+                <span class="flex items-center gap-1.5">
+                  <lucide-icon name="map-pin" [size]="14" [strokeWidth]="2" class="text-gray-400" />
+                  Delivery location
+                </span>
+                <lucide-icon
+                  [name]="expandedLocationOrderId() === order.id ? 'chevron-up' : 'chevron-down'"
+                  [size]="14"
+                  [strokeWidth]="2"
+                  class="text-gray-400"
+                />
+              </button>
+
+              @if (expandedLocationOrderId() === order.id) {
+                <div class="mt-2">
+                  <bedge-location-map
+                    mode="view"
+                    [lat]="order.delivery_lat"
+                    [lng]="order.delivery_lng"
+                    height="200px"
+                  />
+                </div>
+              }
+            }
+
             @if (order.payment_reference) {
-              <div class="mt-3 text-[11px] text-gray-500 font-mono bg-gray-100 px-2.5 py-1 rounded w-fit">
+              <div class="mt-3 text-xs text-gray-500 font-mono bg-gray-100 px-2.5 py-1 rounded w-fit">
                 Ref: {{ order.payment_reference }}
               </div>
             }
@@ -122,6 +152,7 @@
                 @switch (order.status) {
                   @case ('placed') {
                     <bedge-button
+                      variant="secondary"
                       size="sm"
                       [disabled]="busyOrderId() === order.id"
                       (click)="openConfirmModal(order)"
@@ -129,6 +160,7 @@
                   }
                   @case ('confirmed') {
                     <bedge-button
+                      variant="secondary"
                       size="sm"
                       [loading]="busyOrderId() === order.id"
                       (click)="markShipped(order)"
@@ -136,6 +168,7 @@
                   }
                   @case ('shipped') {
                     <bedge-button
+                      variant="secondary"
                       size="sm"
                       [loading]="busyOrderId() === order.id"
                       (click)="markDelivered(order)"
@@ -158,8 +191,19 @@
 
   <!-- Confirm payment modal -->
   @if (modalOrder(); as order) {
-    <div class="fixed inset-0 z-50 bg-ink/40 flex items-center justify-center p-4" (click)="closeModal()">
-      <div class="bg-white border border-gray-200 rounded-2xl w-full max-w-[420px] shadow-xl overflow-hidden" (click)="$event.stopPropagation()">
+    <div
+      class="fixed inset-0 z-50 bg-ink/40 flex items-center justify-center p-4"
+      (click)="closeModal()"
+      (keydown.escape)="closeModal()"
+    >
+      <div
+        class="bg-white border border-gray-200 rounded-2xl w-full max-w-[420px] shadow-xl overflow-hidden"
+        (click)="$event.stopPropagation()"
+        cdkTrapFocus
+        cdkTrapFocusAutoCapture
+        role="dialog"
+        aria-modal="true"
+      >
         <div class="px-5 py-4 border-b border-gray-100">
           <h2 class="text-base font-bold text-ink">Confirm payment received</h2>
           <p class="text-xs text-gray-500 mt-0.5">
@@ -178,7 +222,7 @@
               placeholder="Whish transaction number"
               class="h-11"
             />
-            <p class="text-[11px] text-gray-400 mt-1.5">
+            <p class="text-xs text-gray-400 mt-1.5">
               Only for your own records — the customer never sees this.
             </p>
           </div>

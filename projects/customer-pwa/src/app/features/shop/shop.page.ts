@@ -16,6 +16,7 @@ import {
   ArtistDataService,
   CartStore,
   PRODUCT_CATEGORIES,
+  isSoldOut,
 } from '@bedge/shared';
 import type { Product, ProductCategory } from '@bedge/shared';
 
@@ -46,6 +47,9 @@ export class ShopPage implements OnInit {
   readonly artistId = input.required<string>();
 
   readonly categories = PRODUCT_CATEGORIES;
+  /** Exposed for the template - Angular templates can't call a bare
+   *  imported function, only a component member. */
+  protected readonly isSoldOut = isSoldOut;
 
   readonly loading = signal(true);
   readonly errorMessage = signal<string | null>(null);
@@ -82,6 +86,10 @@ export class ShopPage implements OnInit {
     this.router.navigate(['/shop', this.artistId(), 'cart']);
   }
 
+  openProduct(p: Product): void {
+    this.router.navigate(['/shop', this.artistId(), 'products', p.id]);
+  }
+
   private load(): void {
     this.loading.set(true);
     this.errorMessage.set(null);
@@ -98,6 +106,10 @@ export class ShopPage implements OnInit {
           next: (items) => {
             this.products.set(items ?? []);
             this.loading.set(false);
+            // Restore any cart lines persisted from a previous session,
+            // using THIS fresh product list so prices and availability are
+            // never stale. A no-op if there is nothing pending.
+            this.cart.reconcile(items ?? []);
           },
           error: () => {
             this.loading.set(false);

@@ -9,7 +9,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 
-import { CustomerAuthStore, extractApiErrorMessage, isValidLocalPhone } from '@bedge/shared';
+import {
+  ButtonComponent,
+  CustomerAuthStore,
+  extractApiErrorMessage,
+  isValidLocalPhone,
+} from '@bedge/shared';
 
 /** How long the "Resend code" link stays disabled after a send. Purely a
  *  UI courtesy - the real 3-per-5-min limit is enforced server-side. */
@@ -30,7 +35,7 @@ const RESEND_COOLDOWN_SECONDS = 30;
 @Component({
   selector: 'app-customer-login-page',
   standalone: true,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, ButtonComponent],
   templateUrl: './customer-login.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

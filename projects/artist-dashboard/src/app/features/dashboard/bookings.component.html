@@ -1,5 +1,5 @@
 <!-- Bookings screen -->
-<div>
+<div class="max-w-4xl mx-auto">
 
   <!-- Page header -->
   <div class="mb-6 flex items-center justify-between">
@@ -63,7 +63,7 @@
 
   <!-- Booking list -->
   @if (bookings().length > 0) {
-    <div class="space-y-3">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
       @for (booking of bookings(); track booking.id) {
         <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
 
@@ -75,9 +75,9 @@
                 <p class="text-xs text-gray-400 mt-0.5">{{ booking.customer_phone }}</p>
               }
             </div>
-            <span [class]="'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ' + statusClass(booking.status)">
+            <bedge-badge [tone]="statusTone(booking.status)">
               {{ statusLabel(booking.status) }}
-            </span>
+            </bedge-badge>
           </div>
 
           <!-- Details row -->
@@ -94,20 +94,67 @@
           </div>
 
           <!-- Actions -->
-          @if (canApprove(booking) || canComplete(booking) || canMarkNoShow(booking)) {
+          @if (confirmingCancelId() === booking.id) {
+            <div class="pt-3 border-t border-gray-100">
+              <p class="text-xs text-gray-600 mb-2">
+                Cancel this booking?
+                @if (booking.deposit_amount && +booking.deposit_amount > 0) {
+                  A refund will be recorded.
+                }
+              </p>
+              <input
+                type="text"
+                bedgeInput
+                [value]="cancelReason()"
+                (input)="cancelReason.set($any($event.target).value)"
+                placeholder="Reason (optional)"
+                class="h-9 text-xs mb-2"
+              />
+              @if (cancelError(); as err) {
+                <p class="text-xs text-danger-dark mb-2">{{ err }}</p>
+              }
+              <div class="flex gap-2">
+                <bedge-button
+                  variant="danger"
+                  size="sm"
+                  class="flex-1"
+                  [fullWidth]="true"
+                  [loading]="cancellingId() === booking.id"
+                  (click)="confirmCancel(booking)"
+                >Yes, cancel</bedge-button>
+                <bedge-button
+                  variant="ghost"
+                  size="sm"
+                  class="flex-1"
+                  [fullWidth]="true"
+                  [disabled]="cancellingId() === booking.id"
+                  (click)="dismissCancel()"
+                >Never mind</bedge-button>
+              </div>
+            </div>
+          } @else if (canApprove(booking) || canComplete(booking) || canMarkNoShow(booking) || canCancel(booking)) {
             <div class="flex gap-2 pt-3 border-t border-gray-100">
 
               @if (canApprove(booking)) {
-                <button
+                <bedge-button
+                  variant="secondary"
+                  size="sm"
+                  class="flex-1"
+                  [fullWidth]="true"
                   (click)="approve(booking.id)"
-                  class="flex-1 rounded-lg bg-ink py-2 text-xs font-medium text-white
-                         hover:bg-gray-800 transition-colors"
-                >
-                  Approve
-                </button>
+                >Approve</bedge-button>
               }
 
               @if (canComplete(booking)) {
+                <!-- Deliberately still a hand-styled green button, not
+                     bedge-button: the shared primitive has 4 variants
+                     (primary/secondary/ghost/danger), none of which carry a
+                     success tone, and marking a booking complete is a
+                     genuinely positive action worth keeping visually
+                     distinct from "Approve" - forcing it into an existing
+                     variant would either lose that meaning or need a real
+                     "success" variant added to the shared component, which
+                     is a design-system decision, not a row-button fix. -->
                 <button
                   (click)="complete(booking.id)"
                   class="flex-1 rounded-lg bg-green-600 py-2 text-xs font-medium text-white
@@ -115,13 +162,26 @@
                 >
                   Mark complete
                 </button>
-                <button
+              }
+
+              @if (canMarkNoShow(booking)) {
+                <bedge-button
+                  variant="ghost"
+                  size="sm"
+                  class="flex-1"
+                  [fullWidth]="true"
                   (click)="markNoShow(booking.id)"
-                  class="flex-1 rounded-lg border border-gray-200 py-2 text-xs font-medium
-                         text-gray-600 hover:bg-gray-50 transition-colors"
-                >
-                  No show
-                </button>
+                >No show</bedge-button>
+              }
+
+              @if (canCancel(booking)) {
+                <bedge-button
+                  variant="danger"
+                  size="sm"
+                  class="flex-1"
+                  [fullWidth]="true"
+                  (click)="askToCancel(booking.id)"
+                >Cancel</bedge-button>
               }
 
             </div>

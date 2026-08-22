@@ -91,6 +91,20 @@
       </p>
     }
 
+    <!-- Oversized avatar - offer a resize instead of a flat rejection -->
+    @if (pendingOversizedAvatarFile(); as file) {
+      <div class="rounded-lg bg-warning-light border border-warning px-4 py-3 mb-4">
+        <p class="text-[13px] text-warning-dark leading-relaxed">
+          This photo is {{ pendingOversizedAvatarSizeMB().toFixed(1) }}MB, over the 15MB limit.
+          We can resize it to fit and upload it for you.
+        </p>
+        <div class="flex gap-2 mt-3">
+          <bedge-button size="sm" (click)="confirmResizeAvatar()">Resize &amp; upload</bedge-button>
+          <bedge-button size="sm" variant="ghost" (click)="dismissOversizedAvatar()">Never mind</bedge-button>
+        </div>
+      </div>
+    }
+
     <div class="mb-8"></div>
 
     <!-- ── Read-only fields ──────────────────────────────────────────────── -->
@@ -118,9 +132,9 @@
         <div class="flex items-center justify-between py-2 border-b border-gray-100">
           <span class="text-sm text-gray-500">Verified</span>
           @if (profile()!.is_verified) {
-            <span class="text-xs px-2 py-0.5 rounded-full bg-success-light text-success-dark">Verified</span>
+            <bedge-badge tone="success">Verified</bedge-badge>
           } @else {
-            <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Not verified</span>
+            <bedge-badge tone="neutral">Not verified</bedge-badge>
           }
         </div>
 
@@ -138,12 +152,13 @@
           <label class="block text-sm text-gray-500 mb-1.5" for="profile-bio">Bio</label>
           <textarea
             id="profile-bio"
-            class="bedge-input text-sm resize-none"
+            bedgeInput
+            class="text-sm resize-none"
             rows="4"
             maxlength="500"
             placeholder="Tell clients a bit about you and your work…"
-            [ngModel]="bio()"
-            (ngModelChange)="bio.set($event)"
+            [value]="bio()"
+            (input)="bio.set($any($event.target).value)"
           ></textarea>
           <p class="text-xs text-gray-300 mt-1 text-right">{{ bio().length }}/500</p>
         </div>
@@ -161,8 +176,8 @@
               class="flex-1 px-3 py-2 text-sm text-ink bg-white outline-none placeholder-gray-300"
               placeholder="yourhandle"
               maxlength="255"
-              [ngModel]="instagram()"
-              (ngModelChange)="instagram.set($event)"
+              [value]="instagram()"
+              (input)="instagram.set($any($event.target).value)"
             />
           </div>
         </div>
@@ -188,18 +203,156 @@
     }
 
     <!-- ── Save button ───────────────────────────────────────────────────── -->
-    <button
-      type="button"
-      class="bedge-btn-sm font-medium w-full sm:w-auto mb-8"
-      [disabled]="!isDirty || saving()"
-      [class.opacity-30]="!isDirty || saving()"
+    <bedge-button
+      [fullWidth]="true"
+      class="block mb-8"
+      [disabled]="!isDirty"
+      [loading]="saving()"
       (click)="save()"
-    >
-      @if (saving()) { Saving… } @else { Save changes }
-    </button>
+    >Save changes</bedge-button>
 
     <!-- ── Portfolio manager ─────────────────────────────────────────────── -->
     <bedge-portfolio />
+
+    <!-- ── Account security ──────────────────────────────────────────────── -->
+    <div class="mt-10 pt-8 border-t border-gray-100">
+      <h2 class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-4">Account security</h2>
+
+      <!-- Change password -->
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-ink mb-1.5">Current password</label>
+        <input
+          type="password"
+          bedgeInput
+          [invalid]="changePasswordTouched() && currentPassword().length === 0"
+          [value]="currentPassword()"
+          (input)="currentPassword.set($any($event.target).value)"
+          autocomplete="current-password"
+          class="h-11 mb-3"
+        />
+        <label class="block text-sm font-medium text-ink mb-1.5">New password</label>
+        <input
+          type="password"
+          bedgeInput
+          [invalid]="changePasswordTouched() && !isNewPasswordValid()"
+          [value]="newPassword()"
+          (input)="newPassword.set($any($event.target).value)"
+          autocomplete="new-password"
+          placeholder="At least 8 characters"
+          class="h-11 mb-1.5"
+        />
+        <div class="h-4 mb-1.5">
+          @if (changePasswordTouched() && !isNewPasswordValid()) {
+            <p class="text-xs text-danger leading-4">Password must be at least 8 characters.</p>
+          }
+        </div>
+        <label class="block text-sm font-medium text-ink mb-1.5">Confirm new password</label>
+        <input
+          type="password"
+          bedgeInput
+          [invalid]="changePasswordTouched() && !isConfirmNewPasswordValid()"
+          [value]="confirmNewPassword()"
+          (input)="confirmNewPassword.set($any($event.target).value)"
+          autocomplete="new-password"
+          class="h-11 mb-1.5"
+        />
+        <div class="h-4 mb-3">
+          @if (changePasswordTouched() && !isConfirmNewPasswordValid()) {
+            <p class="text-xs text-danger leading-4">Passwords do not match.</p>
+          }
+        </div>
+
+        @if (changePasswordSuccess()) {
+          <p class="text-sm text-success-dark bg-success-light rounded-lg px-4 py-3 mb-3">Password changed.</p>
+        }
+        @if (changePasswordError()) {
+          <p class="text-sm text-danger-dark bg-danger-light rounded-lg px-4 py-3 mb-3">{{ changePasswordError() }}</p>
+        }
+
+        <bedge-button
+          [loading]="changingPassword()"
+          (click)="changePassword()"
+        >Change password</bedge-button>
+      </div>
+    </div>
+
+    <!-- ── Danger zone ───────────────────────────────────────────────────── -->
+    <div class="mt-8 pt-6 border-t border-gray-100">
+      <h2 class="text-xs font-medium text-danger uppercase tracking-wide mb-4">Danger zone</h2>
+
+      <!-- Freeze account -->
+      <div class="flex items-start justify-between gap-4 mb-5 p-4 rounded-lg border border-gray-200">
+        <div>
+          <p class="text-sm font-medium text-ink">
+            {{ isFrozen() ? 'Account frozen' : 'Freeze account' }}
+          </p>
+          <p class="text-xs text-gray-500 mt-1 max-w-md">
+            @if (isFrozen()) {
+              You can unfreeze it here while still signed in - but once you sign out, a frozen account can't log back in.
+            } @else {
+              Temporarily block new sign-ins. You can undo this right here, but once you sign out while frozen, you won't be able to log back in yourself.
+            }
+          </p>
+          @if (freezeError()) {
+            <p class="text-xs text-danger-dark mt-2">{{ freezeError() }}</p>
+          }
+        </div>
+        <bedge-button
+          [variant]="isFrozen() ? 'primary' : 'secondary'"
+          size="sm"
+          [loading]="freezing()"
+          (click)="toggleFreeze()"
+        >{{ isFrozen() ? 'Unfreeze' : 'Freeze' }}</bedge-button>
+      </div>
+
+      <!-- Delete account -->
+      <div class="p-4 rounded-lg border border-danger/30 bg-danger-light/30">
+        @if (!confirmingDelete()) {
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <p class="text-sm font-medium text-ink">Delete account</p>
+              <p class="text-xs text-gray-500 mt-1 max-w-md">
+                Permanently deletes your account. This cannot be undone from here.
+              </p>
+            </div>
+            <bedge-button variant="danger" size="sm" (click)="askDeleteAccount()">Delete account</bedge-button>
+          </div>
+        } @else {
+          <div>
+            <p class="text-sm font-medium text-ink mb-1">Are you sure?</p>
+            <p class="text-xs text-gray-500 mb-3">
+              Type your email address (<strong>{{ profile()?.email }}</strong>) to confirm.
+            </p>
+            <input
+              type="email"
+              bedgeInput
+              [value]="deleteConfirmEmail()"
+              (input)="deleteConfirmEmail.set($any($event.target).value)"
+              placeholder="your@email.com"
+              class="h-10 mb-3"
+            />
+            @if (deleteError()) {
+              <p class="text-xs text-danger-dark mb-3">{{ deleteError() }}</p>
+            }
+            <div class="flex gap-2">
+              <bedge-button
+                variant="danger"
+                size="sm"
+                [disabled]="!canConfirmDelete()"
+                [loading]="deleting()"
+                (click)="confirmDeleteAccount()"
+              >Permanently delete</bedge-button>
+              <bedge-button
+                variant="ghost"
+                size="sm"
+                [disabled]="deleting()"
+                (click)="cancelDeleteAccount()"
+              >Cancel</bedge-button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
 
   }
 

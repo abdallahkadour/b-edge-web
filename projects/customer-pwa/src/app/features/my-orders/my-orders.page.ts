@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
 
 import {
   ProductDataService,
@@ -37,7 +38,7 @@ const CANCELLABLE_STATUSES = new Set<OrderStatus>(['placed', 'confirmed']);
 @Component({
   selector: 'app-my-orders-page',
   standalone: true,
-  imports: [ButtonComponent, BadgeComponent, CardComponent],
+  imports: [LucideAngularModule, ButtonComponent, BadgeComponent, CardComponent],
   templateUrl: './my-orders.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -61,6 +62,19 @@ export class MyOrdersPage implements OnInit {
   readonly confirmingId = signal<string | null>(null);
   readonly cancellingId = signal<string | null>(null);
   readonly cancelError = signal<string | null>(null);
+
+  /** Which single card, if any, has its detail section (items + status
+   *  timeline) expanded. The list endpoint already returns full items and
+   *  timestamps per order - there was no second request to make, the data
+   *  was just never rendered anywhere past the one-line summary. */
+  readonly expandedId = signal<string | null>(null);
+
+  /** The happy-path progression a non-cancelled order moves through.
+   *  Cancelled/returned orders render their own terminal state instead of
+   *  a partially-filled stepper - same reasoning as order-confirmed.page's
+   *  steps strip, which this mirrors. */
+  private readonly HAPPY_PATH: OrderStatus[] = ['placed', 'confirmed', 'shipped', 'delivered'];
+  readonly steps = this.HAPPY_PATH;
 
   ngOnInit(): void {
     this.load();
@@ -129,6 +143,33 @@ export class MyOrdersPage implements OnInit {
 
   shortRef(id: string): string {
     return id.slice(0, 8).toUpperCase();
+  }
+
+  toggleExpand(orderId: string): void {
+    this.expandedId.update((id) => (id === orderId ? null : orderId));
+  }
+
+  isTerminalNonDelivery(status: OrderStatus): boolean {
+    return status === 'cancelled' || status === 'returned';
+  }
+
+  /** Index of the order's current step within HAPPY_PATH, for filling the
+   *  stepper dots. Only meaningful when !isTerminalNonDelivery. */
+  stepIndex(order: Order): number {
+    return this.HAPPY_PATH.indexOf(order.status);
+  }
+
+  /** The timestamp to show under a given step, if that step has been
+   *  reached - 'placed' always has created_at, the rest map 1:1 to the
+   *  order's own *_at fields. */
+  stepDate(order: Order, step: OrderStatus): string | undefined {
+    switch (step) {
+      case 'placed': return order.created_at;
+      case 'confirmed': return order.confirmed_at;
+      case 'shipped': return order.shipped_at;
+      case 'delivered': return order.delivered_at;
+      default: return undefined;
+    }
   }
 
   askToCancel(orderId: string): void {

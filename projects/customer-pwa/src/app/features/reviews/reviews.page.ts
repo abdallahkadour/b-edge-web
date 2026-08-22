@@ -69,12 +69,28 @@ export class ReviewsPage implements OnInit {
     this.loading.set(true);
     this.errorMessage.set(null);
 
+    // The route param can be a UUID or a handle (e.g. /book/rania/reviews).
+    // GetPublicReviewsByArtist only accepts a genuine UUID - unlike
+    // /artists/:id and its siblings, it has no handle-resolution fallback -
+    // so the raw param must be resolved here first, the same pattern
+    // already required for guest slot holds and the media portfolio call.
+    // Reaching this screen via a handle 400'd every time before this fix.
     this.artistSvc.getArtistById(this.artistId()).subscribe({
-      next: (artist) => this.artistName.set(artist.name),
-      error: () => {}, // name is a nice-to-have on this screen, not essential
+      next: (artist) => {
+        this.artistName.set(artist.name);
+        this.loadReviews(artist.id);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.loading.set(false);
+        this.errorMessage.set(
+          err.status === 0 ? 'Cannot reach the server.' : 'Failed to load reviews.',
+        );
+      },
     });
+  }
 
-    this.reviewSvc.getPublicReviewsByArtist(this.artistId()).subscribe({
+  private loadReviews(resolvedArtistId: string): void {
+    this.reviewSvc.getPublicReviewsByArtist(resolvedArtistId).subscribe({
       next: (items) => {
         this.reviews.set(items ?? []);
         this.loading.set(false);

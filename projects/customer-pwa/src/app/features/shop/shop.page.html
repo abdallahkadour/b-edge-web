@@ -80,27 +80,47 @@
       } @else {
         <div class="grid grid-cols-2 gap-3">
           @for (p of displayed(); track p.id) {
-            <div class="rounded-xl overflow-hidden border border-gray-100 flex flex-col">
-              <div class="aspect-square bg-gray-100 flex items-center justify-center text-gray-300">
+            <div
+              (click)="openProduct(p)"
+              (keydown.enter)="openProduct(p)"
+              tabindex="0"
+              role="button"
+              [attr.aria-label]="isSoldOut(p) ? p.name + ', sold out' : 'View ' + p.name"
+              class="rounded-xl overflow-hidden border border-gray-200 shadow-sm flex flex-col cursor-pointer hover:border-gray-300 transition-colors"
+            >
+              <div class="aspect-square bg-gray-100 flex items-center justify-center text-gray-300 relative">
                 @if (p.image_url) {
-                  <img [src]="p.image_url" [alt]="p.name" class="w-full h-full object-cover" />
+                  <img
+                    [src]="p.image_url"
+                    [alt]="p.name"
+                    class="w-full h-full object-cover"
+                    [class.opacity-50]="isSoldOut(p)"
+                  />
                 } @else {
                   <lucide-icon name="image" [size]="26" [strokeWidth]="1.5" />
+                }
+                @if (isSoldOut(p)) {
+                  <span class="absolute top-2 left-2 bg-ink text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full">
+                    Sold out
+                  </span>
                 }
               </div>
 
               <div class="p-2.5 flex-1 flex flex-col">
                 <h3 class="text-[14px] font-semibold text-ink leading-snug line-clamp-2">{{ p.name }}</h3>
 
-                <div class="flex items-end justify-between mt-2 pt-1">
+                <div class="flex items-end justify-between mt-auto pt-2">
                   <span class="text-[15px] font-bold text-ink">${{ p.price }}</span>
 
-                  @if (cart.quantityOf(p.id) === 0) {
+                  @if (isSoldOut(p)) {
+                    <!-- No add-to-cart control - the card stays clickable so
+                         a customer can still view details/description. -->
+                  } @else if (cart.quantityOf(p.id) === 0) {
                     <button
                       type="button"
-                      (click)="cart.add(p)"
-                      class="w-8 h-8 rounded-lg bg-ink text-white flex items-center justify-center hover:opacity-90 transition-opacity"
-                      aria-label="Add to cart"
+                      (click)="$event.stopPropagation(); cart.add(p)"
+                      class="w-8 h-8 rounded-lg bg-ink text-white flex items-center justify-center hover:opacity-90 active:scale-90 transition-all"
+                      [attr.aria-label]="'Add ' + p.name + ' to cart'"
                     >
                       <lucide-icon name="plus" [size]="16" [strokeWidth]="2.5" />
                     </button>
@@ -108,18 +128,19 @@
                     <div class="flex items-center gap-1.5 bg-gray-100 rounded-lg h-8 px-1">
                       <button
                         type="button"
-                        (click)="cart.decrement(p.id)"
-                        class="w-6 h-6 rounded flex items-center justify-center text-ink hover:bg-gray-200"
-                        aria-label="Remove one"
+                        (click)="$event.stopPropagation(); cart.decrement(p.id)"
+                        class="w-6 h-6 rounded flex items-center justify-center text-ink hover:bg-gray-200 active:scale-90 transition-transform"
+                        [attr.aria-label]="'Remove one ' + p.name"
                       >
                         <lucide-icon name="minus" [size]="14" [strokeWidth]="2.5" />
                       </button>
                       <span class="text-[13px] font-bold text-ink min-w-[16px] text-center">{{ cart.quantityOf(p.id) }}</span>
                       <button
                         type="button"
-                        (click)="cart.add(p)"
-                        class="w-6 h-6 rounded flex items-center justify-center text-ink hover:bg-gray-200"
-                        aria-label="Add one"
+                        (click)="$event.stopPropagation(); cart.add(p)"
+                        [disabled]="p.stock_quantity !== undefined && cart.quantityOf(p.id) >= p.stock_quantity"
+                        class="w-6 h-6 rounded flex items-center justify-center text-ink hover:bg-gray-200 active:scale-90 transition-transform disabled:opacity-30 disabled:pointer-events-none"
+                        [attr.aria-label]="'Add one more ' + p.name"
                       >
                         <lucide-icon name="plus" [size]="14" [strokeWidth]="2.5" />
                       </button>

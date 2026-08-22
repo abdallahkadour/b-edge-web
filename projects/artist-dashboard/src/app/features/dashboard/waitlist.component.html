@@ -1,5 +1,5 @@
 <!-- Waitlist screen -->
-<div>
+<div class="max-w-4xl mx-auto">
 
   <div class="mb-6">
     <h1 class="text-xl font-semibold text-ink">Waitlist</h1>
@@ -22,22 +22,20 @@
   }
 
   @if (!loading()) {
-    <div class="space-y-3">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
       @for (e of entries(); track e.id) {
         <div class="bg-white border border-gray-200 rounded-lg p-3.5">
           <div class="flex justify-between items-start">
             <div>
               <p class="text-sm font-bold text-ink">{{ e.customer_name }}</p>
-              <p class="text-[11px] text-gray-400 font-medium">{{ e.service_name }}</p>
+              <p class="text-xs text-gray-400 font-medium">{{ e.service_name }}</p>
             </div>
-            <span
-              [class]="'text-[9px] font-bold uppercase px-2 py-1 rounded-full shrink-0 ' + statusClass(e.status)"
-            >
+            <bedge-badge [tone]="statusTone(e.status)" class="shrink-0">
               {{ statusLabel(e.status) }}
-            </span>
+            </bedge-badge>
           </div>
 
-          <div class="pt-2.5 mt-2.5 border-t border-gray-100 flex justify-between items-center text-[11px] text-gray-400 font-medium">
+          <div class="pt-2.5 mt-2.5 border-t border-gray-100 flex justify-between items-center text-xs text-gray-400 font-medium">
             <span class="flex items-center gap-1">
               <lucide-icon name="calendar" [size]="11" [strokeWidth]="2" />
               Waiting for {{ formatDate(e.requested_date) }}

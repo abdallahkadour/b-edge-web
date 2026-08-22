@@ -9,7 +9,7 @@ import {
 import { Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 
-import { ProductDataService } from '@bedge/shared';
+import { ButtonComponent, ProductDataService } from '@bedge/shared';
 import type { Order } from '@bedge/shared';
 
 /**
@@ -24,7 +24,7 @@ import type { Order } from '@bedge/shared';
 @Component({
   selector: 'app-order-confirmed-page',
   standalone: true,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, ButtonComponent],
   templateUrl: './order-confirmed.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

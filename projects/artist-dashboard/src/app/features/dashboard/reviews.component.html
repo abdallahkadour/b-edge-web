@@ -1,0 +1,95 @@
+<!-- Reviews screen - artist's own moderation view -->
+<div class="max-w-4xl mx-auto">
+
+  <!-- Header -->
+  <div class="mb-5">
+    <h1 class="text-xl font-semibold text-ink">Reviews</h1>
+    <p class="text-sm text-gray-500 mt-0.5">
+      @if (reviews().length > 0) {
+        {{ reviews().length }} review{{ reviews().length === 1 ? '' : 's' }} - hidden reviews stay off your public profile
+      } @else {
+        What your clients are saying
+      }
+    </p>
+  </div>
+
+  <!-- Error -->
+  @if (errorMessage(); as msg) {
+    <div class="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+      {{ msg }}
+    </div>
+  }
+
+  <!-- Loading skeleton -->
+  @if (loading()) {
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+      @for (i of [1,2,3,4]; track i) {
+        <div class="h-28 rounded-lg bg-gray-100 animate-pulse"></div>
+      }
+    </div>
+  }
+
+  <!-- Empty state -->
+  @if (!loading() && reviews().length === 0) {
+    <div class="rounded-lg border border-gray-200 bg-white p-10 text-center">
+      <p class="text-3xl mb-3">⭐</p>
+      <p class="text-sm font-medium text-ink">No reviews yet</p>
+      <p class="text-xs text-gray-400 mt-1">Reviews appear here once clients leave feedback after a completed booking.</p>
+    </div>
+  }
+
+  <!-- Review list -->
+  @if (!loading() && reviews().length > 0) {
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+      @for (review of reviews(); track review.id) {
+        <div
+          class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
+          [class.opacity-60]="!review.is_visible"
+        >
+          <div class="flex items-start justify-between mb-2">
+            <div class="flex items-center gap-0.5">
+              @for (star of stars; track star) {
+                <lucide-icon
+                  name="star"
+                  [size]="15"
+                  [strokeWidth]="2"
+                  [class]="review.rating >= star ? 'fill-ink stroke-ink' : 'stroke-gray-300 fill-none'"
+                />
+              }
+            </div>
+            @if (!review.is_visible) {
+              <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-500">
+                Hidden
+              </span>
+            }
+          </div>
+
+          @if (review.comment) {
+            <p class="text-sm text-ink leading-relaxed mb-3">{{ review.comment }}</p>
+          } @else {
+            <p class="text-sm text-gray-400 italic mb-3">No comment left.</p>
+          }
+
+          <div class="flex items-center justify-between pt-3 border-t border-gray-50">
+            <span class="text-xs text-gray-400">{{ formatDate(review.created_at) }}</span>
+            <button
+              type="button"
+              (click)="toggleVisibility(review)"
+              [disabled]="togglingId() === review.id"
+              class="text-xs font-semibold text-ink underline decoration-gray-300 hover:decoration-ink transition-colors disabled:opacity-50"
+            >
+              @if (togglingId() === review.id) {
+                Working…
+              } @else if (review.is_visible) {
+                Hide from profile
+              } @else {
+                Show on profile
+              }
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+</div>

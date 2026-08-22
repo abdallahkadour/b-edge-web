@@ -8,11 +8,7 @@
   <!-- ── Page header ────────────────────────────────────────────────────── -->
   <div class="flex items-center justify-between mb-6">
     <h1 class="text-xl font-semibold text-ink">Services</h1>
-    <button
-      type="button"
-      class="bedge-btn-sm flex items-center gap-1.5"
-      (click)="toggleAddForm()"
-    >
+    <bedge-button variant="ghost" size="sm" (click)="toggleAddForm()">
       @if (showAddForm()) {
         <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
         Cancel
@@ -20,7 +16,7 @@
         <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
         Add service
       }
-    </button>
+    </bedge-button>
   </div>
 
   <!-- ── Loading ────────────────────────────────────────────────────────── -->
@@ -79,15 +75,15 @@
 
               <!-- Active badge -->
               @if (svc.is_active) {
-                <span class="text-xs px-2 py-0.5 rounded-full bg-success-light text-success-dark">Active</span>
+                <bedge-badge tone="success">Active</bedge-badge>
               } @else {
-                <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Inactive</span>
+                <bedge-badge tone="neutral">Inactive</bedge-badge>
               }
 
               <!-- Edit -->
               <button
                 type="button"
-                class="bedge-btn-icon text-gray-400 hover:text-ink"
+                class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-50 transition-colors text-gray-400 hover:text-ink"
                 aria-label="Edit service"
                 (click)="startEdit(svc)"
               >
@@ -100,7 +96,7 @@
               @if (svc.is_active) {
                 <button
                   type="button"
-                  class="bedge-btn-icon text-gray-400 hover:text-danger-dark transition-colors"
+                  class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-50 transition-colors disabled:cursor-not-allowed text-gray-400 hover:text-danger-dark"
                   aria-label="Deactivate service"
                   [disabled]="deletingId() === svc.id"
                   (click)="deleteService(svc)"
@@ -133,20 +129,22 @@
                 <label class="block text-xs text-gray-400 mb-1">Name</label>
                 <input
                   type="text"
-                  class="bedge-input text-sm"
+                  bedgeInput
+                  class="h-9 text-sm"
                   maxlength="200"
-                  [ngModel]="editForm().name"
-                  (ngModelChange)="editForm.update(f => ({...f, name: $event}))"
+                  [value]="editForm().name"
+                  (input)="editForm.update(f => ({...f, name: $any($event.target).value}))"
                 />
               </div>
               <div>
                 <label class="block text-xs text-gray-400 mb-1">Price (USD)</label>
                 <input
                   type="text"
-                  class="bedge-input text-sm"
+                  bedgeInput
+                  class="h-9 text-sm"
                   placeholder="0.00"
-                  [ngModel]="editForm().price"
-                  (ngModelChange)="editForm.update(f => ({...f, price: $event}))"
+                  [value]="editForm().price"
+                  (input)="editForm.update(f => ({...f, price: $any($event.target).value}))"
                 />
               </div>
             </div>
@@ -156,21 +154,23 @@
                 <label class="block text-xs text-gray-400 mb-1">Duration (min)</label>
                 <input
                   type="number"
-                  class="bedge-input text-sm"
+                  bedgeInput
+                  class="h-9 text-sm"
                   min="15"
                   max="480"
-                  [ngModel]="editForm().duration_min"
-                  (ngModelChange)="editForm.update(f => ({...f, duration_min: +$event}))"
+                  [value]="editForm().duration_min"
+                  (input)="editForm.update(f => ({...f, duration_min: +$any($event.target).value}))"
                 />
               </div>
               <div>
                 <label class="block text-xs text-gray-400 mb-1">Deposit (USD)</label>
                 <input
                   type="text"
-                  class="bedge-input text-sm"
+                  bedgeInput
+                  class="h-9 text-sm"
                   placeholder="0.00"
-                  [ngModel]="editForm().deposit_amount"
-                  (ngModelChange)="editForm.update(f => ({...f, deposit_amount: $event}))"
+                  [value]="editForm().deposit_amount"
+                  (input)="editForm.update(f => ({...f, deposit_amount: $any($event.target).value}))"
                 />
               </div>
             </div>
@@ -178,30 +178,25 @@
             <div>
               <label class="block text-xs text-gray-400 mb-1">Description (optional)</label>
               <textarea
-                class="bedge-input text-sm resize-none"
+                bedgeInput
+                class="text-sm resize-none"
                 rows="2"
                 maxlength="500"
-                [ngModel]="editForm().description"
-                (ngModelChange)="editForm.update(f => ({...f, description: $event}))"
+                [value]="editForm().description"
+                (input)="editForm.update(f => ({...f, description: $any($event.target).value}))"
               ></textarea>
             </div>
 
             <div class="flex items-center justify-end gap-2">
-              <button
-                type="button"
-                class="bedge-btn-sm text-gray-500"
-                (click)="cancelEdit()"
-              >
+              <bedge-button variant="ghost" size="sm" (click)="cancelEdit()">
                 Cancel
-              </button>
-              <button
-                type="button"
-                class="bedge-btn-sm font-medium"
+              </bedge-button>
+              <bedge-button
+                size="sm"
+                [loading]="updating()"
                 [disabled]="updating()"
                 (click)="saveEdit(svc)"
-              >
-                @if (updating()) { Saving… } @else { Save }
-              </button>
+              >Save</bedge-button>
             </div>
 
             @if (updateErrors()[svc.id]) {
@@ -228,21 +223,23 @@
             <label class="block text-xs text-gray-400 mb-1">Name</label>
             <input
               type="text"
-              class="bedge-input text-sm"
+              bedgeInput
+              class="h-9 text-sm"
               placeholder="e.g. Bridal Makeup"
               maxlength="200"
-              [ngModel]="addForm().name"
-              (ngModelChange)="addForm.update(f => ({...f, name: $event}))"
+              [value]="addForm().name"
+              (input)="addForm.update(f => ({...f, name: $any($event.target).value}))"
             />
           </div>
           <div>
             <label class="block text-xs text-gray-400 mb-1">Price (USD)</label>
             <input
               type="text"
-              class="bedge-input text-sm"
+              bedgeInput
+              class="h-9 text-sm"
               placeholder="0.00"
-              [ngModel]="addForm().price"
-              (ngModelChange)="addForm.update(f => ({...f, price: $event}))"
+              [value]="addForm().price"
+              (input)="addForm.update(f => ({...f, price: $any($event.target).value}))"
             />
           </div>
         </div>
@@ -252,22 +249,24 @@
             <label class="block text-xs text-gray-400 mb-1">Duration (min)</label>
             <input
               type="number"
-              class="bedge-input text-sm"
+              bedgeInput
+              class="h-9 text-sm"
               placeholder="60"
               min="15"
               max="480"
-              [ngModel]="addForm().duration_min"
-              (ngModelChange)="addForm.update(f => ({...f, duration_min: +$event}))"
+              [value]="addForm().duration_min"
+              (input)="addForm.update(f => ({...f, duration_min: +$any($event.target).value}))"
             />
           </div>
           <div>
             <label class="block text-xs text-gray-400 mb-1">Deposit (USD)</label>
             <input
               type="text"
-              class="bedge-input text-sm"
+              bedgeInput
+              class="h-9 text-sm"
               placeholder="0.00"
-              [ngModel]="addForm().deposit_amount"
-              (ngModelChange)="addForm.update(f => ({...f, deposit_amount: $event}))"
+              [value]="addForm().deposit_amount"
+              (input)="addForm.update(f => ({...f, deposit_amount: $any($event.target).value}))"
             />
           </div>
         </div>
@@ -275,32 +274,26 @@
         <div>
           <label class="block text-xs text-gray-400 mb-1">Description (optional)</label>
           <textarea
-            class="bedge-input text-sm resize-none"
+            bedgeInput
+            class="text-sm resize-none"
             rows="2"
             maxlength="500"
             placeholder="Short description of the service…"
-            [ngModel]="addForm().description"
-            (ngModelChange)="addForm.update(f => ({...f, description: $event}))"
+            [value]="addForm().description"
+            (input)="addForm.update(f => ({...f, description: $any($event.target).value}))"
           ></textarea>
         </div>
 
         <div class="flex items-center justify-end gap-2">
-          <button
-            type="button"
-            class="bedge-btn-sm text-gray-500"
-            (click)="toggleAddForm()"
-          >
+          <bedge-button variant="ghost" size="sm" (click)="toggleAddForm()">
             Cancel
-          </button>
-          <button
-            type="button"
-            class="bedge-btn-sm font-medium"
-            [disabled]="!canCreate() || creating()"
-            [class.opacity-30]="!canCreate() || creating()"
+          </bedge-button>
+          <bedge-button
+            size="sm"
+            [disabled]="!canCreate()"
+            [loading]="creating()"
             (click)="createService()"
-          >
-            @if (creating()) { Saving… } @else { Save service }
-          </button>
+          >Save service</bedge-button>
         </div>
 
         @if (addError()) {

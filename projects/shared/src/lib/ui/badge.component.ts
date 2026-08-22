@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
-export type BadgeTone = 'neutral' | 'success' | 'ink' | 'warning' | 'muted';
+export type BadgeTone = 'neutral' | 'success' | 'ink' | 'warning' | 'danger' | 'muted';
 
 /**
  * Status pill.
@@ -34,6 +34,7 @@ export class BadgeComponent {
       success: 'bg-success/10 text-success-dark',
       ink: 'bg-ink/10 text-ink',
       warning: 'bg-warning-light text-warning-dark',
+      danger: 'bg-danger-light text-danger-dark',
       // muted is for terminal, non-happy states (cancelled, returned) -
       // visibly present but deliberately receding.
       muted: 'bg-gray-100 text-gray-400',

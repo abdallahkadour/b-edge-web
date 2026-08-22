@@ -148,9 +148,9 @@
             </div>
             <div class="text-right flex-shrink-0 ml-3">
               <p class="text-sm font-semibold text-ink">${{ formatMoney(booking.final_price) }}</p>
-              <span [class]="'inline-flex mt-0.5 rounded-full px-2 py-0.5 text-xs font-medium ' + statusClass(booking.status)">
+              <bedge-badge [tone]="statusTone(booking.status)" class="mt-0.5">
                 {{ statusLabel(booking.status) }}
-              </span>
+              </bedge-badge>
             </div>
           </div>
           @if (!$last) {

@@ -5,6 +5,9 @@ import { authGuard } from '@bedge/shared';
  * Application routes.
  *
  * /login           — public, the sign-in screen
+ * /register        — public, artist sign-up (POST /auth/register)
+ * /forgot-password — public, request a reset link
+ * /reset-password  — public, ?token=... from the reset link
  * /dashboard       — protected (artist or admin), the shell with child sections
  *   /bookings      — upcoming and past bookings
  *   /clients       — CRM client list
@@ -19,10 +22,47 @@ import { authGuard } from '@bedge/shared';
  */
 export const routes: Routes = [
   {
+    path: 'onboarding',
+    canActivate: [authGuard(['artist'])],
+    loadComponent: () =>
+      import('./features/onboarding/onboarding.page').then((m) => m.OnboardingPage),
+  },
+  {
+    // Admin gets its OWN top-level route, not a child of /dashboard - at
+    // most two admin accounts will ever exist (cmd/seedadmin), and their
+    // whole job is one screen: the pending-review queue. The 13-item
+    // artist dashboard sidebar is chrome built for a different actor.
+    path: 'admin',
+    canActivate: [authGuard(['admin'])],
+    loadComponent: () =>
+      import('./features/admin/admin.page').then((m) => m.AdminPage),
+  },
+  {
     path: 'login',
     loadComponent: () =>
       import('./features/auth/login/login.component').then(
         (m) => m.LoginComponent,
+      ),
+  },
+  {
+    path: 'register',
+    loadComponent: () =>
+      import('./features/auth/register/register.component').then(
+        (m) => m.RegisterComponent,
+      ),
+  },
+  {
+    path: 'forgot-password',
+    loadComponent: () =>
+      import('./features/auth/forgot-password/forgot-password.component').then(
+        (m) => m.ForgotPasswordComponent,
+      ),
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () =>
+      import('./features/auth/reset-password/reset-password.component').then(
+        (m) => m.ResetPasswordComponent,
       ),
   },
   {
@@ -98,6 +138,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'reviews',
+        loadComponent: () =>
+          import('./features/dashboard/reviews.component').then(
+            (m) => m.ReviewsComponent,
+          ),
+      },
+      {
         path: 'services',
         loadComponent: () =>
           import('./features/dashboard/services.component').then(
@@ -121,5 +168,12 @@ export const routes: Routes = [
     ],
   },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-  { path: '**', redirectTo: 'dashboard' },
+  {
+    // Must stay last - Angular matches routes in declared order. Used to be
+    // `redirectTo: 'dashboard'`, which silently dropped a mistyped/stale
+    // URL onto the bookings list with no indication anything was wrong.
+    path: '**',
+    loadComponent: () =>
+      import('./features/not-found/not-found.page').then((m) => m.NotFoundPage),
+  },
 ];

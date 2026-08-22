@@ -1,0 +1,15 @@
+<!-- Wildcard 404 -->
+<div class="min-h-screen bg-white flex flex-col items-center justify-center px-6 text-center">
+  <div class="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 mb-4">
+    <lucide-icon name="search" [size]="24" [strokeWidth]="2" />
+  </div>
+  <h1 class="text-lg font-bold text-ink">We couldn't find that page</h1>
+  <p class="text-sm text-gray-500 mt-1.5 max-w-[280px]">
+    The link may be out of date, or the address might have a typo.
+  </p>
+  <button
+    type="button"
+    (click)="goToDashboard()"
+    class="mt-6 h-11 px-6 bg-ink hover:opacity-90 text-white text-sm font-semibold rounded-lg transition-opacity"
+  >Back to dashboard</button>
+</div>

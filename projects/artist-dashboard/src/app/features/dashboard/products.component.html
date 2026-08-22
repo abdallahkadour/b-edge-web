@@ -83,7 +83,7 @@
       <div class="bg-white border border-gray-200 rounded-xl overflow-hidden mt-6">
         <table class="w-full text-left border-collapse">
           <thead>
-            <tr class="border-b border-gray-100 bg-gray-50 text-[11px] font-bold uppercase tracking-wider text-gray-400">
+            <tr class="border-b border-gray-100 bg-gray-50 text-xs font-bold uppercase tracking-wider text-gray-400">
               <th class="py-3 px-4">Product</th>
               <th class="py-3 px-4 text-right">Price</th>
               <th class="py-3 px-4 text-center">Status</th>
@@ -105,14 +105,19 @@
                     <div>
                       <div class="font-semibold text-ink">{{ p.name }}</div>
                       @if (p.category) {
-                        <div class="text-[11px] text-gray-400 mt-0.5">{{ label(p.category) }}</div>
+                        <div class="text-xs text-gray-400 mt-0.5">{{ label(p.category) }}</div>
                       }
                     </div>
                   </div>
                 </td>
 
-                <td class="py-3 px-4 text-right font-bold text-ink" [class.opacity-50]="!p.is_active">
-                  ${{ p.price }}
+                <td class="py-3 px-4 text-right" [class.opacity-50]="!p.is_active">
+                  <div class="font-bold text-ink">${{ p.price }}</div>
+                  @if (p.stock_quantity !== undefined) {
+                    <div [class]="p.stock_quantity <= 0 ? 'text-xs font-semibold text-danger mt-0.5' : 'text-xs text-gray-400 mt-0.5'">
+                      {{ p.stock_quantity <= 0 ? 'Sold out' : p.stock_quantity + ' in stock' }}
+                    </div>
+                  }
                 </td>
 
                 <td class="py-3 px-4 text-center">
@@ -145,13 +150,24 @@
 
   <!-- Add / Edit modal -->
   @if (modalOpen()) {
-    <div class="fixed inset-0 z-50 bg-ink/40 flex items-center justify-center p-4" (click)="closeModal()">
-      <div class="bg-white border border-gray-200 rounded-2xl max-w-md w-full shadow-xl overflow-hidden" (click)="$event.stopPropagation()">
+    <div
+      class="fixed inset-0 z-50 bg-ink/40 flex items-center justify-center p-4"
+      (click)="closeModal()"
+      (keydown.escape)="closeModal()"
+    >
+      <div
+        class="bg-white border border-gray-200 rounded-2xl max-w-md w-full shadow-xl overflow-hidden"
+        (click)="$event.stopPropagation()"
+        cdkTrapFocus
+        cdkTrapFocusAutoCapture
+        role="dialog"
+        aria-modal="true"
+      >
         <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
           <h2 class="text-base font-bold text-ink">
             {{ editingId() ? 'Edit product' : 'Add product' }}
           </h2>
-          <button type="button" (click)="closeModal()" class="p-1 text-gray-400 hover:text-ink rounded-full hover:bg-gray-100">
+          <button type="button" (click)="closeModal()" aria-label="Close" class="p-1 text-gray-400 hover:text-ink rounded-full hover:bg-gray-100">
             <lucide-icon name="x" [size]="18" [strokeWidth]="2" />
           </button>
         </div>
@@ -198,7 +214,27 @@
           </div>
 
           <div>
+            <label class="block text-xs font-semibold text-ink mb-1">Stock quantity (optional)</label>
+            <input
+              type="text"
+              inputmode="numeric"
+              [value]="form().stockQuantity"
+              (input)="patchForm('stockQuantity', $any($event.target).value)"
+              placeholder="Leave blank for unlimited"
+              class="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm outline-none focus:border-ink"
+            />
+            <p class="text-xs text-gray-400 mt-1">
+              Customers will see "Sold out" once this many have been ordered.
+            </p>
+          </div>
+
+          <div>
             <label class="block text-xs font-semibold text-ink mb-1">Photo (optional)</label>
+            @if (!editingId()) {
+              <p class="text-xs text-gray-400 mb-1">
+                This is the main photo shown everywhere. You can add more angles once the product is saved.
+              </p>
+            }
 
             @if (form().imageUrl) {
               <div class="relative w-full h-40 rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
@@ -232,12 +268,16 @@
                   <span class="flex flex-col items-center gap-1.5">
                     <lucide-icon name="image" [size]="20" [strokeWidth]="2" />
                     <span class="text-xs font-medium">Click to upload a photo</span>
-                    <span class="text-[10px] text-gray-400">PNG or JPG, up to 10MB</span>
+                    <span class="text-xs text-gray-400">PNG or JPG, up to 10MB</span>
                   </span>
                 }
               </label>
             }
           </div>
+
+          @if (editingId(); as productId) {
+            <bedge-product-photo-gallery [productId]="productId" />
+          }
 
           <div>
             <label class="block text-xs font-semibold text-ink mb-1">Description (optional)</label>
@@ -272,6 +312,19 @@
           @if (formError(); as err) {
             <div class="rounded-lg bg-red-50 border border-red-200 px-3.5 py-2.5 text-xs text-red-700">
               {{ err }}
+            </div>
+          }
+
+          @if (pendingOversizedFile(); as file) {
+            <div class="rounded-lg bg-warning-light border border-warning px-3.5 py-2.5">
+              <p class="text-xs text-warning-dark leading-relaxed">
+                This photo is {{ pendingOversizedSizeMB().toFixed(1) }}MB, over the 15MB limit.
+                We can resize it to fit and upload it for you.
+              </p>
+              <div class="flex gap-2 mt-2">
+                <bedge-button size="sm" (click)="confirmResize()">Resize &amp; upload</bedge-button>
+                <bedge-button size="sm" variant="ghost" (click)="dismissOversized()">Never mind</bedge-button>
+              </div>
             </div>
           }
         </div>

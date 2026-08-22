@@ -6,8 +6,7 @@
       <p class="mt-1 text-sm text-gray-500">Beauty at the Edge</p>
     </div>
 
-    <!-- Card -->
-    <div class="bg-white rounded-lg border border-gray-200 p-8 shadow-sm">
+    <bedge-card>
       <h2 class="text-lg font-semibold text-ink mb-6">Sign in</h2>
 
       <!-- Server error -->
@@ -20,7 +19,7 @@
         </div>
       }
 
-      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div>
         <!-- Email -->
         <div class="mb-4">
           <label for="email" class="block text-sm font-medium text-gray-700 mb-1.5">
@@ -29,25 +28,29 @@
           <input
             id="email"
             type="email"
-            formControlName="email"
+            bedgeInput
+            [invalid]="touched() && !isEmailValid()"
+            [value]="email()"
+            (input)="email.set($any($event.target).value)"
+            (keydown.enter)="submit()"
             autocomplete="email"
-            [attr.aria-invalid]="
-              form.controls.email.touched && form.controls.email.invalid
-            "
-            class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-ink
-                   placeholder:text-gray-400 focus:border-ink focus:outline-none
-                   focus:ring-1 focus:ring-ink disabled:bg-gray-100"
+            [attr.aria-invalid]="touched() && !isEmailValid()"
+            class="h-11"
             placeholder="you@example.com"
           />
-          @if (form.controls.email.touched && form.controls.email.invalid) {
-            <p class="mt-1.5 text-xs text-danger">
-              @if (form.controls.email.hasError('required')) {
-                Email is required.
-              } @else {
-                Enter a valid email address.
-              }
-            </p>
-          }
+          <!-- Fixed-height slot, always present, so the field below never
+               jumps up or down depending on whether an error is showing. -->
+          <div class="mt-1.5 h-4">
+            @if (touched() && !isEmailValid()) {
+              <p class="text-xs text-danger leading-4">
+                @if (email().trim().length === 0) {
+                  Email is required.
+                } @else {
+                  Enter a valid email address.
+                }
+              </p>
+            }
+          </div>
         </div>
 
         <!-- Password -->
@@ -58,33 +61,32 @@
           <input
             id="password"
             type="password"
-            formControlName="password"
+            bedgeInput
+            [invalid]="touched() && !isPasswordValid()"
+            [value]="password()"
+            (input)="password.set($any($event.target).value)"
+            (keydown.enter)="submit()"
             autocomplete="current-password"
-            [attr.aria-invalid]="
-              form.controls.password.touched && form.controls.password.invalid
-            "
-            class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-ink
-                   placeholder:text-gray-400 focus:border-ink focus:outline-none
-                   focus:ring-1 focus:ring-ink disabled:bg-gray-100"
+            [attr.aria-invalid]="touched() && !isPasswordValid()"
+            class="h-11"
             placeholder="••••••••"
           />
-          @if (form.controls.password.touched && form.controls.password.hasError('required')) {
-            <p class="mt-1.5 text-xs text-danger">Password is required.</p>
-          }
+          <div class="mt-1.5 h-4">
+            @if (touched() && !isPasswordValid()) {
+              <p class="text-xs text-danger leading-4">Password is required.</p>
+            }
+          </div>
         </div>
 
         <!-- Submit -->
-        <button
-          type="submit"
-          class="w-full rounded-lg bg-ink px-4 py-2.5 text-sm font-medium text-white
-                 hover:bg-ink-800 focus:outline-none focus:ring-2 focus:ring-ink
-                 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed
-                 transition-colors"
-          [disabled]="loading()"
+        <bedge-button
+          [fullWidth]="true"
+          [loading]="loading()"
+          (click)="submit()"
         >
           {{ loading() ? 'Signing in…' : 'Sign in' }}
-        </button>
-      </form>
+        </bedge-button>
+      </div>
 
       <!-- Forgot password -->
       <div class="mt-5 text-center">
@@ -95,6 +97,15 @@
           Forgot password?
         </a>
       </div>
-    </div>
+
+      <!-- Sign up -->
+      <div class="mt-3 text-center">
+        <span class="text-sm text-gray-500">Don't have an account? </span>
+        <a
+          routerLink="/register"
+          class="text-sm text-ink font-medium hover:underline"
+        >Sign up</a>
+      </div>
+    </bedge-card>
   </div>
 </main>
