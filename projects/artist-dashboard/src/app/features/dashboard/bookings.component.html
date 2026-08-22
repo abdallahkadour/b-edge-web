@@ -93,6 +93,22 @@
             <p class="font-medium text-ink">${{ booking.final_price }}</p>
           </div>
 
+          <!-- Special requests - allergies, access notes, preferences the
+               customer left at booking time. Was fully present in the API
+               response and the TS model but never rendered anywhere in this
+               dashboard - a real gap, since some of what customers write
+               here (e.g. an allergy) is safety-relevant, not just a nicety. -->
+          @if (booking.special_requests) {
+            <div class="mb-3 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
+              <p class="text-[10px] font-semibold uppercase tracking-wide text-amber-700 mb-0.5">
+                Client note
+              </p>
+              <p class="text-xs text-amber-900 whitespace-pre-wrap break-words" dir="auto">
+                {{ booking.special_requests }}
+              </p>
+            </div>
+          }
+
           <!-- Actions -->
           @if (confirmingCancelId() === booking.id) {
             <div class="pt-3 border-t border-gray-100">

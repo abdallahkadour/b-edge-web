@@ -136,6 +136,59 @@
 > and fixing 10 real bugs total (see the update notes above) plus 2 stale
 > test-plan wording corrections. The remaining open item is the §3
 > exhaustive stress pass, explicitly out of scope for these five passes.
+>
+> **Update, final session (2026-08-22): a persistent multi-persona test
+> roster was built and exercised creatively across regions, products, and
+> concurrency - closing out this document's live-testing effort.** 10
+> customer accounts (`user1`-`user10`, phone `71900001`-`71900010`, dev-bypass
+> OTP login) and 4 artist accounts (`mkup1`-`mkup4`, real email+password,
+> one per category: lashes/makeup/hair/nails) were created as **permanent**
+> fixtures - unlike every other account this document has used, these are
+> not cleaned up and are meant to stay for future testing. `mkup2` was
+> expanded to 3 branches (Beirut, Zahle/Bekaa, Halba/Akkar) using the real
+> "Add store" feature, and the cross-region travel buffer was verified
+> precisely across all three - a Beirut booking correctly blocked both
+> distant regions until exactly the buffer boundary (150min weekday), and
+> cancelling that booking correctly released the block on both, confirmed
+> live. 11 new services were added using realistic real-world names and
+> pricing (Airbrush Makeup, Balayage, Volume Lash Extensions, etc. -
+> researched, not invented). A full guest product purchase was driven to
+> completion (browse → cart, stock-cap held correctly under both rapid-click
+> UI abuse and a direct over-limit API call → real dropped pin → placed →
+> confirmed with a payment reference → shipped → delivered, verified live
+> from the artist's Orders screen at every step) and a confirmed makeup
+> booking was cancelled artist-side with a real reason. Service price
+> boundaries ($0 allowed, negative rejected) and Arabic/RTL + emoji input
+> were also exercised live, not just assumed safe.
+>
+> This pass found **2 more real bugs**, both severe: (11) the self-service
+> onboarding flow created the artist, salon, store, and service, but never
+> inserted the `artist_stores` link - every artist who onboarded through
+> the real flow was invisible on Discover and completely unbookable (the
+> booking funnel's own store picker depends on the same table), confirmed
+> by onboarding 4 fresh artists and finding none of them reachable; fixed
+> in the same transaction, verified against a fresh throwaway artist, then
+> repaired in place for `mkup1`-`mkup4`. (12) `special_requests` (allergies,
+> access notes, preferences a customer writes at booking time) was fully
+> present in the backend response and the TS model, but never rendered
+> anywhere in artist-dashboard - discovered by booking with a realistic
+> Arabic allergy note and finding it simply didn't appear on the artist's
+> own Bookings card; fixed with a clearly-labeled note block, RTL-aware
+> (`dir="auto"`).
+>
+> Combined with the concurrency and boundary-condition audit done the same
+> day (not tracked in this document - see `bedge-backend-reviewer.md` and
+> the `internal/booking` commit history): the guarded-atomic-UPDATE
+> concurrency pattern was proven safe under 6 real concurrent
+> approve-vs-cancel races, not just assumed from reading the SQL, and a
+> stale pending booking now lazily expires on the same read path that would
+> otherwise have shown it forever. **Total across every live-testing pass
+> this session: 12 real bugs found and fixed**, plus 2 stale test-plan
+> wording corrections, plus the concurrency/timezone audit. The only
+> remaining unexecuted item in this entire document is the §3 exhaustive
+> stress pass (every button, every boundary value, 3 viewports) -
+> deliberately out of scope throughout, given its lower observed bug-yield
+> against real end-to-end journeys.
 
 ---
 
@@ -151,6 +204,22 @@
 - One artist account, already past onboarding (`status: active`) — e.g. `rania@bedge.com` / `password123` if seeded, or create your own (see Gap G1 below — there's no self-serve way to get the *first* account today).
 - A second, fresh artist account **not yet onboarded**, to run the onboarding journey (Suite 1) without disturbing the first.
 - Two customer phone numbers you control the OTP for (see below).
+
+**Permanent multi-persona roster (added 2026-08-22, do not delete)** — for
+any test needing more than one real artist/customer at once (cross-store
+travel-buffer, CRM with real history, concurrency), these already exist and
+are meant to stay:
+- Customers `user1`-`user10` — phone `71900001`-`71900010`, log in via
+  `/login` → phone → the dev-bypass OTP code (`326321`, see below). No
+  passwords; customers never have them in this app.
+- Artists `mkup1` (lashes, Jounieh) / `mkup2` (makeup, Beirut **+ Zahle +
+  Halba** — a genuine 3-region traveling artist, good for travel-buffer
+  tests) / `mkup3` (hair, Tripoli) / `mkup4` (nails, Beirut) — email
+  `mkup<N>@test.bedge.com`, password `password<N>`. All `status: active`,
+  all with real, researched services already added.
+- These accounts already have real booking/order history (a confirmed
+  booking, a cancelled/`refund_due` booking, a delivered product order) —
+  don't be surprised to see it; it's expected, not test debris to clean up.
 
 **Getting a customer OTP code without WhatsApp**
 WhatsApp isn't wired to a live provider yet — codes are queued but not delivered. Request a code from the login screen as normal, then read the plaintext code the backend queued:
