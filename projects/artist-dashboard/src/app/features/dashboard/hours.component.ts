@@ -23,6 +23,7 @@ import type {
   SetBusinessHoursRequest,
   CreateExceptionRequest,
   CreateStoreRequest,
+  UpdateStoreRequest,
 } from '@bedge/shared';
 
 /** Working state for the "Add store" modal form. */
@@ -41,6 +42,12 @@ const EMPTY_NEW_STORE: NewStoreForm = {
   address: '',
   phone: '',
 };
+
+/** Working state for the "Edit store" modal form. */
+interface EditStoreForm {
+  name: string;
+  isActive: boolean;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Local types
@@ -173,6 +180,15 @@ export class HoursComponent implements OnInit {
   readonly newStore = signal<NewStoreForm>({ ...EMPTY_NEW_STORE });
   readonly addingStore = signal(false);
   readonly addStoreError = signal<string | null>(null);
+
+  /** "Edit store" modal state - rename the selected store or toggle it
+   *  active/inactive. Was a real gap: PATCH /artists/stores/:id existed on
+   *  the backend with no UI trigger anywhere - once added, a store could
+   *  never be renamed or deactivated again. */
+  readonly editStoreOpen = signal(false);
+  readonly editStoreForm = signal<EditStoreForm>({ name: '', isActive: true });
+  readonly savingStoreEdit = signal(false);
+  readonly editStoreError = signal<string | null>(null);
 
   // ── Business hours ────────────────────────────────────────────────────────
 
@@ -316,6 +332,58 @@ export class HoursComponent implements OnInit {
       error: (err: HttpErrorResponse) => {
         this.addingStore.set(false);
         this.addStoreError.set(extractApiErrorMessage(err, 'Could not add this store. Please try again.'));
+      },
+    });
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Edit store (rename / activate-deactivate)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  openEditStore(): void {
+    const store = this.selectedStore();
+    if (!store) return;
+    this.editStoreForm.set({ name: store.name, isActive: store.is_active });
+    this.editStoreError.set(null);
+    this.editStoreOpen.set(true);
+  }
+
+  closeEditStore(): void {
+    if (this.savingStoreEdit()) return;
+    this.editStoreOpen.set(false);
+  }
+
+  patchEditStore<K extends keyof EditStoreForm>(key: K, value: EditStoreForm[K]): void {
+    this.editStoreForm.update((f) => ({ ...f, [key]: value }));
+  }
+
+  canSubmitEditStore(): boolean {
+    return this.editStoreForm().name.trim().length >= 2;
+  }
+
+  submitEditStore(): void {
+    const store = this.selectedStore();
+    if (!store || !this.canSubmitEditStore() || this.savingStoreEdit()) return;
+
+    const f = this.editStoreForm();
+    const req: UpdateStoreRequest = {
+      name: f.name.trim(),
+      is_active: f.isActive,
+    };
+
+    this.savingStoreEdit.set(true);
+    this.editStoreError.set(null);
+
+    this.artistService.updateStore(store.id, req).subscribe({
+      next: (updated) => {
+        this.savingStoreEdit.set(false);
+        this.editStoreOpen.set(false);
+        this.stores.update((list) => list.map((s) => (s.id === updated.id ? updated : s)));
+        this.selectedStore.set(updated);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.savingStoreEdit.set(false);
+        this.editStoreError.set(extractApiErrorMessage(err, 'Could not save these changes. Please try again.'));
       },
     });
   }

@@ -67,6 +67,17 @@ export interface CreateStoreRequest {
   phone?: string;     // max 50
 }
 
+/** PATCH /artists/stores/:store_id request body. Every field is optional on
+ *  the backend (nil = leave unchanged) - only the two fields the UI
+ *  actually exposes (rename, active toggle) are typed here. The backend
+ *  contract also allows address/phone/notice-hours/early-bird/travel-buffer/
+ *  timezone updates; not surfaced in this form to avoid a much bigger
+ *  settings screen than what was actually asked for. */
+export interface UpdateStoreRequest {
+  name?: string;      // 2–200
+  is_active?: boolean;
+}
+
 /** A salon service (Go artist.ServiceResponse). */
 export interface Service {
   readonly id: string;

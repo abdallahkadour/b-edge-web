@@ -6,17 +6,45 @@
 <div class="p-6 max-w-2xl mx-auto">
 
   <!-- ── Page title ─────────────────────────────────────────────────────── -->
-  <div class="flex items-center justify-between mb-6">
+  <div class="flex items-center justify-between mb-1">
     <h1 class="text-xl font-semibold text-ink">Hours</h1>
-    <button
-      type="button"
-      (click)="openAddStore()"
-      class="flex items-center gap-1.5 text-xs font-semibold text-ink border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 transition-colors"
-    >
-      <lucide-icon name="plus" [size]="14" [strokeWidth]="2.5" />
-      Add store
-    </button>
+    <div class="flex items-center gap-2">
+      @if (selectedStore()) {
+        <button
+          type="button"
+          (click)="openEditStore()"
+          aria-label="Edit store"
+          class="flex items-center gap-1.5 text-xs font-semibold text-ink border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 transition-colors"
+        >
+          <lucide-icon name="pencil" [size]="14" [strokeWidth]="2.5" />
+          Edit store
+        </button>
+      }
+      <button
+        type="button"
+        (click)="openAddStore()"
+        class="flex items-center gap-1.5 text-xs font-semibold text-ink border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 transition-colors"
+      >
+        <lucide-icon name="plus" [size]="14" [strokeWidth]="2.5" />
+        Add store
+      </button>
+    </div>
   </div>
+
+  <!-- Selected store's name + inactive badge, so this reads clearly even
+       when there's only 1 store (tabs are hidden below 2 stores). -->
+  @if (selectedStore(); as store) {
+    <p class="text-sm text-gray-400 mb-6 flex items-center gap-2">
+      {{ store.name }}
+      @if (!store.is_active) {
+        <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+          Inactive
+        </span>
+      }
+    </p>
+  } @else {
+    <div class="mb-6"></div>
+  }
 
   <!-- ── Stores loading ─────────────────────────────────────────────────── -->
   @if (storesLoading()) {
@@ -474,6 +502,87 @@
             [fullWidth]="true"
             [disabled]="addingStore()"
             (click)="closeAddStore()"
+          >Cancel</bedge-button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Edit store modal -->
+  @if (editStoreOpen()) {
+    <div
+      class="fixed inset-0 z-50 bg-ink/40 flex items-center justify-center p-4"
+      (click)="closeEditStore()"
+      (keydown.escape)="closeEditStore()"
+    >
+      <div
+        class="bg-white border border-gray-200 rounded-2xl max-w-md w-full shadow-xl overflow-hidden"
+        (click)="$event.stopPropagation()"
+        cdkTrapFocus
+        cdkTrapFocusAutoCapture
+        role="dialog"
+        aria-modal="true"
+      >
+        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+          <h2 class="text-base font-bold text-ink">Edit store</h2>
+          <button type="button" (click)="closeEditStore()" aria-label="Close" class="p-1 text-gray-400 hover:text-ink rounded-full hover:bg-gray-100">
+            <lucide-icon name="x" [size]="18" [strokeWidth]="2" />
+          </button>
+        </div>
+
+        <div class="p-5 space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-ink mb-1">Store name</label>
+            <input
+              type="text"
+              bedgeInput
+              [value]="editStoreForm().name"
+              (input)="patchEditStore('name', $any($event.target).value)"
+              class="h-10"
+            />
+          </div>
+
+          <button
+            type="button"
+            (click)="patchEditStore('isActive', !editStoreForm().isActive)"
+            class="w-full flex items-center justify-between rounded-lg border border-gray-200 px-3.5 py-3"
+          >
+            <span class="text-left">
+              <span class="block text-xs font-semibold text-ink">Active</span>
+              <span class="block text-[11px] text-gray-400 mt-0.5">
+                @if (editStoreForm().isActive) {
+                  Bookable and visible to customers
+                } @else {
+                  Hidden from Discover; no new bookings can be made here
+                }
+              </span>
+            </span>
+            <span
+              [class]="editStoreForm().isActive ? 'w-9 h-5 rounded-full bg-ink relative transition-colors shrink-0' : 'w-9 h-5 rounded-full bg-gray-200 relative transition-colors shrink-0'"
+            >
+              <span
+                [class]="editStoreForm().isActive ? 'absolute top-[2px] left-[2px] w-4 h-4 rounded-full bg-white translate-x-4 transition-transform' : 'absolute top-[2px] left-[2px] w-4 h-4 rounded-full bg-white transition-transform'"
+              ></span>
+            </span>
+          </button>
+
+          @if (editStoreError()) {
+            <p class="text-xs text-danger-dark bg-danger-light rounded-lg px-3 py-2">{{ editStoreError() }}</p>
+          }
+        </div>
+
+        <div class="px-5 py-4 border-t border-gray-100 flex flex-col gap-2">
+          <bedge-button
+            [fullWidth]="true"
+            [loading]="savingStoreEdit()"
+            [disabled]="!canSubmitEditStore()"
+            (click)="submitEditStore()"
+          >Save changes</bedge-button>
+          <bedge-button
+            variant="ghost"
+            [fullWidth]="true"
+            [disabled]="savingStoreEdit()"
+            (click)="closeEditStore()"
           >Cancel</bedge-button>
         </div>
       </div>

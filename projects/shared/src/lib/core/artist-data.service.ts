@@ -11,6 +11,7 @@ import type {
   BusinessHoursException,
   UpdateProfileRequest,
   CreateStoreRequest,
+  UpdateStoreRequest,
   CreateServiceRequest,
   UpdateServiceRequest,
   SetBusinessHoursRequest,
@@ -74,6 +75,15 @@ export class ArtistDataService {
   /** POST /artists/salon/stores - add a second (or further) branch. */
   createStore(req: CreateStoreRequest): Observable<Store> {
     return this.api.post<Store>('/artists/salon/stores', req);
+  }
+
+  /** PATCH /artists/stores/:store_id - rename or activate/deactivate a
+   *  store. Backend accepts more fields than UpdateStoreRequest exposes
+   *  (address, phone, notice hours, early-bird, travel buffer, timezone) -
+   *  see the doc comment on UpdateStoreRequest for why only name/is_active
+   *  are surfaced here. */
+  updateStore(storeId: string, req: UpdateStoreRequest): Observable<Store> {
+    return this.api.patch<Store>(`/artists/stores/${storeId}`, req);
   }
 
   /** GET /artists/:id/stores - stores an artist is assigned to. Accepts either a UUID or a handle in :id. */
