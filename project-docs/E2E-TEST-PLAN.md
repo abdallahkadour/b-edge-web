@@ -7,10 +7,24 @@
 > to report, not a step to fake.
 >
 > Verified directly against the real routes and the real frontend code on
-> 2026-08-21, not against old docs. B-Edge has **12 backend API domains** and
-> **~90 endpoints** across two Angular PWAs: **customer-pwa** (`:4200`,
+> 2026-08-21, not against old docs. B-Edge has **13 backend API domains** and
+> **~100 endpoints** across two Angular PWAs: **customer-pwa** (`:4200`,
 > mostly guest, no login required) and **artist-dashboard** (`:4300`,
 > authenticated). Backend runs at `:3000`.
+>
+> **Update, 2026-08-29 (billing + enforcement pass):** The `internal/billing`
+> domain shipped (migrations 023-025: `plans`, `subscriptions`, `invoices`),
+> all three billing UI screens were built (`/pricing`, `/dashboard/billing`,
+> admin Billing/Plans/Artists tabs), and Phase 4 enforcement was wired:
+> `past_due`/`suspended` artists hidden from Discover via
+> `subscriptionVisibleCond` in `discovery/repository.go`; mutating requests
+> on `/api/v1/artists`, `/api/v1/products`, `/api/v1/media` blocked for
+> `suspended` artists via `RequireActiveSubscription` middleware; grace/
+> past_due/suspended banners added to the dashboard layout. The billing
+> coverage map and Suite 8 below were added in this pass. All existing artists
+> (Rania + test accounts) are `comped` -> `active`, so enforcement does not
+> affect live data. To test non-active subscription states, manipulate dates
+> directly in the DB (see Suite 8 setup notes).
 >
 > **Update, same day:** Gaps G1-G5 below are now closed - artist-dashboard
 > gained a sign-up screen, an Add Store modal (Hours), a Reviews screen
@@ -269,13 +283,35 @@ Every real route in the codebase, and exactly what on screen triggers it. Use th
 | `POST /onboarding/complete` | artist-dashboard `/onboarding` — the one-page form's **submit** |
 | `GET /onboarding/status` | automatic, on every dashboard load (redirects to pending/rejected state or `/onboarding` itself) |
 
-### `admin` (3 endpoints)
+### `admin` — artist approvals (3 endpoints)
 
 | Endpoint | UI trigger |
 |---|---|
-| `GET /admin/artists/pending` | artist-dashboard `/admin` page load |
+| `GET /admin/artists/pending` | artist-dashboard `/admin` page load (Approvals tab) |
 | `POST /admin/artists/:id/approve` | **Approve** button on a pending-artist card |
 | `POST /admin/artists/:id/reject` | **Reject** → confirm reason → **Reject** (two-tap, inline) |
+
+### `billing` — artist-facing (3 endpoints)
+
+| Endpoint | UI trigger |
+|---|---|
+| `GET /billing/plans` | public `/pricing` page load (no auth required) |
+| `GET /billing/subscription` | dashboard `/dashboard/billing` load; also triggered silently on every dashboard page load by the layout component (drives the grace/past_due/suspended banners) |
+| `GET /billing/invoices` | dashboard `/dashboard/billing` load (invoice history + outstanding invoice) |
+| `POST /billing/invoices/:id/submit` | Billing → outstanding invoice section → **I've paid** → optional reference → **Submit** modal |
+
+### `billing` — admin-facing (5 endpoints)
+
+| Endpoint | UI trigger |
+|---|---|
+| `GET /admin/billing/invoices?status=submitted` | `/admin` → **Billing** tab load (confirmation queue) |
+| `GET /admin/billing/overview` | same Billing tab load (full artist roster, sorted by outstanding amount) |
+| `POST /admin/billing/invoices/:id/confirm` | Billing tab → confirmation queue → **Confirm paid** on a submitted invoice card |
+| `POST /admin/billing/invoices/:id/void` | Billing tab → **Void** → required reason textarea → **Confirm void** |
+| `PATCH /admin/billing/subscriptions/:id` | **Artists** tab → artist card → **Edit** (plan/seats/trial/period dates) or **Cancel** / **Reinstate** (separate one-tap actions, not in the edit form) |
+| `GET /admin/plans` | **Plans** tab load |
+| `POST /admin/plans` | Plans → **New plan** → fill form → **Create plan** |
+| `PATCH /admin/plans/:code` | Plans → **Edit** on an existing plan card → change fields → **Save changes** |
 
 ### `artist` (17 endpoints)
 
@@ -544,6 +580,118 @@ Given/When/Then, numbered, each ending in a concrete pass/fail check against the
 
 **7.1** — Dashboard Earnings → confirm the summary reflects real completed/confirmed bookings for a known test period, not just "a number shows up." Cross-check the total against a manual sum of a few real bookings' `final_price`.
 
+### Suite 8 — Billing, subscription enforcement, and admin billing console
+
+> **Setup note.** All current artists are `comped` → `active`. To test non-active
+> states you must manipulate subscription dates directly in the DB. Use these
+> snippets — they are safe to run repeatedly against the `mkup1` test account
+> and safe to undo:
+>
+> ```sql
+> -- Find mkup1's subscription ID
+> SELECT sub.id, sub.plan_code, sub.current_period_end
+> FROM subscriptions sub JOIN artists a ON a.id = sub.artist_id
+> JOIN users u ON u.id = a.user_id WHERE u.email = 'mkup1@test.bedge.com';
+>
+> -- Put mkup1 into grace (current period ended 3 days ago):
+> UPDATE subscriptions SET current_period_end = NOW() - INTERVAL '3 days',
+>   plan_code = 'starter', monthly_price = 7.00 WHERE id = '<sub_id>';
+>
+> -- Put mkup1 into past_due (12 days overdue):
+> UPDATE subscriptions SET current_period_end = NOW() - INTERVAL '12 days'
+>   WHERE id = '<sub_id>';
+>
+> -- Put mkup1 into suspended (25 days overdue):
+> UPDATE subscriptions SET current_period_end = NOW() - INTERVAL '25 days'
+>   WHERE id = '<sub_id>';
+>
+> -- Restore mkup1 to comped/active:
+> UPDATE subscriptions SET plan_code = 'comped', monthly_price = 0,
+>   current_period_end = NULL WHERE id = '<sub_id>';
+> ```
+>
+> Run the restore snippet when done. Do not leave mkup1 in a non-active state
+> between test passes or it will confuse the next tester.
+
+**8.1 — Comped artist billing screen (the normal state for all current artists)**
+- Log in as Rania (`rania@bedge.com`) → `/dashboard/billing`
+- Then: plan shows "Comped" with an Active badge, no invoice section, no "I've paid" button, no payment instructions
+- No banner anywhere in the dashboard (comped = active = no enforcement)
+- DB confirm: Rania's `subscriptions` row has `plan_code = 'comped'`, `monthly_price = 0`
+
+**8.2 — Public pricing page**
+- Open `http://localhost:4300/pricing` in an incognito window (not logged in)
+- Then: 4 tier cards render (Starter, Growth, Studio, Multi-location) with real prices read from the API — not hardcoded
+- Growth card has a "Recommended" badge; no Comped card visible (is_public = false)
+- FAQ section visible; CTA links to `/register`
+- DB confirm: `SELECT * FROM plans ORDER BY sort_order` — prices match what the page shows
+
+**8.3 — Outstanding invoice: submit payment reference**
+- Set mkup1 to `starter` with `current_period_end` 3 days ago (grace state, see setup)
+- Log in as mkup1 → `/dashboard/billing`
+- Then: amber "payment is overdue" banner visible on the billing screen AND in the dashboard layout (every page)
+- Outstanding invoice card visible with the correct amount and due date
+- "I've paid" button enabled → tap it → reference input modal opens
+- Enter a realistic reference ("Whish #99821") → **Submit**
+- Then: invoice status flips to `submitted`, button disappears, card updates to "Awaiting confirmation" copy, reference shown
+- DB confirm: `SELECT status, payment_reference, submitted_at FROM invoices WHERE artist_id = '<mkup1_artist_id>'` — status = 'submitted', reference = 'Whish #99821'
+
+**8.4 — Admin confirms payment**
+- Log in as admin → `/admin` → **Billing** tab
+- Then: mkup1's invoice appears in the "Needs confirmation" section with the submitted reference
+- Tap **Confirm paid** → confirm it disappears from the queue immediately
+- DB confirm: invoice `status = 'paid'`, `paid_at` is set, `confirmed_by` = admin's user_id
+- Also confirm: mkup1's `current_period_end` in `subscriptions` advanced by one month
+- Log back in as mkup1 → billing screen → subscription status badge = Active, no outstanding invoice, past invoice appears in history as "paid"
+- Edge case: tap **Confirm paid** a second time on an already-paid invoice (simulate via direct API call or find another submitted one) → must return a visible error, not silently extend the period again (the backend returns a 409 for this — verify the admin UI surfaces it)
+
+**8.5 — Admin voids an invoice**
+- Create a second test invoice in `submitted` state (manipulate dates to trigger lazy generation, or insert directly)
+- Admin Billing tab → **Void** → leave the reason blank → **Confirm void** should be disabled
+- Enter a reason → **Confirm void** → invoice disappears from queue
+- DB confirm: `status = 'void'`, `void_reason` populated
+- Log in as mkup1 → billing screen → voided invoice appears in history with "void" badge
+
+**8.6 — Discovery enforcement: past_due artist hidden from Discover**
+- Set mkup1 to past_due (12 days overdue, see setup)
+- customer-pwa Discover → search for mkup1 by name or city → must not appear in results
+- Navigate directly to `/book/mkup1` (if mkup1 has a handle) → must return a not-found state, not the artist profile
+- Log in as mkup1 → dashboard still fully accessible (only read from Discover is blocked, not dashboard access) → amber "past due" banner visible on every page, including the layout
+- Restore mkup1 to active → Discover search → mkup1 appears again immediately (no cache to clear, status is derived at read time)
+
+**8.7 — Write enforcement: suspended artist cannot mutate services/products/media**
+- Set mkup1 to suspended (25 days overdue, see setup)
+- Log in as mkup1 → red "suspended" banner visible on every dashboard page
+- Try to add a new service: Services → **Add service** → fill form → **Save** → must fail with a clear error message (backend returns SUBSCRIPTION_SUSPENDED, frontend should surface it — check that `extractApiErrorMessage` picks it up, not a generic "something went wrong")
+- Try to edit an existing service → same result
+- Try to add a product → same result
+- Try to upload a portfolio photo → same result
+- Confirm reads still work: Bookings list loads, Calendar loads, Clients list loads, Earnings loads — suspended = read-only, not locked out
+- Confirm **Billing screen** still works: `/dashboard/billing` loads, outstanding invoice visible, "I've paid" submit still works (billing routes are excluded from the write-block deliberately)
+- Booking lifecycle: if mkup1 has an existing confirmed booking, approve/complete/cancel it from the dashboard → must succeed (existing bookings are honored regardless of subscription state)
+
+**8.8 — Admin Plans tab: create and edit a tier**
+- Admin → **Plans** tab → **New plan** → fill: code=`enterprise`, name=`Enterprise`, monthly price=`75`, seat price=`8`, included seats=`5`, a description, 3 feature lines (one per line in the textarea) → **Create plan**
+- Then it appears in the Plans list immediately
+- Tap **Edit** on the new plan → change the price to `80` → **Save changes**
+- DB confirm: `SELECT * FROM plans WHERE code = 'enterprise'` — name, price, features match
+- Verify the "affects new signups only" note is visible inline on the edit form — this is a key communication, not a decoration
+- Note: the `comped` plan is visible in the Plans tab (is_public=false → shows a "Hidden" badge) but does NOT appear on the public `/pricing` page — verify both
+
+**8.9 — Admin Artists tab: edit a subscription**
+- Admin → **Artists** tab → search "mkup" → confirm mkup1-mkup4 all appear
+- Tap **Edit** on mkup1 → change plan to `growth`, seats to `2` → **Save changes**
+- DB confirm: `subscriptions` row for mkup1 has `plan_code = 'growth'`, `seats = 2`
+- Log in as mkup1 → billing screen → plan name shows "Growth", seat count shows 2
+- Tap **Cancel** (subscription cancel) → confirm inline confirm text appears → **Confirm cancel** → mkup1's status flips to `cancelled` in the Artists tab
+- Tap **Reinstate** → status returns to `active` (or the appropriate derived state based on period_end dates)
+- Restore mkup1 to `comped` via the setup SQL before finishing
+
+**8.10 — Invoice history**
+- Log in as mkup1 (after running 8.3-8.5 above so there are real invoices)
+- `/dashboard/billing` → invoice history section → confirm paid and voided invoices both appear with the correct badge colours (paid = green, void = muted grey)
+- Confirm the period dates (period_start, period_end) and amounts match the DB
+
 ---
 
 ## 3. Bring it to the edge — exhaustive UI stress pass
@@ -560,7 +708,7 @@ Go screen by screen (use the route lists below) and click **every** button, link
 
 **customer-pwa routes to sweep**: `/`, `/book/:handle` (all funnel steps: profile → select-service → pick-datetime → details → confirmed, plus the slot-unavailable branch), `/book/:handle/reviews`, `/shop/:handle`, `/shop/:handle/products/:id`, `/shop/:handle/cart`, `/shop/:handle/confirmed/:orderId`, `/login` (both phone and code steps), `/my-bookings`, `/my-bookings/:id`, `/my-orders`, `/review/:token` (valid, invalid, and already-used token), `/this-does-not-exist` (404 page).
 
-**artist-dashboard routes to sweep**: `/login`, `/onboarding` (form, pending, and rejected states), `/admin`, `/dashboard/bookings`, `/calendar`, `/waitlist`, `/products`, `/orders`, `/deposits`, `/clients`, `/clients/:id`, `/earnings`, `/services`, `/hours`, `/profile`, `/this-does-not-exist` (404 page).
+**artist-dashboard routes to sweep**: `/login`, `/register`, `/forgot-password`, `/reset-password`, `/onboarding` (form, pending, and rejected states), `/pricing` (public — open in incognito), `/admin` (all 4 tabs: Approvals, Billing, Plans, Artists), `/dashboard/bookings`, `/dashboard/calendar`, `/dashboard/waitlist`, `/dashboard/products`, `/dashboard/orders`, `/dashboard/deposits`, `/dashboard/billing` (comped state, outstanding invoice state, history state), `/dashboard/clients`, `/dashboard/clients/:id`, `/dashboard/earnings`, `/dashboard/services`, `/dashboard/hours`, `/dashboard/profile`, `/this-does-not-exist` (404 page).
 
 ### 3.2 Boundary values to actually try, not assume
 
@@ -583,14 +731,28 @@ Go screen by screen (use the route lists below) and click **every** button, link
 - Go offline (devtools network throttling → Offline) mid-submit on a few key forms — confirm a real error message appears, not an infinite spinner
 - Refresh mid-flow on every multi-step screen (booking funnel, onboarding, checkout) — confirm you don't lose so much state that it's unusable, and don't end up in a broken half-state
 
-### 3.4 Auth/permission edges
+### 3.4 Billing enforcement edges
+
+These require DB date manipulation (see Suite 8 setup). Run them after Suite 8's journeys pass.
+
+- **Grace → past_due boundary:** Set `current_period_end` to exactly 7 days ago → artist should be `past_due` (hidden from Discover), not `grace`. Set to 6 days ago → `grace` (still visible). Verify the dashboard banner copy changes correctly between the two.
+- **Past_due → suspended boundary:** Set to exactly 21 days ago → `past_due` (writes allowed). Set to 22 days ago → `suspended` (writes blocked). The middleware checks `now >= period_end + 21 days`, so day 22 is the first blocked day.
+- **Comped always passes:** Set a comped artist's `current_period_end` to 90 days ago — status must still be `active`, no banner, Discover still shows them, writes still work. Comped is handled before any date check in `DeriveStatus`.
+- **Cancelled subscription:** Set `cancelled_at` to any past timestamp → artist should be `cancelled`. Verify whether Discover hides them (per the spec, cancelled is not explicitly in the hide-list — check the actual behavior and decide if it's correct).
+- **Submit while suspended:** Submit a payment reference from `/dashboard/billing` as a suspended artist → must succeed (billing routes are excluded from the write-block). This is the intended escape hatch — if it's blocked, that's a bug.
+- **Admin confirm while artist is in a stale state:** Run the admin confirm on an invoice after resetting the artist back to `comped` — the invoice should still confirm cleanly (invoices are addressed by ID, not by subscription state at confirm time).
+- **Double-click Confirm paid:** Click **Confirm paid** twice in quick succession (or confirm, then manually set the invoice back to `submitted` in the DB and click again) — must surface a visible error, not silently extend the period twice. The backend returns a 409 for this; the admin UI must not swallow it.
+- **Void reason required:** Leave the void-reason textarea blank → **Confirm void** button must stay disabled. This is enforced both client-side (button `[disabled]`) and server-side (VoidInvoiceRequest validation) — verify both.
+- **Concurrent subscription state changes:** While one admin tab is loading the Billing overview, change the subscription dates in a second tab → refresh the first tab → confirm the new state renders, not a stale cached view.
+
+### 3.5 Auth/permission edges (was 3.4)
 
 - Try to reach every `/dashboard/*` URL directly, logged out → redirected to `/login`, and back to the originally-requested page after logging in
 - Log in as a plain artist, try to navigate to `/admin` directly → redirected away, not shown an error page
 - Let an access token expire mid-session (or simulate it) → confirm the silent-refresh works, or you're cleanly bounced to login — not stuck with broken API calls
 - Try to view/edit another artist's booking, client, or product by editing the URL's ID directly → should be rejected (403/404), not served
 
-### 3.5 Visual sweep at every required viewport
+### 3.6 Visual sweep at every required viewport
 
 At minimum 390×844, 768×1024, and 1440×900 for every screen in §3.1:
 - No horizontal scroll on the page itself (check `document.documentElement.scrollWidth` vs `clientWidth`)
@@ -610,6 +772,13 @@ All five originally-confirmed gaps are now closed (2026-08-21) — see the updat
 - **G5 — "Add store" screen.** ✅ Closed: Hours → Add store.
 
 **New, still open, out of scope for this pass:** `GetReviewsByArtist` has no ownership check — any authenticated artist can view another artist's full review list (including hidden reviews) by guessing/enumerating an artist ID. Found while fixing G4's visibility-filter bug; not fixed, since it's a backend authorization hardening task, not a missing-UI gap.
+
+**Billing domain — known gaps (2026-08-29):**
+- **No automated dunning notifications.** When an invoice becomes overdue, no WhatsApp message is sent to the artist. The WhatsApp worker and billing templates are planned (Phase 5) but not built; Twilio also isn't live yet. Until both land, the only signal an artist receives is the in-dashboard banner — which requires them to actively log in.
+- **No pre-due reminder.** The current flow generates invoices lazily and the artist's first signal is an overdue banner. A "your invoice will be due soon" message before the period ends is not implemented.
+- **Plan selection in onboarding not built.** New artists are assigned `comped` by admin via the Artists tab or manually; there is no plan-picker step in the self-service onboarding flow. This is a Phase 3 gap.
+- **`apply-to-existing` not built.** `POST /admin/plans/:code/apply-to-existing` (audited bulk re-price of existing subscribers) was deliberately deferred — no paying subscribers exist to re-price yet. Not a UI gap to report; a planned Phase 3 feature.
+- **Cancelled subscription enforcement ambiguity.** `DeriveStatus` returns `Cancelled` for `cancelled_at IS NOT NULL`, but `subscriptionVisibleCond` in discovery treats `cancelled_at IS NOT NULL` as *visible* (the condition passes it through, matching the spec's enforcement table which only names `past_due`/`suspended` as hidden). This may or may not be the intended behavior — test case 3.4 above covers this explicitly.
 
 ---
 
