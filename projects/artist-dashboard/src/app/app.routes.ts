@@ -4,6 +4,7 @@ import { authGuard } from '@bedge/shared';
 /**
  * Application routes.
  *
+ * /pricing         — public, subscription plans (reads GET /billing/plans)
  * /login           — public, the sign-in screen
  * /register        — public, artist sign-up (POST /auth/register)
  * /forgot-password — public, request a reset link
@@ -14,6 +15,7 @@ import { authGuard } from '@bedge/shared';
  *   /clients/:id   — single client detail + notes
  *   /earnings      — revenue summary
  *   /deposits      — deposit verification queue
+ *   /billing       — subscription plan, invoices, submit OMT/Whish payment
  *   /calendar      — weekly appointment calendar
  *   /waitlist      — customers waiting for a fully-booked date
  *   /services      — service catalogue management
@@ -36,6 +38,15 @@ export const routes: Routes = [
     canActivate: [authGuard(['admin'])],
     loadComponent: () =>
       import('./features/admin/admin.page').then((m) => m.AdminPage),
+  },
+  {
+    // Public - unlike every other route here except login/register, this
+    // has no canActivate guard on purpose. Someone deciding whether to
+    // sign up has no account yet, so gating pricing behind auth would mean
+    // gating it behind the very decision it's meant to inform.
+    path: 'pricing',
+    loadComponent: () =>
+      import('./features/pricing/pricing.page').then((m) => m.PricingPage),
   },
   {
     path: 'login',
@@ -107,6 +118,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/dashboard/deposit-queue.component').then(
             (m) => m.DepositQueueComponent,
+          ),
+      },
+      {
+        path: 'billing',
+        loadComponent: () =>
+          import('./features/dashboard/billing.component').then(
+            (m) => m.BillingComponent,
           ),
       },
       {

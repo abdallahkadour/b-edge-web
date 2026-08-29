@@ -100,6 +100,7 @@ export class DashboardLayoutComponent {
     { path: '/dashboard/products', label: 'Products', icon: 'package' },
     { path: '/dashboard/orders', label: 'Orders', icon: 'shopping-bag' },
     { path: '/dashboard/deposits', label: 'Deposits', icon: 'wallet' },
+    { path: '/dashboard/billing',  label: 'Billing',  icon: 'credit-card' },
     { path: '/dashboard/clients',  label: 'Clients',  icon: 'users' },
     { path: '/dashboard/earnings', label: 'Earnings', icon: 'banknote' },
     { path: '/dashboard/services', label: 'Services', icon: 'scissors' },

@@ -14,3 +14,4 @@ export * from './enriched-booking.model';
 export * from './earnings.model';
 export * from './client.model';
 export * from './media.model';
+export * from './billing.model';

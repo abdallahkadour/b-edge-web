@@ -1,0 +1,214 @@
+<div class="p-4 md:p-6 max-w-3xl mx-auto space-y-5">
+  <div>
+    <h1 class="text-xl font-bold text-ink">Billing</h1>
+    <p class="text-sm text-gray-500 mt-0.5">Your B-Edge subscription and payment history.</p>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="flex justify-center py-16">
+      <lucide-icon name="loader-2" [size]="20" [strokeWidth]="2" class="animate-spin text-gray-300" />
+    </div>
+  }
+
+  <!-- Error -->
+  @if (!loading() && errorMessage()) {
+    <div class="rounded-lg bg-danger-light px-4 py-3 text-sm text-danger-dark" role="alert">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <!-- No subscription yet (pre-Phase-3 signup gap - see component doc) -->
+  @if (!loading() && noSubscription()) {
+    <bedge-card>
+      <p class="text-sm text-gray-500">
+        No subscription is set up on your account yet. This is expected for now -
+        contact B-Edge support and we'll get your plan assigned.
+      </p>
+    </bedge-card>
+  }
+
+  @if (!loading() && !noSubscription() && subscription(); as sub) {
+    <!-- Current plan -->
+    <bedge-card>
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 class="text-base font-bold text-ink">{{ sub.plan_name ?? sub.plan_code }}</h2>
+            <bedge-badge [tone]="statusTone(sub.status)">{{ statusLabel(sub.status) }}</bedge-badge>
+          </div>
+          @if (isComped()) {
+            <p class="text-sm text-gray-500 mt-1">Comped account - no billing required.</p>
+          } @else {
+            <p class="text-sm text-gray-500 mt-1">
+              ${{ sub.monthly_price }}/month
+              @if (sub.seats > 1) { · {{ sub.seats }} seats }
+            </p>
+          }
+        </div>
+      </div>
+
+      @if (!isComped()) {
+        <div class="mt-4 pt-4 border-t border-gray-100 grid grid-cols-2 gap-4 text-sm">
+          @if (sub.status === 'trialing' && sub.trial_ends_at) {
+            <div>
+              <p class="text-gray-400 text-xs uppercase tracking-wide">Trial ends</p>
+              <p class="text-ink font-medium mt-0.5">{{ formatDate(sub.trial_ends_at) }}</p>
+            </div>
+          } @else {
+            <div>
+              <p class="text-gray-400 text-xs uppercase tracking-wide">
+                {{ sub.status === 'active' ? 'Next payment due' : 'Period ended' }}
+              </p>
+              <p class="text-ink font-medium mt-0.5">{{ formatDate(sub.current_period_end) }}</p>
+            </div>
+          }
+        </div>
+      }
+    </bedge-card>
+
+    <!-- Overdue / grace banner - matches the graduated-enforcement states
+         from the spec (grace/past_due/suspended), purely informational here
+         since enforcement itself isn't wired up yet. -->
+    @if (sub.status === 'grace' || sub.status === 'past_due' || sub.status === 'suspended') {
+      <div
+        class="rounded-lg px-4 py-3 text-sm"
+        [class]="sub.status === 'suspended'
+          ? 'bg-danger-light text-danger-dark'
+          : 'bg-warning-light text-warning-dark'"
+      >
+        @if (sub.status === 'grace') {
+          Your payment is overdue. Send it soon to avoid any interruption.
+        } @else if (sub.status === 'past_due') {
+          Your account is past due and no longer visible to new customers on Discover.
+          Send your payment to restore visibility.
+        } @else {
+          Your account is suspended for non-payment. Existing bookings are unaffected,
+          but you can't take new ones until this is resolved.
+        }
+      </div>
+    }
+
+    <!-- Outstanding invoice -->
+    @if (outstandingInvoice(); as invoice) {
+      <bedge-card>
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-bold text-ink">Amount due</h3>
+          <bedge-badge [tone]="invoiceStatusTone(invoice.status)">
+            {{ invoice.status === 'submitted' ? 'Awaiting confirmation' : 'Unpaid' }}
+          </bedge-badge>
+        </div>
+
+        <div class="flex items-baseline gap-1">
+          <span class="text-2xl font-bold text-ink">${{ invoice.amount }}</span>
+          <span class="text-sm text-gray-500">due {{ formatDate(invoice.due_date) }}</span>
+        </div>
+
+        @if (invoice.status === 'issued') {
+          <div class="mt-4 pt-4 border-t border-gray-100">
+            <p class="text-xs font-bold uppercase tracking-wider text-ink mb-1">How to pay</p>
+            <p class="text-sm text-gray-600">
+              Send ${{ invoice.amount }} via OMT or Whish to B-Edge's account, then tell us
+              below so we can confirm it.
+            </p>
+            <div class="mt-3">
+              <bedge-button (click)="openSubmitModal()">I've paid</bedge-button>
+            </div>
+          </div>
+        } @else {
+          <p class="mt-3 text-sm text-gray-500">
+            Reference: {{ invoice.payment_reference || '—' }} · submitted {{ formatDate(invoice.submitted_at) }}.
+            An admin will confirm shortly.
+          </p>
+        }
+      </bedge-card>
+    }
+
+    <!-- Invoice history -->
+    @if (pastInvoices().length > 0) {
+      <bedge-card [padding]="'flush'">
+        <div class="px-4 pt-4 pb-2">
+          <h3 class="text-sm font-bold text-ink">Invoice history</h3>
+        </div>
+        <div class="divide-y divide-gray-100">
+          @for (invoice of pastInvoices(); track invoice.id) {
+            <div class="px-4 py-3 flex items-center justify-between">
+              <div>
+                <p class="text-sm text-ink font-medium">
+                  {{ formatDate(invoice.period_start) }} – {{ formatDate(invoice.period_end) }}
+                </p>
+                <p class="text-xs text-gray-400 mt-0.5">Invoice #{{ invoice.invoice_number }}</p>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="text-sm text-ink font-medium">${{ invoice.amount }}</span>
+                <bedge-badge [tone]="invoiceStatusTone(invoice.status)">{{ invoice.status }}</bedge-badge>
+              </div>
+            </div>
+          }
+        </div>
+      </bedge-card>
+    }
+  }
+</div>
+
+<!-- Submit payment modal -->
+@if (showSubmitModal()) {
+  <div
+    class="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50"
+    (click)="closeSubmitModal()"
+    (keydown.escape)="closeSubmitModal()"
+  >
+    <div
+      class="bg-white rounded-2xl w-full max-w-sm p-5 space-y-4 shadow-xl"
+      (click)="$event.stopPropagation()"
+      cdkTrapFocus
+      cdkTrapFocusAutoCapture
+      role="dialog"
+      aria-modal="true"
+    >
+      <div>
+        <h3 class="text-base font-bold text-ink">Confirm your payment</h3>
+        <p class="text-xs text-gray-400 mt-0.5">
+          Let us know you've sent the payment so an admin can confirm it.
+        </p>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-ink mb-1">
+          Transaction ref or notes (optional)
+        </label>
+        <input
+          type="text"
+          [value]="paymentReference()"
+          (input)="paymentReference.set($any($event.target).value)"
+          placeholder="e.g. Whish Code #94821"
+          class="w-full h-10 px-3 border border-gray-200 rounded-lg text-xs text-ink focus:outline-none focus:border-ink"
+        />
+      </div>
+
+      <div class="flex gap-2 pt-1">
+        <button
+          type="button"
+          (click)="closeSubmitModal()"
+          [disabled]="submitting()"
+          class="flex-1 h-10 border border-gray-200 rounded-lg text-ink font-bold text-xs uppercase tracking-wider hover:bg-gray-50 disabled:opacity-50"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          (click)="submitPayment()"
+          [disabled]="submitting()"
+          class="flex-1 h-10 bg-[#16a34a] hover:opacity-90 rounded-lg text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 disabled:opacity-50 transition-opacity"
+        >
+          @if (submitting()) {
+            <lucide-icon name="loader-2" [size]="13" [strokeWidth]="2" class="animate-spin" />
+          } @else {
+            <lucide-icon name="check" [size]="13" [strokeWidth]="2" />
+          }
+          Submit
+        </button>
+      </div>
+    </div>
+  </div>
+}

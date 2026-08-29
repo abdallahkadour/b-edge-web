@@ -2,9 +2,17 @@
 
   <div class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
     <div>
-      <h1 class="text-lg font-bold text-ink">Pending artists</h1>
+      <h1 class="text-lg font-bold text-ink">Admin</h1>
       <p class="text-xs text-gray-500 mt-0.5">
-        {{ pending().length }} awaiting review
+        @if (activeTab() === 'approvals') {
+          {{ pending().length }} awaiting review
+        } @else if (activeTab() === 'billing') {
+          {{ confirmationQueue().length }} awaiting confirmation
+        } @else if (activeTab() === 'plans') {
+          {{ plans().length }} tiers
+        } @else {
+          {{ overview().length }} artists
+        }
       </p>
     </div>
     <button type="button" (click)="logout()" class="text-xs text-gray-400 font-semibold underline">
@@ -12,6 +20,59 @@
     </button>
   </div>
 
+  <!-- Tabs - see admin.page.ts's class doc comment for why these two and
+       not the full Plans/Artists set from the spec yet. -->
+  <div class="bg-white border-b border-gray-200 px-6">
+    <div class="max-w-2xl mx-auto flex gap-6">
+      <button
+        type="button"
+        (click)="selectTab('approvals')"
+        class="py-3 text-sm font-bold border-b-2 -mb-px transition-colors"
+        [class]="activeTab() === 'approvals'
+          ? 'border-ink text-ink'
+          : 'border-transparent text-gray-400 hover:text-gray-600'"
+      >
+        Approvals
+      </button>
+      <button
+        type="button"
+        (click)="selectTab('billing')"
+        class="py-3 text-sm font-bold border-b-2 -mb-px transition-colors"
+        [class]="activeTab() === 'billing'
+          ? 'border-ink text-ink'
+          : 'border-transparent text-gray-400 hover:text-gray-600'"
+      >
+        Billing
+        @if (confirmationQueue().length > 0) {
+          <span class="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-warning text-white text-[10px]">
+            {{ confirmationQueue().length }}
+          </span>
+        }
+      </button>
+      <button
+        type="button"
+        (click)="selectTab('plans')"
+        class="py-3 text-sm font-bold border-b-2 -mb-px transition-colors"
+        [class]="activeTab() === 'plans'
+          ? 'border-ink text-ink'
+          : 'border-transparent text-gray-400 hover:text-gray-600'"
+      >
+        Plans
+      </button>
+      <button
+        type="button"
+        (click)="selectTab('artists')"
+        class="py-3 text-sm font-bold border-b-2 -mb-px transition-colors"
+        [class]="activeTab() === 'artists'
+          ? 'border-ink text-ink'
+          : 'border-transparent text-gray-400 hover:text-gray-600'"
+      >
+        Artists
+      </button>
+    </div>
+  </div>
+
+  @if (activeTab() === 'approvals') {
   <div class="max-w-2xl mx-auto px-4 py-6">
 
     @if (errorMessage(); as msg) {
@@ -127,4 +188,611 @@
     }
 
   </div>
+  }
+
+  @if (activeTab() === 'billing') {
+  <div class="max-w-3xl mx-auto px-4 py-6">
+
+    @if (billingError(); as msg) {
+      <div class="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+        {{ msg }}
+      </div>
+    }
+
+    @if (billingLoading()) {
+      <div class="space-y-3">
+        <div class="h-24 rounded-xl bg-gray-100 animate-pulse"></div>
+        <div class="h-24 rounded-xl bg-gray-100 animate-pulse"></div>
+      </div>
+    }
+
+    @if (!billingLoading()) {
+      <!-- Confirmation queue - the actual daily work. -->
+      <h2 class="text-sm font-bold text-ink mb-3">Needs confirmation</h2>
+
+      @if (confirmationQueue().length === 0) {
+        <div class="py-8 text-center border border-gray-200 rounded-xl bg-white mb-8">
+          <p class="text-sm text-gray-400">No payments waiting on you.</p>
+        </div>
+      } @else {
+        <div class="space-y-3 mb-8">
+          @for (invoice of confirmationQueue(); track invoice.id) {
+            <div class="bg-white border border-gray-200 rounded-xl p-4">
+              <div class="flex items-start justify-between">
+                <div>
+                  <p class="text-sm font-bold text-ink">${{ invoice.amount }} · Invoice #{{ invoice.invoice_number }}</p>
+                  <p class="text-xs text-gray-400 mt-0.5">
+                    Reference: {{ invoice.payment_reference || '—' }} · submitted {{ formatDate(invoice.submitted_at) }}
+                  </p>
+                </div>
+              </div>
+
+              @if (confirmingVoidId() !== invoice.id) {
+                <div class="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                  <bedge-button
+                    class="flex-1"
+                    [fullWidth]="true"
+                    [loading]="billingBusyId() === invoice.id"
+                    (click)="confirmInvoice(invoice)"
+                  >Confirm paid</bedge-button>
+                  <bedge-button
+                    variant="danger"
+                    class="flex-1"
+                    [fullWidth]="true"
+                    [disabled]="billingBusyId() === invoice.id"
+                    (click)="askToVoid(invoice.id)"
+                  >Void</bedge-button>
+                </div>
+              } @else {
+                <div class="mt-3 pt-3 border-t border-gray-100">
+                  <label class="block text-xs font-semibold text-ink mb-1">Reason (required)</label>
+                  <textarea
+                    bedgeInput
+                    rows="2"
+                    [value]="voidReason()"
+                    (input)="voidReason.set($any($event.target).value)"
+                    placeholder="Why this invoice is being voided"
+                  ></textarea>
+                  <div class="flex gap-2 mt-2">
+                    <bedge-button
+                      variant="danger"
+                      class="flex-1"
+                      [fullWidth]="true"
+                      [disabled]="!voidReason().trim()"
+                      [loading]="billingBusyId() === invoice.id"
+                      (click)="confirmVoid(invoice)"
+                    >Confirm void</bedge-button>
+                    <bedge-button
+                      variant="ghost"
+                      class="flex-1"
+                      [fullWidth]="true"
+                      [disabled]="billingBusyId() === invoice.id"
+                      (click)="cancelVoid()"
+                    >Cancel</bedge-button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Full roster - every artist, plan, status, and what they owe. -->
+      <h2 class="text-sm font-bold text-ink mb-3">All artists</h2>
+
+      <div class="bg-white border border-gray-200 rounded-xl divide-y divide-gray-100">
+        @for (row of overview(); track row.artist_id) {
+          <div class="px-4 py-3 flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <p class="text-sm font-medium text-ink truncate">{{ row.artist_name }}</p>
+              <p class="text-xs text-gray-400 mt-0.5">
+                {{ row.plan_name }} · ${{ row.monthly_price }}/mo
+                @if (row.current_period_end) { · period ends {{ formatDate(row.current_period_end) }} }
+              </p>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+              @if (+row.outstanding_amount > 0) {
+                <span class="text-sm font-bold text-danger-dark">${{ row.outstanding_amount }} due</span>
+              }
+              <bedge-badge [tone]="statusTone(row.status)">{{ statusLabel(row.status) }}</bedge-badge>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+  </div>
+  }
+
+  @if (activeTab() === 'plans') {
+  <div class="max-w-2xl mx-auto px-4 py-6">
+
+    @if (plansError(); as msg) {
+      <div class="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+        {{ msg }}
+      </div>
+    }
+
+    @if (plansLoading()) {
+      <div class="space-y-3">
+        <div class="h-32 rounded-xl bg-gray-100 animate-pulse"></div>
+        <div class="h-32 rounded-xl bg-gray-100 animate-pulse"></div>
+      </div>
+    }
+
+    @if (!plansLoading()) {
+
+      @if (!creatingPlan()) {
+        <div class="flex justify-end mb-4">
+          <bedge-button variant="secondary" (click)="startCreatePlan()">New plan</bedge-button>
+        </div>
+      } @else {
+        <div class="bg-white border border-gray-200 rounded-xl p-5 mb-4">
+          <h2 class="text-sm font-bold text-ink mb-3">New plan</h2>
+
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs font-semibold text-ink mb-1">Code</label>
+              <input
+                bedgeInput
+                [value]="planCode()"
+                (input)="planCode.set($any($event.target).value)"
+                placeholder="e.g. growth"
+              />
+              <p class="text-[11px] text-gray-400 mt-1">Lowercase, no spaces. Cannot be changed after creation.</p>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-ink mb-1">Name</label>
+              <input
+                bedgeInput
+                [value]="planName()"
+                (input)="planName.set($any($event.target).value)"
+                placeholder="e.g. Growth"
+              />
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-ink mb-1">Monthly price ($)</label>
+                <input
+                  bedgeInput
+                  [value]="planMonthlyPrice()"
+                  (input)="planMonthlyPrice.set($any($event.target).value)"
+                  placeholder="15.00"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-ink mb-1">Seat price ($)</label>
+                <input
+                  bedgeInput
+                  [value]="planSeatPrice()"
+                  (input)="planSeatPrice.set($any($event.target).value)"
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-ink mb-1">Included seats</label>
+                <input
+                  bedgeInput
+                  type="number"
+                  min="1"
+                  [value]="planIncludedSeats()"
+                  (input)="planIncludedSeats.set($any($event.target).value)"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-ink mb-1">Sort order</label>
+                <input
+                  bedgeInput
+                  type="number"
+                  [value]="planSortOrder()"
+                  (input)="planSortOrder.set($any($event.target).value)"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-ink mb-1">Description</label>
+              <textarea
+                bedgeInput
+                rows="2"
+                [value]="planDescription()"
+                (input)="planDescription.set($any($event.target).value)"
+              ></textarea>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-ink mb-1">Features (one per line)</label>
+              <textarea
+                bedgeInput
+                rows="4"
+                [value]="planFeaturesText()"
+                (input)="planFeaturesText.set($any($event.target).value)"
+                placeholder="Unlimited bookings&#10;WhatsApp reminders&#10;Priority support"
+              ></textarea>
+            </div>
+
+            <label class="flex items-center gap-2 text-sm text-ink">
+              <input
+                type="checkbox"
+                [checked]="planIsPublic()"
+                (change)="planIsPublic.set($any($event.target).checked)"
+              />
+              Visible on the public pricing page
+            </label>
+          </div>
+
+          <div class="flex gap-2 mt-4 pt-4 border-t border-gray-100">
+            <bedge-button
+              class="flex-1"
+              [fullWidth]="true"
+              [disabled]="!planCode().trim() || !planName().trim() || !planMonthlyPrice().trim()"
+              [loading]="plansBusyCode() === ''"
+              (click)="saveNewPlan()"
+            >Create plan</bedge-button>
+            <bedge-button
+              variant="ghost"
+              class="flex-1"
+              [fullWidth]="true"
+              [disabled]="plansBusyCode() === ''"
+              (click)="cancelPlanForm()"
+            >Cancel</bedge-button>
+          </div>
+        </div>
+      }
+
+      <div class="space-y-3">
+        @for (plan of plans(); track plan.code) {
+          <div class="bg-white border border-gray-200 rounded-xl p-5">
+
+            @if (editingPlanCode() !== plan.code) {
+              <div class="flex items-start justify-between">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h2 class="text-[15px] font-bold text-ink">{{ plan.name }}</h2>
+                    @if (!plan.is_public) {
+                      <bedge-badge tone="muted">Hidden</bedge-badge>
+                    }
+                  </div>
+                  <p class="text-xs text-gray-400 mt-0.5">{{ plan.code }}</p>
+                </div>
+                <div class="text-right shrink-0">
+                  <p class="text-sm font-bold text-ink">${{ plan.monthly_price }}/mo</p>
+                  @if (+plan.seat_price > 0) {
+                    <p class="text-xs text-gray-400 mt-0.5">
+                      +${{ plan.seat_price }}/seat past {{ plan.included_seats }}
+                    </p>
+                  }
+                </div>
+              </div>
+
+              @if (plan.description) {
+                <p class="text-[13px] text-gray-600 mt-3">{{ plan.description }}</p>
+              }
+
+              @if (plan.features.length > 0) {
+                <ul class="mt-3 space-y-1">
+                  @for (feature of plan.features; track feature) {
+                    <li class="text-[13px] text-gray-600 flex items-start gap-1.5">
+                      <lucide-icon name="check" [size]="14" [strokeWidth]="2.5" class="text-success mt-0.5 shrink-0" />
+                      {{ feature }}
+                    </li>
+                  }
+                </ul>
+              }
+
+              <div class="mt-4 pt-4 border-t border-gray-100">
+                <bedge-button variant="ghost" [fullWidth]="true" (click)="startEditPlan(plan)">Edit</bedge-button>
+              </div>
+            } @else {
+              <h2 class="text-sm font-bold text-ink mb-3">Editing {{ plan.name }}</h2>
+
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-xs font-semibold text-ink mb-1">Name</label>
+                  <input
+                    bedgeInput
+                    [value]="planName()"
+                    (input)="planName.set($any($event.target).value)"
+                  />
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-xs font-semibold text-ink mb-1">Monthly price ($)</label>
+                    <input
+                      bedgeInput
+                      [value]="planMonthlyPrice()"
+                      (input)="planMonthlyPrice.set($any($event.target).value)"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-ink mb-1">Seat price ($)</label>
+                    <input
+                      bedgeInput
+                      [value]="planSeatPrice()"
+                      (input)="planSeatPrice.set($any($event.target).value)"
+                    />
+                  </div>
+                </div>
+                <p class="text-[11px] text-gray-400 -mt-1">
+                  Affects new signups only - existing subscribers keep their current price.
+                </p>
+
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-xs font-semibold text-ink mb-1">Included seats</label>
+                    <input
+                      bedgeInput
+                      type="number"
+                      min="1"
+                      [value]="planIncludedSeats()"
+                      (input)="planIncludedSeats.set($any($event.target).value)"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-ink mb-1">Sort order</label>
+                    <input
+                      bedgeInput
+                      type="number"
+                      [value]="planSortOrder()"
+                      (input)="planSortOrder.set($any($event.target).value)"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-semibold text-ink mb-1">Description</label>
+                  <textarea
+                    bedgeInput
+                    rows="2"
+                    [value]="planDescription()"
+                    (input)="planDescription.set($any($event.target).value)"
+                  ></textarea>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-semibold text-ink mb-1">Features (one per line)</label>
+                  <textarea
+                    bedgeInput
+                    rows="4"
+                    [value]="planFeaturesText()"
+                    (input)="planFeaturesText.set($any($event.target).value)"
+                  ></textarea>
+                </div>
+
+                <label class="flex items-center gap-2 text-sm text-ink">
+                  <input
+                    type="checkbox"
+                    [checked]="planIsPublic()"
+                    (change)="planIsPublic.set($any($event.target).checked)"
+                  />
+                  Visible on the public pricing page
+                </label>
+              </div>
+
+              <div class="flex gap-2 mt-4 pt-4 border-t border-gray-100">
+                <bedge-button
+                  class="flex-1"
+                  [fullWidth]="true"
+                  [disabled]="!planName().trim() || !planMonthlyPrice().trim()"
+                  [loading]="plansBusyCode() === plan.code"
+                  (click)="saveEditedPlan(plan)"
+                >Save changes</bedge-button>
+                <bedge-button
+                  variant="ghost"
+                  class="flex-1"
+                  [fullWidth]="true"
+                  [disabled]="plansBusyCode() === plan.code"
+                  (click)="cancelPlanForm()"
+                >Cancel</bedge-button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+  </div>
+  }
+
+  @if (activeTab() === 'artists') {
+  <div class="max-w-2xl mx-auto px-4 py-6">
+
+    @if (artistsError(); as msg) {
+      <div class="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+        {{ msg }}
+      </div>
+    }
+
+    <div class="mb-4">
+      <input
+        bedgeInput
+        [value]="artistSearch()"
+        (input)="artistSearch.set($any($event.target).value)"
+        placeholder="Search by name"
+      />
+    </div>
+
+    @if (billingLoading()) {
+      <div class="space-y-3">
+        <div class="h-28 rounded-xl bg-gray-100 animate-pulse"></div>
+        <div class="h-28 rounded-xl bg-gray-100 animate-pulse"></div>
+      </div>
+    }
+
+    @if (!billingLoading()) {
+      @if (filteredArtists().length === 0) {
+        <div class="py-16 text-center">
+          <p class="text-sm text-gray-400">No artists match "{{ artistSearch() }}".</p>
+        </div>
+      } @else {
+        <div class="space-y-3">
+          @for (row of filteredArtists(); track row.subscription_id) {
+            <div class="bg-white border border-gray-200 rounded-xl p-5">
+
+              @if (editingSubscriptionId() !== row.subscription_id) {
+                <div class="flex items-start justify-between">
+                  <div class="min-w-0">
+                    <h2 class="text-[15px] font-bold text-ink truncate">{{ row.artist_name }}</h2>
+                    <p class="text-xs text-gray-400 mt-0.5">
+                      {{ row.plan_name }} · {{ row.seats }} seat{{ row.seats === 1 ? '' : 's' }} · ${{ row.monthly_price }}/mo
+                    </p>
+                  </div>
+                  <bedge-badge [tone]="statusTone(row.status)">{{ statusLabel(row.status) }}</bedge-badge>
+                </div>
+
+                <div class="mt-3 bg-gray-50 rounded-lg p-3 text-[13px] space-y-1.5">
+                  @if (row.status === 'trialing') {
+                    <div class="flex justify-between">
+                      <span class="text-gray-500">Trial ends</span>
+                      <span class="font-medium text-ink">{{ formatDate(row.trial_ends_at) }}</span>
+                    </div>
+                  }
+                  <div class="flex justify-between">
+                    <span class="text-gray-500">Period ends</span>
+                    <span class="font-medium text-ink">{{ formatDate(row.current_period_end) }}</span>
+                  </div>
+                  @if (+row.outstanding_amount > 0) {
+                    <div class="flex justify-between">
+                      <span class="text-gray-500">Outstanding</span>
+                      <span class="font-bold text-danger-dark">${{ row.outstanding_amount }}</span>
+                    </div>
+                  }
+                </div>
+
+                @if (confirmingCancelSubId() !== row.subscription_id) {
+                  <div class="flex gap-2 mt-4 pt-4 border-t border-gray-100">
+                    <bedge-button
+                      variant="ghost"
+                      class="flex-1"
+                      [fullWidth]="true"
+                      [disabled]="artistBusyId() === row.subscription_id"
+                      (click)="startEditArtist(row)"
+                    >Edit</bedge-button>
+                    @if (row.status !== 'cancelled') {
+                      <bedge-button
+                        variant="danger"
+                        class="flex-1"
+                        [fullWidth]="true"
+                        [disabled]="artistBusyId() === row.subscription_id"
+                        (click)="askToCancelSub(row.subscription_id)"
+                      >Cancel</bedge-button>
+                    } @else {
+                      <bedge-button
+                        class="flex-1"
+                        [fullWidth]="true"
+                        [loading]="artistBusyId() === row.subscription_id"
+                        (click)="reinstateSub(row)"
+                      >Reinstate</bedge-button>
+                    }
+                  </div>
+                } @else {
+                  <div class="mt-4 pt-4 border-t border-gray-100">
+                    <p class="text-[13px] text-gray-600 mb-2">
+                      Cancel {{ row.artist_name }}'s subscription? This marks it cancelled immediately -
+                      note that enforcement (blocking dashboard access) isn't live yet, so this only
+                      changes billing status today.
+                    </p>
+                    <div class="flex gap-2">
+                      <bedge-button
+                        variant="danger"
+                        class="flex-1"
+                        [fullWidth]="true"
+                        [loading]="artistBusyId() === row.subscription_id"
+                        (click)="confirmCancelSub(row)"
+                      >Confirm cancel</bedge-button>
+                      <bedge-button
+                        variant="ghost"
+                        class="flex-1"
+                        [fullWidth]="true"
+                        [disabled]="artistBusyId() === row.subscription_id"
+                        (click)="cancelCancelConfirm()"
+                      >Back</bedge-button>
+                    </div>
+                  </div>
+                }
+              } @else {
+                <h2 class="text-sm font-bold text-ink mb-3">Editing {{ row.artist_name }}</h2>
+
+                <div class="space-y-3">
+                  <div>
+                    <label class="block text-xs font-semibold text-ink mb-1">Plan</label>
+                    <select
+                      bedgeInput
+                      [value]="artistPlanCode()"
+                      (change)="artistPlanCode.set($any($event.target).value)"
+                    >
+                      @for (plan of plans(); track plan.code) {
+                        <option [value]="plan.code">{{ plan.name }}</option>
+                      }
+                    </select>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-semibold text-ink mb-1">Seats</label>
+                    <input
+                      bedgeInput
+                      type="number"
+                      min="1"
+                      [value]="artistSeats()"
+                      (input)="artistSeats.set($any($event.target).value)"
+                    />
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-xs font-semibold text-ink mb-1">Trial ends</label>
+                      <input
+                        bedgeInput
+                        type="date"
+                        [value]="artistTrialEndsAt()"
+                        (input)="artistTrialEndsAt.set($any($event.target).value)"
+                      />
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-ink mb-1">Period ends</label>
+                      <input
+                        bedgeInput
+                        type="date"
+                        [value]="artistPeriodEndsAt()"
+                        (input)="artistPeriodEndsAt.set($any($event.target).value)"
+                      />
+                    </div>
+                  </div>
+                  <p class="text-[11px] text-gray-400 -mt-1">
+                    Leave a date blank to leave it unchanged. Extending "Period ends" past today
+                    is how to bring a suspended or past-due artist back to active.
+                  </p>
+                </div>
+
+                <div class="flex gap-2 mt-4 pt-4 border-t border-gray-100">
+                  <bedge-button
+                    class="flex-1"
+                    [fullWidth]="true"
+                    [disabled]="!artistPlanCode() || !artistSeats()"
+                    [loading]="artistBusyId() === row.subscription_id"
+                    (click)="saveArtistEdit(row)"
+                  >Save changes</bedge-button>
+                  <bedge-button
+                    variant="ghost"
+                    class="flex-1"
+                    [fullWidth]="true"
+                    [disabled]="artistBusyId() === row.subscription_id"
+                    (click)="cancelArtistEdit()"
+                  >Cancel</bedge-button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    }
+
+  </div>
+  }
 </div>
