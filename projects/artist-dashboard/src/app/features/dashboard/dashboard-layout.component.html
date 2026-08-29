@@ -92,6 +92,38 @@
           </p>
         </div>
       }
+
+      @if (subscriptionStatus() === 'grace') {
+        <div class="mb-5 rounded-xl bg-warning-light border border-warning px-4 py-3 flex items-start gap-3">
+          <lucide-icon name="alert-circle" [size]="18" [strokeWidth]="2" class="text-warning-dark shrink-0 mt-0.5" />
+          <p class="text-[13px] text-warning-dark leading-relaxed">
+            Your payment is overdue. Send it via OMT or Whish soon to avoid your profile being hidden from new customers.
+            <a routerLink="/dashboard/billing" class="font-semibold underline">View billing.</a>
+          </p>
+        </div>
+      }
+
+      @if (subscriptionStatus() === 'past_due') {
+        <div class="mb-5 rounded-xl bg-warning-light border border-warning px-4 py-3 flex items-start gap-3">
+          <lucide-icon name="alert-circle" [size]="18" [strokeWidth]="2" class="text-warning-dark shrink-0 mt-0.5" />
+          <p class="text-[13px] text-warning-dark leading-relaxed">
+            Your account is past due. Your profile is no longer visible to new customers on Discover.
+            <a routerLink="/dashboard/billing" class="font-semibold underline">Pay now</a> to restore visibility.
+          </p>
+        </div>
+      }
+
+      @if (subscriptionStatus() === 'suspended') {
+        <div class="mb-5 rounded-xl bg-danger-light border border-danger px-4 py-3 flex items-start gap-3">
+          <lucide-icon name="alert-circle" [size]="18" [strokeWidth]="2" class="text-danger-dark shrink-0 mt-0.5" />
+          <p class="text-[13px] text-danger-dark leading-relaxed">
+            Your account is suspended for non-payment. Existing bookings are unaffected, but your
+            profile is hidden and changes to your services or products are blocked until you pay.
+            <a routerLink="/dashboard/billing" class="font-semibold underline">Submit your payment.</a>
+          </p>
+        </div>
+      }
+
       <router-outlet />
     </main>
   </div>

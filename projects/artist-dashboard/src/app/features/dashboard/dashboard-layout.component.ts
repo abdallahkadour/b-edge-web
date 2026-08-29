@@ -10,7 +10,8 @@ import { tap } from 'rxjs';
 import { LucideAngularModule } from 'lucide-angular';
 import { A11yModule } from '@angular/cdk/a11y';
 
-import { AuthStore, OnboardingDataService } from '@bedge/shared';
+import { AuthStore, BillingDataService, OnboardingDataService } from '@bedge/shared';
+import type { SubscriptionStatus } from '@bedge/shared';
 
 /** A single navigation item in the dashboard sidebar / bottom bar. */
 interface NavItem {
@@ -43,9 +44,16 @@ export class DashboardLayoutComponent {
   private readonly auth: AuthStore = inject(AuthStore);
   private readonly router = inject(Router);
   private readonly onboardingSvc = inject(OnboardingDataService);
+  private readonly billingSvc = inject(BillingDataService);
 
   /** Authenticated user — null when unauthenticated (guard prevents this). */
   readonly user = this.auth.user;
+
+  /** Subscription status for the billing enforcement banners, or null while
+   *  loading or if the fetch fails. Only ever set for artist accounts — admins
+   *  have no subscription. The banner is informational; a missing status just
+   *  means no banner is shown (fail open, same as the backend middleware). */
+  readonly subscriptionStatus = signal<SubscriptionStatus | null>(null);
 
   /** True while status is confirmed 'pending' (not just "not yet checked" -
    *  defaults false so the normal sidebar renders during the brief window
@@ -87,6 +95,14 @@ export class DashboardLayoutComponent {
           }
         },
         error: () => this.router.navigateByUrl('/onboarding'),
+      });
+
+      // Fire-and-forget — the banner appears once the fetch resolves.
+      // Errors are swallowed: the banner is informational, and a missing
+      // status should not prevent the dashboard from rendering.
+      this.billingSvc.getMySubscription().subscribe({
+        next: (sub) => this.subscriptionStatus.set(sub.status ?? null),
+        error: () => {},
       });
     }
   }
