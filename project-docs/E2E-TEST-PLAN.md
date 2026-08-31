@@ -593,16 +593,16 @@ Given/When/Then, numbered, each ending in a concrete pass/fail check against the
 > FROM subscriptions sub JOIN artists a ON a.id = sub.artist_id
 > JOIN users u ON u.id = a.user_id WHERE u.email = 'mkup1@test.bedge.com';
 >
-> -- Put mkup1 into grace (current period ended 3 days ago):
+> -- Put mkup1 into grace (windows are 21/45 as of Aug 31 2026 - 3 days is well inside grace):
 > UPDATE subscriptions SET current_period_end = NOW() - INTERVAL '3 days',
 >   plan_code = 'starter', monthly_price = 7.00 WHERE id = '<sub_id>';
 >
-> -- Put mkup1 into past_due (12 days overdue):
-> UPDATE subscriptions SET current_period_end = NOW() - INTERVAL '12 days'
+> -- Put mkup1 into past_due (must now be >21 days; 12 days is GRACE since Aug 31 2026):
+> UPDATE subscriptions SET current_period_end = NOW() - INTERVAL '30 days'
 >   WHERE id = '<sub_id>';
 >
-> -- Put mkup1 into suspended (25 days overdue):
-> UPDATE subscriptions SET current_period_end = NOW() - INTERVAL '25 days'
+> -- Put mkup1 into suspended (must now be >45 days; 25 days is PAST_DUE since Aug 31 2026):
+> UPDATE subscriptions SET current_period_end = NOW() - INTERVAL '60 days'
 >   WHERE id = '<sub_id>';
 >
 > -- Restore mkup1 to comped/active:
@@ -653,7 +653,7 @@ Given/When/Then, numbered, each ending in a concrete pass/fail check against the
 - Log in as mkup1 → billing screen → voided invoice appears in history with "void" badge
 
 **8.6 — Discovery enforcement: past_due artist hidden from Discover**
-- Set mkup1 to past_due (12 days overdue, see setup)
+- Set mkup1 to past_due (**30** days overdue - see setup; 12 days is grace since the Aug 31 2026 window change)
 - customer-pwa Discover → search for mkup1 by name or city → must not appear in results
 - Navigate directly to `/book/mkup1` (if mkup1 has a handle) → must return a not-found state, not the artist profile
 - Log in as mkup1 → dashboard still fully accessible (only read from Discover is blocked, not dashboard access) → amber "past due" banner visible on every page, including the layout
@@ -691,6 +691,165 @@ Given/When/Then, numbered, each ending in a concrete pass/fail check against the
 - Log in as mkup1 (after running 8.3-8.5 above so there are real invoices)
 - `/dashboard/billing` → invoice history section → confirm paid and voided invoices both appear with the correct badge colours (paid = green, void = muted grey)
 - Confirm the period dates (period_start, period_end) and amounts match the DB
+
+---
+
+### Suite 9 — Open/Closed status and store map pins
+
+**Added Aug 31, 2026.** Covers `internal/pkg/openinghours`, `discovery.StoreCard.open_status`,
+and migration 027's store coordinates.
+
+**Timezone is the whole point of this suite.** Business hours are stored as wall-clock
+`TIME` with no zone and resolved against the store's IANA zone *per date*. Testing only
+from a Beirut-local machine at midday will pass while the interesting cases go unchecked.
+
+**9.1 — Badge reflects real trading state**
+- As an artist, set a store's hours to a window that is currently OPEN (e.g. 09:00–23:00)
+- Open the customer artist profile → the store shows an **Open now** badge (green) and a
+  "Closes HH:MM" line
+- Narrow the hours to a window that has already ended today → reload → badge becomes
+  **Closed** (muted), and the "Opens…" line is **absent** (the API deliberately does not
+  point at tomorrow)
+- Set hours starting later today → badge Closed, but now an "Opens HH:MM" line appears
+
+**9.2 — Times render in the STORE's zone, not the device's**
+- Change your machine's timezone (or run the browser with `TZ=America/New_York`)
+- Reload the profile → the "Closes"/"Opens" time must be **unchanged**, still the salon's
+  local time
+- This is the diaspora case: a customer browsing from abroad must not see Beirut hours
+  shifted into their own zone
+
+**9.3 — Holiday exception vs. non-trading weekday**
+- Add a dated exception closing the store today → badge Closed
+- Separately, mark today's weekday as not trading → badge Closed
+- Both look the same to the customer, but `open_status.reason` differs (`holiday` vs
+  `closed_today`) — check the network response, not just the pixels
+
+**9.4 — Unknown state renders NO badge (the important one)**
+- Find or create a store with **no** `business_hours` rows at all
+- The store card must render with **no badge whatsoever** — not "Closed"
+- Rationale: telling a customer a salon is shut when nobody filled in the hours costs the
+  artist real bookings. A "Closed" pill here is a bug, not a cosmetic issue.
+
+**9.5 — A failed hours read must not break the profile**
+- Simulate by stopping Postgres mid-request, or temporarily break the hours query
+- The profile must still render, with every store reporting `unknown`
+- A customer losing access to a salon's page because opening hours would not load is a far
+  worse outcome than a missing badge
+
+**9.6 — Map pin, and the half-pin guard**
+- Artist dashboard → store edit → drop a pin → save → reload → pin persists
+- Customer profile → map renders with a "Get directions" link → tapping opens the device's
+  native maps app
+- A store with **no** pin must render **no map** (not a default location)
+- Via API: `PATCH /artists/stores/:id` with only `latitude` → **400 INCOMPLETE_LOCATION**
+- With `latitude`, `longitude` AND `clear_location: true` → **400 CONFLICTING_LOCATION**
+- With `clear_location: true` alone → pin removed (this is the only way to remove one)
+
+**9.7 — DST boundary**
+- Set a store's hours to 09:00–17:00
+- Query availability for a date in January and one in July
+- The same "09:00" must resolve to **07:00Z in winter** and **06:00Z in summer**
+- If both return the same UTC instant, the zone is not being applied per-date
+
+---
+
+### Suite 10 — Portfolio tagged to services
+
+**Added Aug 31, 2026.** Covers migration 028, `PUT /media/:id/services`, and the customer
+gallery filter.
+
+**10.1 — Tag a photo (artist)**
+- Dashboard → Profile → Portfolio → hover a photo → the `#` button (only present when the
+  salon has services)
+- Select two services → Save → the tile caption lists both service names
+- Reload → tags persist
+
+**10.2 — Clearing tags**
+- Reopen the editor, deselect everything, Save → caption disappears
+- An empty list is a real replace, not a no-op — confirm via `GET /media/my` that
+  `service_ids` is `[]`
+
+**10.3 — Cross-salon rejection, and what the error must NOT say**
+- As mkup1, call `PUT /media/:id/services` with a service ID belonging to mkup2's salon
+- → **400 INVALID_SERVICE_ID**
+- **The message must not name which service failed** — naming it would confirm that
+  another salon's service ID exists. Read the actual response body.
+- Confirm nothing was written: the photo's existing tags are unchanged
+
+**10.4 — Ownership is a 404, not a 403**
+- Call `PUT /media/:id/services` for a photo belonging to another artist
+- → **404 MEDIA_NOT_FOUND**, same as a genuinely missing photo, so IDs cannot be enumerated
+- Try the same against a **product** photo → also 404 (a product photo shows merchandise,
+  not a service)
+
+**10.5 — Customer filter chips**
+- Open the customer artist profile for an artist with tagged photos
+- Chips appear above the gallery: "All" plus **only** services that actually have a tagged
+  photo — a chip must never lead to an empty gallery
+- Tap a chip → gallery narrows; tap the same chip again → filter clears
+
+**10.6 — "Browse the look, book the look"**
+- With a filter active, tap a photo → the funnel opens on **that** service
+- With no filter, tap a photo tagged to exactly one service → funnel opens on it
+- With no filter, tap a photo tagged to **several** services → **nothing happens**, by
+  design (guessing would send someone into a booking for the wrong treatment)
+- Untagged photos are not tappable at all
+
+**10.7 — Reorder**
+- Hover a photo → left/right arrows appear (hidden at the ends, not disabled)
+- Move a photo → order persists after reload
+- Moving a photo into position 0 **changes the cover** — this is intended, since cover *is*
+  `display_order` 0
+
+---
+
+### Suite 11 — Share link previews
+
+**Added Aug 31, 2026.** Covers `internal/share` and `GET /a/:handle`. See
+`b-edge-api/project-docs/B-Edge-Share-Previews-Decision-v1.md`.
+
+**This suite cannot be verified by looking at a browser.** The whole feature exists for
+clients that do not run JavaScript. Use `curl` and real messaging apps.
+
+**11.1 — Tags are present and correct**
+- `curl -s http://localhost:3000/a/rania | grep -E 'og:|twitter:'`
+- Expect `og:title`, `og:description`, `og:image`, `og:url`, `og:site_name`,
+  `twitter:card=summary_large_image`
+- `og:url` must point at the **customer app**, not the API
+
+**11.2 — Both link forms work**
+- `/a/rania` (handle) and `/a/<uuid>` must both resolve
+- Links generated before an artist set a handle must keep working
+
+**11.3 — The image is the resized card**
+- `og:image` must contain `c_fill,g_auto,w_1200,h_630`
+- An artist with **no** portfolio photo still gets an `og:image` (the branded fallback) —
+  an empty `og:image` renders worse than none
+
+**11.4 — Hidden artists are not previewable (security)**
+- Set an artist's `current_period_end` to 60 days ago (→ suspended)
+- `curl -o /dev/null -w '%{http_code}' http://localhost:3000/a/<handle>` → **302**, not 200
+- A suspended artist must not get a rich preview for a profile that is itself hidden
+- Restore afterwards
+
+**11.5 — Failure degrades to a redirect, never a 500**
+- Request an unknown slug → **302** to the app home
+- Stop Postgres and request a valid slug → still **302**, not a 500
+- A shared link is the first thing a prospective customer touches
+
+**11.6 — Escaping**
+- Set an artist bio to `</title><script>alert(1)</script>`
+- `curl` the preview → the script must appear **escaped** (`&lt;script&gt;`), not live
+
+**11.7 — Real-world preview (the actual acceptance test)**
+- Paste the link into a WhatsApp chat with yourself, and an Instagram DM
+- The card must render with title, description and image
+- **This is the only step that proves the feature works.** Everything above proves the
+  server is doing its part; only a real crawler proves the card appears.
+- ⚠️ In production this requires the reverse proxy to route `/a/*` to the **API**, not the
+  static bundle (T10.4, not yet done). On localhost it works without a proxy, so a passing
+  local test says nothing about production.
 
 ---
 
@@ -735,8 +894,8 @@ Go screen by screen (use the route lists below) and click **every** button, link
 
 These require DB date manipulation (see Suite 8 setup). Run them after Suite 8's journeys pass.
 
-- **Grace → past_due boundary:** Set `current_period_end` to exactly 7 days ago → artist should be `past_due` (hidden from Discover), not `grace`. Set to 6 days ago → `grace` (still visible). Verify the dashboard banner copy changes correctly between the two.
-- **Past_due → suspended boundary:** Set to exactly 21 days ago → `past_due` (writes allowed). Set to 22 days ago → `suspended` (writes blocked). The middleware checks `now >= period_end + 21 days`, so day 22 is the first blocked day.
+- **Grace → past_due boundary:** Windows changed from 7/21 to **21/45** on Aug 31, 2026 (decision D2 - see `internal/pkg/subscription/status.go`'s `GraceDays` comment for why). Set `current_period_end` to exactly **21** days ago → artist should be `past_due` (hidden from Discover), not `grace`. Set to 20 days ago → `grace` (still visible). Verify the dashboard banner copy changes correctly between the two.
+- **Past_due → suspended boundary:** Set to exactly **45** days ago → `suspended` (writes blocked); the comparison is exclusive `Before`, so the boundary instant belongs to the LATER state. Set to 44 days ago → `past_due` (writes still allowed). Note the middleware no longer names statuses itself - it reads `subscription.Enforce(status).CanModifyAccount`, so this and the booking block are now driven by one policy function.
 - **Comped always passes:** Set a comped artist's `current_period_end` to 90 days ago — status must still be `active`, no banner, Discover still shows them, writes still work. Comped is handled before any date check in `DeriveStatus`.
 - **Cancelled subscription:** Set `cancelled_at` to any past timestamp → artist should be `cancelled`. Verify whether Discover hides them (per the spec, cancelled is not explicitly in the hide-list — check the actual behavior and decide if it's correct).
 - **Submit while suspended:** Submit a payment reference from `/dashboard/billing` as a suspended artist → must succeed (billing routes are excluded from the write-block). This is the intended escape hatch — if it's blocked, that's a bug.
@@ -773,12 +932,36 @@ All five originally-confirmed gaps are now closed (2026-08-21) — see the updat
 
 **New, still open, out of scope for this pass:** `GetReviewsByArtist` has no ownership check — any authenticated artist can view another artist's full review list (including hidden reviews) by guessing/enumerating an artist ID. Found while fixing G4's visibility-filter bug; not fixed, since it's a backend authorization hardening task, not a missing-UI gap.
 
-**Billing domain — known gaps (2026-08-29):**
+**Billing domain — known gaps (2026-08-29, revised 2026-08-31):**
+- ~~**`internal/billing` has zero tests.**~~ **Closed 2026-08-31.** 59 service-layer
+  tests added; `DeriveStatus` and `ensureInvoicesUpTo` are at 100%. Repository tests
+  remain deliberately out of scope — this codebase has no database test infrastructure
+  (`TEST_DB_NAME` is vestigial, read only by `cmd/migrate`), so the SQL guards themselves
+  are untested and only the service's mapping of their errors is covered.
+- **Two billing behaviours are known-wrong and pinned by characterization tests rather
+  than fixed**, because both are product decisions:
+  1. `ensureInvoicesUpTo`'s doc comment and the monetization spec §12 both claim an unpaid
+     subscription never accumulates more than one outstanding invoice. **It does** — four
+     unpaid months produce five invoices.
+  2. Go's `AddDate` normalizes rather than clamps, so a period starting Jan 31 rolls to
+     **Mar 3**, not Feb 28, and the billing day then shifts forward permanently. Anyone on
+     the 29th–31st is affected.
+- **Enforcement windows changed 7/21 → 21/45 on 2026-08-31** (decision D2). Any test
+  fixture using a hardcoded day count needs re-checking; the setup SQL above is updated.
 - **No automated dunning notifications.** When an invoice becomes overdue, no WhatsApp message is sent to the artist. The WhatsApp worker and billing templates are planned (Phase 5) but not built; Twilio also isn't live yet. Until both land, the only signal an artist receives is the in-dashboard banner — which requires them to actively log in.
 - **No pre-due reminder.** The current flow generates invoices lazily and the artist's first signal is an overdue banner. A "your invoice will be due soon" message before the period ends is not implemented.
 - **Plan selection in onboarding not built.** New artists are assigned `comped` by admin via the Artists tab or manually; there is no plan-picker step in the self-service onboarding flow. This is a Phase 3 gap.
 - **`apply-to-existing` not built.** `POST /admin/plans/:code/apply-to-existing` (audited bulk re-price of existing subscribers) was deliberately deferred — no paying subscribers exist to re-price yet. Not a UI gap to report; a planned Phase 3 feature.
-- **Cancelled subscription enforcement ambiguity.** `DeriveStatus` returns `Cancelled` for `cancelled_at IS NOT NULL`, but `subscriptionVisibleCond` in discovery treats `cancelled_at IS NOT NULL` as *visible* (the condition passes it through, matching the spec's enforcement table which only names `past_due`/`suspended` as hidden). This may or may not be the intended behavior — test case 3.4 above covers this explicitly.
+- **Cancelled subscription enforcement ambiguity — STILL OPEN, and now has a second
+  reader.** `DeriveStatus` returns `Cancelled` for `cancelled_at IS NOT NULL`, but
+  `subscriptionVisibleCond` (duplicated in discovery, artist and share) treats
+  `cancelled_at IS NOT NULL` as *visible*, so a cancelled artist still appears on Discover.
+  As of 2026-08-31 the new `subscription.Enforce(Cancelled)` says the **opposite**
+  (`VisibleInDiscovery: false`). That field is currently read by nothing, so there is no
+  live inconsistency — but wiring it without resolving this would silently change behaviour
+  for cancelled artists. The question is a product one: does cancelling remove your listing
+  immediately, or at the end of the period you already paid for? (Fresha does the latter.)
+  Test case 3.4 covers the current behaviour.
 
 ---
 
