@@ -90,6 +90,9 @@ export class PortfolioComponent implements OnInit {
   /** ID of the photo currently being set as cover, or null. */
   readonly settingCoverId = signal<string | null>(null);
 
+  /** ID of the photo currently being moved, or null. */
+  readonly movingId = signal<string | null>(null);
+
   /** True when the portfolio has room for more photos. */
   get canAddMore(): boolean {
     return this.photos().length < this.maxAllowed();
@@ -200,6 +203,48 @@ export class PortfolioComponent implements OnInit {
   /** Returns true if this photo is currently the cover (first). */
   isCover(photo: MediaItem): boolean {
     return photo.display_order === 0;
+  }
+
+  /**
+   * Swaps this photo with its neighbour and persists the full new order -
+   * the reorder endpoint always takes the complete list, never a delta.
+   *
+   * Mirrors product-photo-gallery.component.ts's move(), which already
+   * solved this for product galleries. Arrow swaps rather than drag: the
+   * grid is small, and drag-and-drop on a touch target this size is more
+   * likely to fire an accidental reorder than a deliberate one.
+   *
+   * Note this changes which photo is the cover when index 0 is involved,
+   * because cover IS display_order 0 - the two controls act on the same
+   * underlying value by design.
+   */
+  move(photo: MediaItem, direction: -1 | 1): void {
+    const current = this.photos();
+    const index = current.findIndex((p) => p.id === photo.id);
+    const swapWith = index + direction;
+    if (index === -1 || swapWith < 0 || swapWith >= current.length) return;
+
+    const reordered = [...current];
+    [reordered[index], reordered[swapWith]] = [reordered[swapWith], reordered[index]];
+
+    this.movingId.set(photo.id);
+    this.mediaSvc.reorder({ ids: reordered.map((p) => p.id) }).subscribe({
+      next: () => {
+        // Re-derive display_order locally so isCover() and the arrow
+        // bounds stay correct without a refetch that would flash the grid.
+        this.photos.set(reordered.map((p, i) => ({ ...p, display_order: i })));
+        this.movingId.set(null);
+      },
+      error: () => {
+        this.movingId.set(null);
+        this.error.set('Failed to reorder photos. Please try again.');
+      },
+    });
+  }
+
+  /** Index of a photo in the current grid, for arrow bounds. */
+  indexOf(photo: MediaItem): number {
+    return this.photos().findIndex((p) => p.id === photo.id);
   }
 
   // ── Private ───────────────────────────────────────────────────────────────

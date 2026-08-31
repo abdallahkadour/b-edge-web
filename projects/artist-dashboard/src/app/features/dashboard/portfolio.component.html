@@ -95,6 +95,35 @@
               </span>
             }
 
+            <!-- Reorder arrows. Separate from the hover actions row so they
+                 sit at the edges where the direction they move is obvious.
+                 Hidden at the ends, rather than disabled, so there is no
+                 dead control to tap. -->
+            <div class="absolute inset-y-0 left-0 flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+              @if (indexOf(photo) > 0) {
+                <button
+                  type="button"
+                  (click)="move(photo, -1)"
+                  [disabled]="movingId() === photo.id"
+                  class="w-6 h-10 bg-black/50 text-white text-xs rounded-r hover:bg-black/70 disabled:opacity-40"
+                  aria-label="Move photo earlier"
+                  title="Move earlier"
+                >‹</button>
+              }
+            </div>
+            <div class="absolute inset-y-0 right-0 flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+              @if (indexOf(photo) < photos().length - 1) {
+                <button
+                  type="button"
+                  (click)="move(photo, 1)"
+                  [disabled]="movingId() === photo.id"
+                  class="w-6 h-10 bg-black/50 text-white text-xs rounded-l hover:bg-black/70 disabled:opacity-40"
+                  aria-label="Move photo later"
+                  title="Move later"
+                >›</button>
+              }
+            </div>
+
             <!-- Hover actions -->
             <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors
                         flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
