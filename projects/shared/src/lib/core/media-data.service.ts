@@ -8,6 +8,7 @@ import type {
   ReorderRequest,
   ProductGalleryResponse,
   MediaItem,
+  SetMediaServicesRequest,
 } from '../models';
 
 /**
@@ -46,6 +47,17 @@ export class MediaDataService {
   /** PATCH /media/reorder - reorder all photos. */
   reorder(req: ReorderRequest): Observable<void> {
     return this.api.command('/media/reorder', 'PATCH', req);
+  }
+
+  /**
+   * PUT /media/:id/services - set which services a photo depicts.
+   *
+   * Replaces the whole tag set; send an empty list to clear it. Every
+   * service must belong to the caller's salon, or the API rejects the
+   * request without saying which one failed.
+   */
+  setMediaServices(mediaId: string, req: SetMediaServicesRequest): Observable<MediaItem> {
+    return this.api.put<MediaItem>(`/media/${mediaId}/services`, req);
   }
 
   // ── Product gallery ───────────────────────────────────────────────────────

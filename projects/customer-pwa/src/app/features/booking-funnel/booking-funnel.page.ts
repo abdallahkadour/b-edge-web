@@ -3,8 +3,21 @@ import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { LucideAngularModule } from 'lucide-angular';
 
-import { ArtistDataService, BookingDataService, MediaDataService, extractApiErrorMessage } from '@bedge/shared';
-import type { Artist, Service, Store, MediaItem, Booking } from '@bedge/shared';
+import {
+  ArtistDataService,
+  BookingDataService,
+  DiscoveryDataService,
+  MediaDataService,
+  extractApiErrorMessage,
+} from '@bedge/shared';
+import type {
+  Artist,
+  Service,
+  Store,
+  MediaItem,
+  Booking,
+  DiscoveryStoreCard,
+} from '@bedge/shared';
 
 import { ArtistProfileScreenComponent } from './screens/artist-profile-screen.component';
 import { SelectServiceScreenComponent } from './screens/select-service-screen.component';
@@ -55,6 +68,7 @@ export class BookingFunnelPage implements OnInit {
   private readonly artistApi = inject(ArtistDataService);
   private readonly mediaApi = inject(MediaDataService);
   private readonly bookingApi = inject(BookingDataService);
+  private readonly discoveryApi = inject(DiscoveryDataService);
   private readonly router = inject(Router);
 
   readonly artistId = input.required<string>();
@@ -74,6 +88,8 @@ export class BookingFunnelPage implements OnInit {
   protected readonly artist = signal<Artist | null>(null);
   protected readonly services = signal<Service[]>([]);
   protected readonly stores = signal<Store[]>([]);
+  /** Display-only cards carrying open/closed status and the map pin. */
+  protected readonly storeCards = signal<DiscoveryStoreCard[]>([]);
   protected readonly portfolio = signal<MediaItem[]>([]);
   protected readonly loading = signal(true);
   // 'not-found' (a real 404 - the artist ID/handle doesn't exist) vs
@@ -148,6 +164,22 @@ export class BookingFunnelPage implements OnInit {
 
         this.artistApi.getStoresByArtist(artist.id).subscribe({
           next: (stores) => this.stores.set(stores),
+        });
+
+        // Display-only store cards, separate from `stores` above.
+        //
+        // `stores` drives the booking machine and comes from the artist
+        // domain, which carries the operational fields (buffers, notice
+        // hours) the funnel needs. These come from the public discovery
+        // profile, which is the only surface that computes open/closed
+        // status and exposes the map pin. Two calls rather than one
+        // because the two views of a store genuinely differ in shape and
+        // in audience — see the doc comment on discovery.StoreCard.
+        //
+        // Failure is silent on purpose: no badge and no map is a fine
+        // degradation, and it must never block a booking.
+        this.discoveryApi.getArtistProfile(artist.id).subscribe({
+          next: (profile) => this.storeCards.set(profile.stores),
         });
 
         this.mediaApi.getPortfolio(artist.id).subscribe({

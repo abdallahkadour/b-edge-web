@@ -9,13 +9,14 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
 
 import {
+  ArtistDataService,
   MediaDataService,
   CloudinaryUploadService,
   extractApiErrorMessage,
   validateImageFile,
   resizeImageToFit,
 } from '@bedge/shared';
-import type { MediaItem } from '@bedge/shared';
+import type { MediaItem, Service } from '@bedge/shared';
 
 /**
  * Portfolio photo manager — embedded in the Profile screen.
@@ -39,6 +40,7 @@ import type { MediaItem } from '@bedge/shared';
 export class PortfolioComponent implements OnInit {
   private readonly mediaSvc: MediaDataService = inject(MediaDataService);
   private readonly cloudinary: CloudinaryUploadService = inject(CloudinaryUploadService);
+  private readonly artistSvc: ArtistDataService = inject(ArtistDataService);
 
   // ── State ─────────────────────────────────────────────────────────────────
 
@@ -58,6 +60,21 @@ export class PortfolioComponent implements OnInit {
 
   /** ID of the photo currently being deleted, or null. */
   readonly deletingId = signal<string | null>(null);
+
+  // ── Service tagging ───────────────────────────────────────────────────────
+  //
+  // Tagging a photo to the services it shows turns the customer-side
+  // gallery into a booking entry point ("browse the look, book the look").
+  // The menu is loaded once here rather than per photo.
+
+  /** The salon's service menu, for the tag picker. */
+  readonly services = signal<Service[]>([]);
+  /** ID of the photo whose tag editor is open, or null. */
+  readonly taggingId = signal<string | null>(null);
+  /** Working set of selected service IDs while the editor is open. */
+  readonly tagDraft = signal<Set<string>>(new Set());
+  readonly savingTags = signal(false);
+  readonly tagError = signal<string | null>(null);
 
   /**
    * Which photo, if any, is currently asking "are you sure?".
@@ -82,6 +99,7 @@ export class PortfolioComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
+    this.loadServices();
   }
 
   // ── Actions ───────────────────────────────────────────────────────────────
@@ -233,6 +251,88 @@ export class PortfolioComponent implements OnInit {
       error: () => {
         this.loading.set(false);
         this.error.set('Failed to load portfolio. Please try again.');
+      },
+    });
+  }
+
+  // ── Service tagging ───────────────────────────────────────────────────────
+
+  /**
+   * Loads the salon's service menu for the tag picker.
+   *
+   * Failure is silent and non-blocking: without the menu the tag button is
+   * simply hidden, and the rest of the portfolio manager keeps working.
+   * Losing the ability to upload a photo because a service list failed to
+   * load would be a far worse trade.
+   */
+  private loadServices(): void {
+    this.artistSvc.getServicesBySalon().subscribe({
+      next: (services) => this.services.set(services.filter((s) => s.is_active)),
+    });
+  }
+
+  /** Names of the services a photo is tagged to, for the tile caption. */
+  tagNames(photo: MediaItem): string[] {
+    const byId = new Map(this.services().map((s) => [s.id, s.name]));
+    return (photo.service_ids ?? [])
+      .map((id) => byId.get(id))
+      .filter((n): n is string => !!n);
+  }
+
+  /** Resolves the id held by the open editor back to its photo. */
+  photoById(id: string): MediaItem | undefined {
+    return this.photos().find((p) => p.id === id);
+  }
+
+  openTagEditor(photo: MediaItem): void {
+    this.tagError.set(null);
+    this.tagDraft.set(new Set(photo.service_ids ?? []));
+    this.taggingId.set(photo.id);
+  }
+
+  closeTagEditor(): void {
+    this.taggingId.set(null);
+    this.tagDraft.set(new Set());
+    this.tagError.set(null);
+  }
+
+  isTagSelected(serviceId: string): boolean {
+    return this.tagDraft().has(serviceId);
+  }
+
+  toggleTag(serviceId: string): void {
+    // Replace the Set rather than mutating it - a signal holding the same
+    // object reference does not notify, so an in-place add/delete would
+    // leave the checkboxes visually stale.
+    const next = new Set(this.tagDraft());
+    if (next.has(serviceId)) {
+      next.delete(serviceId);
+    } else {
+      next.add(serviceId);
+    }
+    this.tagDraft.set(next);
+  }
+
+  saveTags(photo: MediaItem): void {
+    this.savingTags.set(true);
+    this.tagError.set(null);
+
+    const ids = [...this.tagDraft()];
+
+    this.mediaSvc.setMediaServices(photo.id, { service_ids: ids }).subscribe({
+      next: (updated) => {
+        // Patch the one row in place rather than refetching the whole
+        // portfolio - the response already carries the authoritative tag
+        // set, and a reload would flash the grid.
+        this.photos.update((list) =>
+          list.map((p) => (p.id === photo.id ? { ...p, service_ids: updated.service_ids } : p)),
+        );
+        this.savingTags.set(false);
+        this.closeTagEditor();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.savingTags.set(false);
+        this.tagError.set(extractApiErrorMessage(err, 'Could not save tags. Please try again.'));
       },
     });
   }

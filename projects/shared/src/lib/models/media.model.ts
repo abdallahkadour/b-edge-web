@@ -10,6 +10,26 @@ export interface MediaItem {
   readonly type: string;
   readonly display_order: number;
   readonly created_at: string;
+  /**
+   * Services this photo depicts (migration 028). Always present and never
+   * null — an untagged photo carries `[]` — so callers filter without a
+   * nil check.
+   *
+   * Always empty for product-gallery photos: a product photo shows
+   * merchandise, not a service being performed, so the API does not
+   * consult the tag table for them.
+   */
+  readonly service_ids: string[];
+}
+
+/**
+ * Body for PUT /media/:id/services.
+ *
+ * The FULL desired tag set, not a delta — send every service the photo
+ * should be tagged to, and an empty list to clear them all.
+ */
+export interface SetMediaServicesRequest {
+  service_ids: string[];
 }
 
 /** Full portfolio response (Go media.PortfolioResponse). */

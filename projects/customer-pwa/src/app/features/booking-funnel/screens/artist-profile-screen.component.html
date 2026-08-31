@@ -57,6 +57,61 @@
       <p class="text-[14px] text-gray-500 leading-[20px]">{{ artist().bio }}</p>
     }
 
+    <!-- Locations -->
+    @if (stores().length) {
+      <section class="flex flex-col gap-3">
+        <h2 class="text-[12px] font-bold uppercase tracking-wider text-gray-400">
+          {{ stores().length === 1 ? 'Location' : 'Locations' }}
+        </h2>
+
+        @for (store of stores(); track store.id) {
+          <div class="rounded-2xl border border-gray-100 overflow-hidden">
+            <div class="p-4 flex flex-col gap-1.5">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <p class="text-[15px] font-semibold leading-[20px] truncate" dir="auto">
+                    {{ store.name }}
+                  </p>
+                  <p class="text-[13px] text-gray-400 leading-[18px]" dir="auto">
+                    {{ store.address || store.city }}
+                  </p>
+                </div>
+                @if (showsOpenBadge(store)) {
+                  <bedge-badge [tone]="openTone(store)">{{ openLabel(store) }}</bedge-badge>
+                }
+              </div>
+
+              @if (openDetail(store); as detail) {
+                <p class="text-[13px] text-gray-500 leading-[18px]">{{ detail }}</p>
+              }
+
+              @if (store.phone) {
+                <a
+                  [href]="'tel:' + store.phone"
+                  class="text-[13px] text-ink underline leading-[18px] w-fit"
+                  dir="ltr"
+                >
+                  {{ store.phone }}
+                </a>
+              }
+            </div>
+
+            <!-- Map only when the artist actually dropped a pin. No pin
+                 means no map, rather than a default location that would
+                 point customers somewhere wrong. -->
+            @if (hasPin(store)) {
+              <bedge-location-map
+                mode="view"
+                [lat]="store.latitude"
+                [lng]="store.longitude"
+                height="180px"
+              />
+            }
+          </div>
+        }
+      </section>
+    }
+
     <!-- Services -->
     <div class="flex flex-col gap-3 mt-1">
       <h2 class="text-[12px] font-bold leading-[16px] tracking-[0.05em] uppercase text-gray-500">
@@ -93,11 +148,65 @@
         <h2 class="text-[12px] font-bold leading-[16px] tracking-[0.05em] uppercase text-gray-500">
           Portfolio
         </h2>
+        <!-- Service filter chips. Only services with at least one tagged
+             photo appear, so a chip can never lead to an empty gallery. -->
+        @if (filterableServices().length) {
+          <div
+            class="flex gap-2 overflow-x-auto pb-1 -mt-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+            role="group"
+            aria-label="Filter portfolio by service"
+          >
+            <button
+              type="button"
+              (click)="setFilter(null)"
+              [attr.aria-pressed]="activeFilter() === null"
+              class="shrink-0 px-3 py-1.5 rounded-full text-[13px] font-medium border transition-colors"
+              [class]="
+                activeFilter() === null
+                  ? 'bg-ink text-white border-ink'
+                  : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+              "
+            >
+              All
+            </button>
+            @for (service of filterableServices(); track service.id) {
+              <button
+                type="button"
+                (click)="setFilter(service.id)"
+                [attr.aria-pressed]="activeFilter() === service.id"
+                class="shrink-0 px-3 py-1.5 rounded-full text-[13px] font-medium border transition-colors"
+                [class]="
+                  activeFilter() === service.id
+                    ? 'bg-ink text-white border-ink'
+                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                "
+                dir="auto"
+              >
+                {{ service.name }}
+              </button>
+            }
+          </div>
+        }
+
         <div class="flex gap-3 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          @for (photo of portfolio(); track photo.id) {
-            <div class="w-[120px] h-[120px] rounded-lg overflow-hidden border border-gray-200 shrink-0 bg-gray-100">
-              <img [src]="photo.url" alt="Portfolio" class="w-full h-full object-cover" referrerpolicy="no-referrer" />
-            </div>
+          @for (photo of visiblePortfolio(); track photo.id) {
+            @if (isPhotoTappable(photo)) {
+              <!-- Tappable only when the target service is unambiguous —
+                   see onPhotoTap. A button, not a div, so it is reachable
+                   by keyboard and announced as actionable. -->
+              <button
+                type="button"
+                (click)="onPhotoTap(photo)"
+                class="w-[120px] h-[120px] rounded-lg overflow-hidden border border-gray-200 shrink-0 bg-gray-100 cursor-pointer hover:opacity-90 transition-opacity"
+                aria-label="Book this look"
+              >
+                <img [src]="photo.url" alt="Portfolio" class="w-full h-full object-cover" referrerpolicy="no-referrer" />
+              </button>
+            } @else {
+              <div class="w-[120px] h-[120px] rounded-lg overflow-hidden border border-gray-200 shrink-0 bg-gray-100">
+                <img [src]="photo.url" alt="Portfolio" class="w-full h-full object-cover" referrerpolicy="no-referrer" />
+              </div>
+            }
           }
         </div>
       </div>

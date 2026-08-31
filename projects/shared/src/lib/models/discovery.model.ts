@@ -23,11 +23,51 @@ export interface ArtistCard {
   readonly is_new: boolean; // created within the last 30 days
 }
 
+/**
+ * Why a store is or isn't currently trading.
+ *
+ * `unknown` means the hours could not be resolved — not configured, or
+ * unreadable. Render NO badge for it rather than "Closed": telling a
+ * customer a salon is shut when nobody filled in the hours costs the artist
+ * real bookings.
+ */
+export type OpenReason =
+  | 'open'
+  | 'outside_hours'
+  | 'closed_today'
+  | 'holiday'
+  | 'unknown';
+
+/**
+ * A store's trading state at the moment the profile was requested.
+ *
+ * Computed server-side per request and never stored, so it is only as fresh
+ * as the response. Don't cache a profile across a day boundary and keep
+ * showing this.
+ */
+export interface OpenStatus {
+  readonly is_open: boolean;
+  readonly reason: OpenReason;
+  /** Present while open, so the UI can warn "closes in 30 minutes". */
+  readonly closes_at?: string;
+  /**
+   * Present only when the store opens LATER TODAY. Absent once it has
+   * closed for the day — the API deliberately does not point at tomorrow.
+   */
+  readonly opens_at?: string;
+}
+
 /** A store entry inside a public artist profile. */
 export interface DiscoveryStoreCard {
   readonly id: string;
   readonly name: string;
   readonly city: string;
+  readonly address?: string;
+  readonly phone?: string;
+  /** Artist-dropped map pin. Both absent means no pin — omit the map. */
+  readonly latitude?: number;
+  readonly longitude?: number;
+  readonly open_status: OpenStatus;
 }
 
 /** A service entry inside a public artist profile. */

@@ -80,8 +80,10 @@ export class ArtistDataService {
   /** PATCH /artists/stores/:store_id - rename or activate/deactivate a
    *  store. Backend accepts more fields than UpdateStoreRequest exposes
    *  (address, phone, notice hours, early-bird, travel buffer, timezone) -
-   *  see the doc comment on UpdateStoreRequest for why only name/is_active
-   *  are surfaced here. */
+   *  see the doc comment on UpdateStoreRequest for which fields are
+   *  surfaced here. Note the map pin is not COALESCE-merged server-side:
+   *  send `clear_location: true` to remove one, since omitting the
+   *  coordinates means "leave unchanged", not "clear". */
   updateStore(storeId: string, req: UpdateStoreRequest): Observable<Store> {
     return this.api.patch<Store>(`/artists/stores/${storeId}`, req);
   }

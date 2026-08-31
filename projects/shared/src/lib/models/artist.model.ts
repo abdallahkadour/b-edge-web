@@ -53,6 +53,16 @@ export interface Store {
   readonly early_bird_fee: string;     // decimal as string
   readonly weekday_buffer_min: number;
   readonly weekend_buffer_min: number;
+  /**
+   * IANA zone, e.g. 'Asia/Beirut'. The API has returned this since
+   * migration 010 but this interface never declared it, so opening hours
+   * (which are wall-clock local times) had no zone to be interpreted in
+   * on the client.
+   */
+  readonly timezone: string;
+  /** Artist-dropped map pin (migration 027). Absent until one is set. */
+  readonly latitude?: number;
+  readonly longitude?: number;
   readonly is_active: boolean;
   readonly created_at: string;
   readonly updated_at: string;
@@ -76,6 +86,18 @@ export interface CreateStoreRequest {
 export interface UpdateStoreRequest {
   name?: string;      // 2–200
   is_active?: boolean;
+  /**
+   * Map pin. Send both together — the API rejects a half-pin, since a
+   * latitude without a longitude is not a location.
+   *
+   * Omitting them leaves an existing pin unchanged. To REMOVE a pin, send
+   * `clear_location: true` instead; an omitted field cannot express
+   * "clear" once it has been decoded into a pointer server-side.
+   */
+  latitude?: number;
+  longitude?: number;
+  /** Removes the store's pin. Cannot be combined with latitude/longitude. */
+  clear_location?: boolean;
 }
 
 /** A salon service (Go artist.ServiceResponse). */
