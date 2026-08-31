@@ -853,6 +853,311 @@ clients that do not run JavaScript. Use `curl` and real messaging apps.
 
 ---
 
+### Suite 12 — Bulk schedule shift preview
+
+**Added Sep 1, 2026.** Covers `POST /bookings/schedule/shift-preview`, the pure
+`evaluateShift` evaluator, and migration 029's deferrable overlap constraint.
+
+The endpoint **writes nothing**, so it is safe to hammer. Be aggressive here —
+this is the dry run that decides whether a destructive bulk write is offered.
+
+**12.1 — The constraint, at the database level**
+
+Migration 029 is the load-bearing change and is invisible from the UI. Test it
+directly in `psql`:
+
+- Two adjacent bookings (09:00–10:00, 10:00–11:00), one `UPDATE` adding 10
+  minutes → **must succeed**. Before 029 this failed with `23P01`.
+- Insert a booking that genuinely overlaps an existing one → **must still fail
+  immediately**. The guarantee must not have been traded away.
+- Inside a transaction with `SET CONSTRAINTS ... DEFERRED`, create a real
+  overlap and commit → **must fail at commit**.
+- Shift a day **one booking per statement**, no `SET CONSTRAINTS` → **must
+  fail**. Deferrable-immediate is checked per statement, not per transaction.
+
+**12.2 — Boundary values on `shift_minutes`**
+
+| Input | Expected |
+|---|---|
+| `0` | **Check this deliberately.** Go's `validate:"required"` rejects a zero value, so 0 is likely a 422 rather than a no-op. Decide which is correct and pin it. |
+| `1` / `-1` | Accepted |
+| `240` / `-240` | Accepted — exact bound |
+| `241` / `-241` | 422 |
+| `2147483648` | 422, not an integer overflow panic |
+| `"10"` (string) | 422 |
+| `10.5` | 422 or truncation — pin which |
+| omitted | 422 |
+
+**12.3 — Date parsing, adversarially**
+
+`"2026-9-16"` (no zero pad), `"16-09-2026"`, `"2026-02-30"` (impossible),
+`"2026-02-29"` (2026 is not a leap year), `"0000-01-01"`, `"99999-01-01"`,
+`""`, `null`, `"2026-09-16T10:00:00Z"`, and a date **50 years out**. Each must
+be a clean 400, never a panic or a zero-time query scanning the whole table.
+
+**12.4 — Off-by-one at the trading edges**
+
+- Booking ending **exactly** at closing → shift +1 → must block.
+- Booking ending one minute **before** closing → shift +1 → must pass.
+- Booking starting **exactly** at opening → shift −1 → must block.
+- Booking starting **exactly at `now`** → must be skipped as in-progress, not
+  moved.
+- Booking starting **one second after `now`** → must be movable.
+
+**12.5 — Timezone and DST, aggressively**
+
+- Store in `Asia/Beirut`, request from a machine set to `America/New_York` →
+  identical result.
+- Run at **23:30 UTC**: the store-local date is already tomorrow. Preview
+  "today" and confirm it previews the store's day, not the server's.
+- A day containing Lebanon's **DST transition** (late March / late October).
+  A +60 shift across the jump must move wall-clock time by 60 minutes, not by
+  a UTC hour that lands an hour off.
+- A store whose `timezone` is deliberately corrupted to `"Not/AZone"` → falls
+  back to UTC without a 500.
+
+**12.6 — Volume**
+
+A day with **50 bookings**. Response must stay under a second and must not
+issue one query per booking — watch the query log. This is the N+1 the
+enriched day query exists to prevent.
+
+**12.7 — Concurrency (the aggressive one)**
+
+- Fire **20 concurrent previews** for the same day. All must agree; none may
+  error.
+- While a preview is in flight, create a guest booking on that day. The
+  preview is read-only so a stale answer is acceptable — but it must not
+  return a **half-updated** picture (some bookings shifted, others not).
+- Preview a day while another session cancels one of its bookings.
+
+**12.8 — Authorisation**
+
+- mkup1 previews Rania's store → `movable: []`, `skipped: []`. **Verified once
+  already; re-verify after any change**, this is the highest-yield bug class in
+  this codebase.
+- A store ID that is a valid UUID but does not exist → 404.
+- A store belonging to the caller's *salon* but not assigned to them.
+- No token, expired token, customer token, admin token.
+
+---
+
+### Suite 13 — In-app notification centre
+
+**Added Sep 1, 2026.** Covers `internal/inbox`, migration 030, and the
+dead-letter producer in the notification worker.
+
+**13.1 — Bundling, pushed hard**
+
+- File **100** notifications with the same `group_key` in a tight loop →
+  **exactly one row**, `item_count: 100`, badge shows **1**.
+- Two **concurrent** inserts with the same group key → one row, no
+  `unique_violation` surfacing to the caller. `ON CONFLICT` must absorb it.
+- Mark read → file another → **new row**, badge 1. The old row must not be
+  resurrected.
+- Archive → file another → new row.
+- Same kind, **different** group keys → separate rows.
+- `group_key = NULL` → never bundles; ten inserts give ten rows.
+
+**13.2 — Read/archive state machine**
+
+Every transition, including the silly ones:
+
+| From | Action | Expected |
+|---|---|---|
+| unread | read | read, badge −1 |
+| read | read again | **204, idempotent** — a double-tap must not 404 |
+| unread | archive | archived **and** read (badge must not stick) |
+| archived | read | 404 or no-op — pin which |
+| archived | archive again | 404 |
+| unread | read-all | all read, badge 0 |
+| (none) | read-all | 204, not an error |
+
+**13.3 — Pagination bounds**
+
+`limit` of `0`, `-1`, `1`, `50`, `51`, `10000`, `"abc"`, and omitted. Must
+clamp to 1..50 and never return the whole table.
+
+**13.4 — Authorisation**
+
+- mkup1 reads/archives Rania's notification → **404, not 403** (verified once;
+  re-verify).
+- mkup1's feed never contains Rania's rows.
+- `read-all` as mkup1 must not clear Rania's badge — **run this one
+  specifically**, a missing `user_id` predicate on a bulk UPDATE is exactly the
+  bug that would clear everyone's.
+
+**13.5 — The dead-letter producer**
+
+- Force a delivery failure (invalid `TWILIO_WHATSAPP_FROM`), let the worker
+  exhaust `maxAttempts` → an `action_required` notification appears **for the
+  artist**, not the customer.
+- Notification with **no booking** (customer OTP) dies → **no** inbox row, and
+  nothing crashes.
+- Booking deleted between the failure and the alert → no crash, no orphan row.
+- Ten failures across the same artist's bookings → **one** bundled row.
+- Inbox insert itself fails → the notification is still correctly marked
+  `dead`. The alert is best-effort and must never roll back the delivery
+  record.
+
+**13.6 — Content safety**
+
+Title and body render in the dashboard. Inject into each:
+`<script>alert(1)</script>`, `<img src=x onerror=alert(1)>`, `{{7*7}}`, and a
+string of 10,000 characters. Must render as inert text and must not break the
+panel layout. `title` is `VARCHAR(200)` — confirm a longer value is rejected
+cleanly rather than truncated mid-character.
+
+**13.7 — Cascade**
+
+Delete a user with unread notifications → rows removed by
+`ON DELETE CASCADE`, no orphans, no error on the next feed request.
+
+---
+
+## 2.5 Adversarial hardening pass — applies to EVERY suite above
+
+**Added Sep 1, 2026 after auditing this document against its own standards.**
+
+An honest audit of this plan found it weaker than the system deserves. Counting
+mentions across all 970 lines before this section was added:
+
+| Technique | Occurrences |
+|---|---|
+| injection / fuzzing / overflow / idempotency / retry / timeout | **0 each** |
+| **unicode** | **0** |
+| malformed input, simultaneous access | 1 each |
+| concurrent | 2 |
+
+Those are the categories that produce the expensive failures — the industry's
+canonical disasters (Knight Capital, Ariane 5, CrowdStrike) all trace back to
+missing negative tests for boundaries, input validation or fault handling, not
+to a broken happy path. The suites above test that features *work*. This
+section is about trying to *break* them.
+
+Run each subsection against **every** applicable endpoint, not just the newest.
+
+### 2.5.1 Unicode, RTL and Arabic — the largest gap
+
+**This had zero coverage, in a product whose strategy documents call it
+"the first Arabic-first platform for Lebanon" and whose schema carries
+`name_ar` on stores, services and categories.** Arabic input is the single
+most likely thing to break string handling and layout, and nothing tested it.
+
+Into **every** free-text field — artist bio, service name, store name, review
+comment, `special_requests`, delivery notes, customer name, product
+description, notification title:
+
+| Input | What it breaks if unhandled |
+|---|---|
+| `صالون الجمال` | Basic Arabic. Must store, retrieve and render intact. |
+| Mixed `Rania صالون 2026` | Bidirectional reordering; check the *rendered* order, not just the stored bytes. |
+| `‮` (U+202E RTL override) | Can visually reverse surrounding text — a spoofing vector in a shared link preview. |
+| `​` zero-width space | Bypasses naive "is it empty" and profanity checks. |
+| `👰🏽‍♀️💄` (ZWJ emoji) | Multi-codepoint graphemes; naive truncation splits them into garbage. |
+| `José` as NFC vs NFD | Two byte sequences, one visual string — breaks equality and dedup. |
+| `Ⅷ` (Roman numeral) / `ﬁ` (ligature) | Unicode normalisation and case-folding surprises. |
+| 200 Arabic chars in a `VARCHAR(200)` | **Postgres counts characters, Go's `len()` counts bytes.** Arabic is 2 bytes/char in UTF-8, so a Go-side length check will disagree with the column. Test the exact boundary. |
+
+Then verify each **round-trips**: stored → API JSON → rendered in both PWAs →
+and, for the artist bio, into the `/a/:handle` Open Graph tags where WhatsApp
+renders it.
+
+### 2.5.2 Boundary values — test the edge, not the middle
+
+For every numeric or length-bounded field, test: `min-1`, `min`, `min+1`,
+`max-1`, `max`, `max+1`, `0`, `-1`, and the type's own limit.
+
+Specific to B-Edge: `shift_minutes` (±240), `limit` (1..50), `seats` (min 1),
+`duration_min` (15..480), `buffer_min` (0..120), `item_count`, prices against
+`NUMERIC(10,2)` (**99999999.99** exactly, then one more), latitude (±90),
+longitude (±180), `rating` (1..5), portfolio photos (20 cap), product photos
+(8 cap), `service_ids` per photo (20 cap).
+
+Money deserves its own pass: `0`, `0.001`, `10.999` (**known to be silently
+rounded** — pinned by a characterization test), `-0.01`, `1e3`, `Infinity`,
+`NaN`, and `99999999.999`.
+
+### 2.5.3 Concurrency — races, not sequences
+
+This plan tested sequences and called them concurrency. A race needs requests
+**genuinely in flight together** — Burp Turbo Intruder or a small script, not
+two `curl`s in a row.
+
+For each: fire N=20 simultaneously and assert the invariant.
+
+| Race | Invariant |
+|---|---|
+| Same slot, N guest holds | Exactly one succeeds |
+| Last product unit, N orders | Exactly one; stock never negative |
+| One invoice, N confirms | One succeeds; period advances **once** |
+| One booking, approve vs cancel | One wins; no intermediate state persists |
+| Same `group_key`, N notifications | One row, `item_count` = N |
+| `read-all` while marking one read | Badge is consistent; no negative count |
+| Bulk preview while a booking is created | No half-updated picture |
+| Same OTP, N verifications | One succeeds; attempts counted correctly |
+
+### 2.5.4 Fault injection — break the dependencies
+
+Test what happens when things the app depends on fail, mid-request:
+
+- **Stop Postgres** during: a booking write, a feed read, an invoice confirm.
+  Expect a clean 5xx, never a hang or a partial write.
+- **Kill the API** mid-transaction → no half-applied booking shift.
+- **Cloudinary unreachable** → upload fails cleanly, no orphan `media` row.
+- **Twilio 429 / 500 / timeout** → retried; **invalid number** → failed
+  immediately without burning retries.
+- **Clock skew**: set the server 25 hours ahead → deposit deadlines and
+  subscription status behave sanely.
+- **Kill the notification worker mid-send** → the lease expires and the row is
+  reclaimed, not stranded.
+- **Fill the disk** → graceful failure.
+
+### 2.5.5 Idempotency and replay
+
+Every mutating endpoint, called **twice with the identical payload**:
+
+- Two identical bookings → two bookings, or one? Pin the answer.
+- Two identical confirms → 409 on the second (verified for invoices).
+- Two identical shifts → **the reason `idempotency_key` is in the write-path
+  design**; without it a double-tap shifts the day twice.
+- Replay a captured request 10 minutes later → rejected or handled.
+- Browser back button after submit → no duplicate.
+
+### 2.5.6 Malformed input and fuzzing
+
+Against every endpoint: empty body, `null`, `[]` where an object is expected,
+deeply nested JSON (1,000 levels), a 10 MB body, duplicate JSON keys, wrong
+`Content-Type`, truncated JSON, `\x00` in a string, and a UUID field
+containing a SQL fragment.
+
+Also: **10,000 `service_ids`** on one photo, **10,000 IDs** in a reorder call.
+
+### 2.5.7 State-machine abuse
+
+For the booking state machine, attempt **every illegal transition**, not just
+the plausible ones: complete a pending booking, approve a cancelled one,
+no-show a completed one, confirm a deposit on an expired booking, cancel
+twice, refund an unpaid booking. Each must be a clean 409 naming the current
+state.
+
+Build the full matrix — 11 statuses × 8 actions — and tick off every cell.
+Untested cells are where the next bug lives.
+
+### 2.5.8 What "aggressive" means for a tester here
+
+- **Assume the developer only tested the happy path.** They mostly did.
+- **A test that passes first time taught you nothing.** Push until something
+  breaks, then decide whether it matters.
+- **Ambiguity is a failure.** "Probably fine" is not a result.
+- **Test the thing the comment says is safe.** Every "this can't happen"
+  comment in this codebase is a hypothesis.
+- **When you find one bug, look for its siblings.** Both real bug classes
+  found here — route-group leakage and cross-tenant IDOR — appeared in six
+  places each, not one.
+
+---
+
 ## 3. Bring it to the edge — exhaustive UI stress pass
 
 Do this as its own pass, after the journeys above pass. The goal is: **every clickable element on every screen gets clicked at least once**, including the ones that should do nothing dramatic (disabled buttons, already-in-that-state toggles) and the ones at the edges of input ranges.
@@ -931,6 +1236,18 @@ All five originally-confirmed gaps are now closed (2026-08-21) — see the updat
 - **G5 — "Add store" screen.** ✅ Closed: Hours → Add store.
 
 **New, still open, out of scope for this pass:** `GetReviewsByArtist` has no ownership check — any authenticated artist can view another artist's full review list (including hidden reviews) by guessing/enumerating an artist ID. Found while fixing G4's visibility-filter bug; not fixed, since it's a backend authorization hardening task, not a missing-UI gap.
+
+**Suite execution status (2026-09-01):**
+
+| Suites | Status |
+|---|---|
+| 1–8 | Live-executed at least once. 12 real bugs found and fixed. |
+| 9–13 | **Written, NOT executed.** Do not read a passing build as a passing suite. |
+| §2.5 adversarial pass | **Never run.** Added after auditing this document against its own standards and finding zero coverage of injection, fuzzing, overflow, idempotency, retry, timeout or Unicode. |
+
+The §2.5 gap is the important one. Suites 1–13 verify that features work;
+§2.5 is the first section that tries to break them, and it is where the
+expensive bugs will be if they exist.
 
 **Billing domain — known gaps (2026-08-29, revised 2026-08-31):**
 - ~~**`internal/billing` has zero tests.**~~ **Closed 2026-08-31.** 59 service-layer
