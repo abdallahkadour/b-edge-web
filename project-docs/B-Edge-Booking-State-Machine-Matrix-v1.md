@@ -123,7 +123,7 @@ questionable, decision needed (§4)
 These are the `⚠️` cells. **They are product decisions, not bugs** — the code
 is self-consistent; nobody has ever been asked the question.
 
-### 4.1 The time-guard asymmetry ⚠️ *(decide)*
+### 4.1 The time-guard asymmetry — ✅ RESOLVED 2026-09-01: option 2
 
 `ApproveBooking` refuses a booking whose appointment already passed, with a
 comment explaining that approving it would compute a deposit deadline already
@@ -146,9 +146,12 @@ Three options, in order of preference:
 3. **Leave it.** Only defensible if late reconciliation is common, and it
    still needs the message suppressed — so it is really option 2.
 
-**Recommend option 2.** The bookkeeping is legitimate; the message is not.
+**Chose option 2.** The bookkeeping is legitimate; the message is not.
+`announceConfirmed` returns early when `StartTime` is in the past, so both
+routes still confirm but neither messages the customer or issues a calendar
+link for a date that has gone.
 
-### 4.2 Two paths to `confirmed` ⚠️ *(decide, then delete one)*
+### 4.2 Two paths to `confirmed` — ✅ RESOLVED 2026-09-01: keep both
 
 ```
 approved ──MarkDepositReceived──▶ deposit_paid ──ConfirmDeposit──▶ confirmed
@@ -158,10 +161,18 @@ approved ──────────────ConfirmDepositReceived──�
 Two routes to the same state is a standing invitation for behaviour to be
 wired to one and not the other — which is exactly what happened (§5.1).
 
-Decide whether `deposit_pending`/`deposit_paid` are a real workflow the artist
-wants (mark money seen → confirm separately) or a legacy two-step that the
-one-step call replaced. Then **delete the loser**, rather than maintaining
-both and re-discovering this.
+**Both stay.** The two-step is not legacy - it was built deliberately, and
+`deposit-queue.component.ts` says why: *"a partial payment or disputed
+transfer that genuinely needs the steps apart."* It is wired as a secondary
+"mark partial" action beside the primary Verify button, and an earlier
+session specifically fixed `deposit_paid` bookings vanishing from every list
+on that screen. Deleting it would remove a working feature.
+
+That settles §5.1's fix too: if the two-step exists for partial payments,
+reaching `confirmed` that way is a real confirmation and the customer must be
+told. The announcement now lives in one shared `announceConfirmed`, so
+anything wired to "the booking became confirmed" cannot attach to one route
+and miss the other.
 
 ### 4.3 Two statuses nothing can ever produce ⚠️ *(decide)*
 
@@ -186,7 +197,7 @@ are *completed* or *no_show*, not *cancelled*.
 
 ## 5. Confirmed defects — found by writing this document
 
-### 5.1 One of the two confirmation paths tells the customer nothing 🐞
+### 5.1 One of the two confirmation paths tells the customer nothing 🐞 — FIXED 2026-09-01
 
 | Path | `enqueueNotification` calls |
 |---|---|
@@ -203,11 +214,12 @@ Severity is bounded today only because WhatsApp delivery is not live (D8) —
 which means it would have shipped silently and surfaced as "some customers
 never get confirmations" once Twilio was switched on.
 
-**Fix:** move the notification to wherever the transition to `confirmed`
-actually happens, so it cannot be attached to one route and not the other.
-Resolving §4.2 first may delete the problem instead.
+**Fixed.** Both routes now call one shared `announceConfirmed`. A test
+asserts the two messages are byte-identical - *"a customer must not be able to
+tell which button the artist pressed"* - rather than leaving that implied by
+two separate tests passing.
 
-### 5.2 `refund_due` is a dead end, with money in it 🐞
+### 5.2 `refund_due` is a dead end, with money in it 🐞 — FIXED 2026-09-01
 
 `CancelBooking(refundDue=true)` writes `refund_due`. Then:
 
@@ -232,9 +244,16 @@ ever record the artist's assertion — but recording it is the entire point.
 This is the same gap `B-Edge-Bulk-Schedule-Operations-Spec-v1.md` §8 flagged
 from the other direction.
 
-**Fix:** an artist action `refund_due → refunded`, with an optional
-reference, mirroring `ConfirmDepositReceived`'s reference field. Small, and it
-makes the refund notification actionable.
+**Fixed.** `PATCH /bookings/:id/refunded` transitions `refund_due →
+refunded`, guarded on that status, with an optional reference mirroring
+`ConfirmDepositReceived`'s. No customer message: they were already told about
+the cancellation, and announcing an out-of-band bank transfer they either
+have or have not received would raise more questions than it answers.
+
+Verified live against the two stuck rows. Rania's closed (200, reference
+recorded); the second returned **403** because it belongs to `mkup2` - the
+ownership guard working, not a failure. A replay returned
+`BOOKING_NOT_REFUND_DUE`.
 
 ---
 
