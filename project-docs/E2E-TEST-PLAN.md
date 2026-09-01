@@ -1242,8 +1242,80 @@ All five originally-confirmed gaps are now closed (2026-08-21) — see the updat
 | Suites | Status |
 |---|---|
 | 1–8 | Live-executed at least once. 12 real bugs found and fixed. |
-| 9–13 | **Written, NOT executed.** Do not read a passing build as a passing suite. |
-| §2.5 adversarial pass | **Never run.** Added after auditing this document against its own standards and finding zero coverage of injection, fuzzing, overflow, idempotency, retry, timeout or Unicode. |
+| 9–11 | **Written, NOT executed.** |
+| **12–13** | **Executed 2026-09-01.** Pass, with 3 minor findings recorded below. |
+| **§2.5 (partial)** | **Executed 2026-09-01** for Unicode/RTL, injection, boundary values, concurrency and idempotency **against the newest surfaces only**. 1 real finding. Fault injection, fuzzing and the state-machine matrix remain unrun. |
+
+### Execution results — 2026-09-01
+
+Run against the live dev stack. Every seeded row was removed afterwards and
+the artist bio and store name restored; verified zero leftovers.
+
+**Passed outright**
+
+- **12.1 Constraint (migration 029).** Single-statement bulk shift succeeds; a
+  genuine overlap still fails immediately; a per-statement shift without
+  `SET CONSTRAINTS` still fails. The guarantee was not traded away.
+- **12.4 Trading edges.** All four off-by-ones exact: a booking ending
+  *exactly* at close blocks on +1; one minute earlier passes; starting
+  *exactly* at open blocks on −1.
+- **12.7 Concurrency.** 20 simultaneous previews returned identical results,
+  no errors.
+- **13.1 Bundling.** 100 inserts sharing a group key → **1 row,
+  `item_count: 100`, badge 1**. A `NULL` group key correctly never bundles.
+- **13.2 State machine.** Read is idempotent (204 twice); archiving an unread
+  row also marks it read, so **the badge does not stick**.
+- **13.3 Pagination.** With 60 rows present, `limit` of 50 / 51 / 10000 all
+  returned exactly 50. No unbounded page.
+- **13.4 Ownership.** `read-all` as mkup1 left Rania's badge at 2. Foreign
+  read/archive → **404**, and her row stayed unread.
+- **§2.5.1 Unicode round-trip.** Arabic, mixed LTR/RTL, zero-width space, ZWJ
+  emoji, NFD, and 50 stacked combining marks all round-trip byte-identical.
+- **§2.5.2 The byte-vs-char trap did NOT materialise.** 200 Arabic characters
+  (400 bytes) into a `VARCHAR(200)` with Go `max=200` → accepted; 201 →
+  rejected. Go's validator counts runes, so the two agree. Worth having
+  measured rather than assumed.
+- **§2.5.3 Race.** 20 concurrent inserts on one group key → 1 row,
+  `item_count: 20`, zero `unique_violation` errors surfaced.
+- **§2.5.6 Injection.** `</title><script>`, `"><img onerror>`, `{{7*7}}`,
+  `${7*7}` into the artist bio, rendered at `/a/:handle` — the codebase's only
+  raw-HTML surface. All escaped, no script executed, no template evaluated.
+
+**FINDING 1 — U+202E survives into Open Graph tags (Low/Medium)**
+
+Setting a bio to `Book now ‮moc.live//:sptth` produces:
+
+    og:description content="Book now \u202emoc.live//:sptth"
+
+The right-to-left override is preserved, so a WhatsApp link preview renders
+that as `Book now https://evil.com`. The `og:url` still points at the real
+profile, so the **link** is honest and only the **displayed text** is spoofed —
+but the preview card is the most trusted-looking surface B-Edge has, and this
+is user-controlled text reaching it.
+
+HTML escaping does not help: bidi controls are not HTML-special. The fix is
+to strip `U+202A–U+202E` and `U+2066–U+2069` from any text bound for a meta
+tag. Predicted by §2.5.1 and confirmed on the first attempt.
+
+**FINDING 2 — `shift_minutes: 0` is a 422 (Low)**
+
+The field is `min=-240,max=240`, which implies 0 is in range, but Go's
+`validate:"required"` rejects a zero value. A UI slider resting at 0 would
+produce a confusing validation error rather than a no-op preview. Decide
+whether 0 means "no shift" or is genuinely invalid, and make the contract say
+so.
+
+**FINDING 3 — no date sanity range (Low)**
+
+`date: "0000-01-01"` returns **200**. Harmless on a read-only endpoint that
+returns an empty day, but there is no lower bound; `99999-01-01` is rejected
+only because Go's parser fails on the width. A `[today − 2y, today + 2y]`
+range would be more honest.
+
+**Inconsistency noted, not filed as a bug:** archiving twice returns 404,
+but marking an archived notification read returns 204. Read is idempotent by
+design and archive is strict. Defensible, but the asymmetry should be
+deliberate rather than incidental.
 
 The §2.5 gap is the important one. Suites 1–13 verify that features work;
 §2.5 is the first section that tries to break them, and it is where the
