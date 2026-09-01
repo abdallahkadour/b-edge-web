@@ -4,10 +4,13 @@
   <!-- ── Sidebar (desktop ≥ 768px) ──────────────────────────────────────── -->
   <aside class="hidden md:flex md:flex-col md:w-56 md:fixed md:inset-y-0 bg-white border-r border-gray-200">
 
-    <!-- Wordmark -->
-    <div class="px-6 py-6 border-b border-gray-100">
-      <span class="text-lg font-semibold tracking-tight text-ink">B-Edge</span>
-      <p class="text-xs text-gray-400 mt-0.5">Artist Dashboard</p>
+    <!-- Wordmark + notification bell -->
+    <div class="px-6 py-6 border-b border-gray-100 flex items-start justify-between gap-3">
+      <div class="min-w-0">
+        <span class="text-lg font-semibold tracking-tight text-ink">B-Edge</span>
+        <p class="text-xs text-gray-400 mt-0.5">Artist Dashboard</p>
+      </div>
+      <bedge-notification-bell class="mt-0.5 shrink-0" />
     </div>
 
     <!-- Nav links -->
@@ -69,16 +72,19 @@
     <header class="md:hidden flex items-center justify-between px-4 py-4
                    bg-white border-b border-gray-200 sticky top-0 z-10">
       <span class="text-base font-semibold tracking-tight text-ink">B-Edge</span>
-      @if (user(); as u) {
-        <a
-          routerLink="/dashboard/profile"
-          aria-label="Go to profile"
-          class="w-8 h-8 rounded-full bg-ink flex items-center justify-center
-                 text-white text-xs font-semibold active:opacity-80 transition-opacity"
-        >
-          {{ initials(u.name) }}
-        </a>
-      }
+      <div class="flex items-center gap-3">
+        <bedge-notification-bell />
+        @if (user(); as u) {
+          <a
+            routerLink="/dashboard/profile"
+            aria-label="Go to profile"
+            class="w-8 h-8 rounded-full bg-ink flex items-center justify-center
+                   text-white text-xs font-semibold active:opacity-80 transition-opacity"
+          >
+            {{ initials(u.name) }}
+          </a>
+        }
+      </div>
     </header>
 
     <!-- Page content -->

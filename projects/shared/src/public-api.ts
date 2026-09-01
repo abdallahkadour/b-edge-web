@@ -45,3 +45,4 @@ export * from './lib/core/client-data.service';
 export * from './lib/core/media-data.service';
 export * from './lib/core/cloudinary-upload.service';
 export * from './lib/core/billing-data.service';
+export * from './lib/core/notification-data.service';

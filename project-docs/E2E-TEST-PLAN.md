@@ -1008,6 +1008,34 @@ string of 10,000 characters. Must render as inert text and must not break the
 panel layout. `title` is `VARCHAR(200)` — confirm a longer value is rejected
 cleanly rather than truncated mid-character.
 
+**13.7 — The bell and panel (added Sep 1, 2026, after the UI shipped)**
+
+13.1–13.6 test the API. Until the bell existed the feature was only reachable
+over curl, so none of it was verified as a *product*. These cases need a real
+browser — half of them are invisible to any assertion made on JSON.
+
+- Badge reflects unread **rows**, not occurrences: a bundled row with
+  `item_count: 4` contributes **1**. Above 9 the badge reads `9+`.
+- Badge disappears entirely at zero rather than rendering `0`.
+- **Unread styling on every row, not just the first.** Read the *computed*
+  `border-left-color`, do not eyeball it — see finding 4.
+- Dismiss (`×`) removes the row and decrements the badge, and is a **sibling**
+  of the row button, never nested inside it.
+- Row click marks read **and** navigates when the notification has a link;
+  marks read and stays put when it does not.
+- **Escape closes the panel and returns focus to the bell** — check
+  `document.activeElement`, not just that the panel vanished (finding 5).
+- Outside click closes; the backdrop must not dim the page (dropdown, not
+  modal).
+- At 390px the panel stays inside the viewport and `document.documentElement.
+  scrollWidth` does not exceed the window — a dropdown anchored on the wrong
+  side is the classic way to introduce a horizontal body scroll on a phone.
+- **After every optimistic update, re-read the database.** The panel updates
+  before the request settles by design, so the UI agreeing with itself proves
+  nothing.
+- Polling stops when the tab is hidden and fires immediately on return.
+- Sign out with the panel open → no further `/unread-count` requests.
+
 **13.7 — Cascade**
 
 Delete a user with unread notifications → rows removed by
@@ -1243,7 +1271,7 @@ All five originally-confirmed gaps are now closed (2026-08-21) — see the updat
 |---|---|
 | 1–8 | Live-executed at least once. 12 real bugs found and fixed. |
 | 9–11 | **Written, NOT executed.** |
-| **12–13** | **Executed 2026-09-01.** Pass, with 3 minor findings recorded below. |
+| **12–13** | **Executed 2026-09-01.** Pass, with 5 findings, all fixed. Suite 13 re-run against the real UI after the bell shipped later the same day. |
 | **§2.5 (partial)** | **Executed 2026-09-01** for Unicode/RTL, injection, boundary values, concurrency and idempotency **against the newest surfaces only**. 1 real finding. Fault injection, fuzzing and the state-machine matrix remain unrun. |
 
 ### Execution results — 2026-09-01
@@ -1280,6 +1308,71 @@ the artist bio and store name restored; verified zero leftovers.
 - **§2.5.6 Injection.** `</title><script>`, `"><img onerror>`, `{{7*7}}`,
   `${7*7}` into the artist bio, rendered at `/a/:handle` — the codebase's only
   raw-HTML surface. All escaped, no script executed, no template evaluated.
+
+**Second pass — 13.7, the UI, executed 2026-09-01 after the bell shipped**
+
+Driven in headless Chrome over the DevTools Protocol against the live API, not
+asserted on JSON.
+
+- **Badge counts rows, not occurrences.** A row with `item_count: 4` and two
+  others → badge `3`, `aria-label="Notifications, 3 unread"`. Badge absent at
+  zero.
+- **Dismiss** removed the row and took the badge 3 → 2.
+- **Mark all read** cleared the badge and every accent stripe in one action.
+- **Row click** navigated to the notification's link and closed the panel.
+- **Server truth re-read from psql after all of the above**: all three rows
+  `read`, the dismissed one `archived`. The optimistic updates were real, not
+  just local.
+- **Layout at 390px**: panel spans x=10..330 in a 390px viewport, nothing
+  off-screen either side, `scrollWidth == innerWidth` — no horizontal body
+  scroll.
+- **Zero console errors** across the whole run.
+
+**FINDING 4 — the unread stripe was invisible on every row but the first
+(Medium) — FIXED 2026-09-01**
+
+Rows carried `border-l-2` with `border-ink` bound to the unread state, inside a
+`<ul class="divide-y divide-gray-100">`.
+
+Tailwind's `divide-<color>` emits a plain `border-color` — which sets **all four
+edges**, not just the divided one — under a `> * + *` selector that outranks a
+utility class on the child. So every row after the first had its unread accent
+repainted `gray-100`.
+
+Computed `border-left-color` with three unread rows:
+
+    row 1  rgb(10, 10, 10)     <- ink, correct
+    row 2  rgb(244, 244, 245)  <- gray-100, wrong
+    row 3  rgb(244, 244, 245)  <- gray-100, wrong
+
+Worth recording **how** this was found: the screenshot looked completely
+correct, because in the first run only the top row was unread. It only appeared
+by reading computed styles. This is the argument for 13.7's "read the computed
+value, do not eyeball it" — a visual check would have signed this off.
+
+The failure mode is also the wrong way round: the unread marker vanishes
+precisely when there is more than one thing to notice.
+
+**Fixed** by dropping `divide-*` and using side-specific utilities
+(`border-t-gray-100` for the separator, `border-l-ink` / `border-l-transparent`
+for the stripe), which cannot collide.
+
+**FINDING 5 — Escape did not close the panel (Low) — FIXED 2026-09-01**
+
+`(keydown.escape)` was bound on the panel element, with `cdkTrapFocus
+cdkTrapFocusAutoCapture` expected to put focus inside it. Focus never moved:
+
+    focus is inside panel: false | activeElement: BODY
+
+A keydown on `body` never reaches a handler on the panel, so Escape did
+nothing. The design was also self-contradictory — the panel declares
+`aria-modal="false"` while trapping focus like a modal, which would mean Tab
+could never leave a dropdown.
+
+**Fixed**: the focus trap is gone; the panel takes `tabindex="-1"` and is
+focused on open (so Tab walks the notifications), and Escape is bound at the
+**document**, closing the panel and returning focus to the bell. Verified:
+`focus is inside panel: true`, and a real CDP key event now closes it.
 
 **FINDING 1 — U+202E survives into Open Graph tags (Low/Medium) — FIXED 2026-09-01**
 
@@ -1329,6 +1422,15 @@ returning `400 DATE_OUT_OF_RANGE`. Two years either side covers rebuilding
 last season and booking a wedding well ahead, while excluding the values that
 only ever arrive by accident. Retested: `0000-01-01` and `2076-09-16` now
 rejected, `2026-09-16` still accepted.
+
+**Finding 1's vector also existed on a second surface, closed the same day.**
+Building the notification bell surfaced that `alertArtistOfDeadLetter`
+interpolates a **customer-supplied name** into a body the **artist** reads —
+the same shape as the share card, different screen. Angular's interpolation
+does not help either: a bidi override is not markup. `stripBidiControls` was
+therefore extracted from `internal/share` into the leaf package
+`internal/pkg/bidi` and applied at both producers, rather than left as two
+copies of a security rule that would drift.
 
 **Inconsistency noted, not filed as a bug:** archiving twice returns 404,
 but marking an archived notification read returns 204. Read is idempotent by

@@ -1,0 +1,211 @@
+<!-- Notification bell + dropdown panel.
+     `relative` anchors the panel; the wrapper itself is unpositioned in
+     flow so it drops straight into the sidebar header and the mobile top
+     bar without either needing to know about the panel. -->
+<div class="relative">
+
+  <button
+    #bellButton
+    type="button"
+    (click)="toggle()"
+    [attr.aria-expanded]="open()"
+    [attr.aria-label]="ariaLabel()"
+    class="relative p-2 -m-2 rounded-lg text-gray-500 hover:text-ink hover:bg-gray-50
+           transition-colors"
+  >
+    <lucide-icon name="bell" [size]="20" [strokeWidth]="2" />
+
+    <!-- The count is in the button's aria-label above, so the badge itself
+         is decorative to a screen reader - announcing "3" on its own after
+         "Notifications, 3 unread" is just noise. -->
+    @if (unreadCount() > 0) {
+      <span
+        aria-hidden="true"
+        class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full
+               bg-danger text-white text-[10px] font-bold leading-[18px] text-center
+               tabular-nums"
+      >{{ badgeLabel() }}</span>
+    }
+  </button>
+
+  @if (open()) {
+    <!-- Transparent full-screen backdrop: closes on any outside click
+         without a document-level listener, and without dimming the page the
+         way a modal would - this is a dropdown, not a modal. -->
+    <div class="fixed inset-0 z-40" (click)="close()"></div>
+
+    <!-- Anchored right on mobile (the bell sits at the right edge of the
+         top bar, so left-anchoring would run off-screen) and left on
+         desktop (the bell sits in a 224px sidebar too narrow to hold a
+         320px panel, so it opens rightward over the content instead). -->
+    <div
+      #panel
+      tabindex="-1"
+      role="dialog"
+      aria-modal="false"
+      aria-label="Notifications"
+      class="absolute z-50 mt-2 right-0 md:right-auto md:left-0 outline-none
+             w-[min(20rem,calc(100vw-2rem))]
+             max-h-[70vh] flex flex-col
+             bg-white rounded-xl border border-gray-200 shadow-xl overflow-hidden"
+    >
+
+      <!-- Header -->
+      <div class="flex items-center justify-between gap-2 px-4 py-3 border-b border-gray-100">
+        <h2 class="text-sm font-bold text-ink">Notifications</h2>
+        <div class="flex items-center gap-1">
+          @if (unreadCount() > 0) {
+            <button
+              type="button"
+              (click)="markAllRead()"
+              class="flex items-center gap-1 text-xs font-medium text-gray-500
+                     hover:text-ink px-2 py-1 rounded-md hover:bg-gray-50 transition-colors"
+            >
+              <lucide-icon name="check" [size]="14" [strokeWidth]="2" />
+              Mark all read
+            </button>
+          }
+          <button
+            type="button"
+            (click)="close()"
+            aria-label="Close notifications"
+            class="p-1 text-gray-400 hover:text-ink rounded-full hover:bg-gray-100 transition-colors"
+          >
+            <lucide-icon name="x" [size]="16" [strokeWidth]="2" />
+          </button>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="flex-1 overflow-y-auto overscroll-contain">
+
+        @if (loading() && items().length === 0) {
+          <div class="flex items-center justify-center gap-2 px-4 py-10 text-sm text-gray-400">
+            <lucide-icon name="loader-2" [size]="16" [strokeWidth]="2" class="animate-spin" />
+            Loading
+          </div>
+        } @else if (error()) {
+          <div class="px-4 py-8 text-center">
+            <p class="text-sm text-gray-500">{{ error() }}</p>
+          </div>
+        } @else if (items().length === 0) {
+          <div class="px-4 py-10 text-center">
+            <lucide-icon
+              name="inbox"
+              [size]="28"
+              [strokeWidth]="1.5"
+              class="text-gray-300 mx-auto mb-2"
+            />
+            <p class="text-sm font-medium text-ink">You're all caught up</p>
+            <p class="text-xs text-gray-400 mt-1 leading-relaxed">
+              We'll tell you here if a customer can't be reached, or a refund is owed.
+            </p>
+          </div>
+        } @else {
+          <!-- Row separators are per-<li> border-TOP rather than `divide-y
+               divide-gray-100` on this list. Tailwind's `divide-<color>`
+               emits a plain `border-color`, which sets every edge, and its
+               `> * + *` selector outranks a utility class on the child - so
+               it silently repainted the unread accent stripe below on every
+               row except the first, making the unread state invisible
+               exactly where there is more than one thing to notice. Caught
+               by reading computed styles, not by looking: with only the top
+               row unread the screenshot looked entirely correct. Hence the
+               side-specific `border-t-*` / `border-l-*` here, which cannot
+               collide. -->
+          <ul>
+            @for (n of items(); track n.id) {
+              <!-- Dismiss is a SIBLING of the row target, not a child.
+                   A <button> inside a <button> is invalid HTML, and browsers
+                   recover from it by flattening the nesting - so the inner
+                   control silently stops being clickable in some engines.
+                   Splitting them means no stopPropagation is needed either;
+                   the two are simply different targets. -->
+              <li
+                class="flex items-stretch hover:bg-gray-50 transition-colors
+                       border-t border-t-gray-100 first:border-t-0 border-l-2"
+                [class.border-l-ink]="isUnread(n)"
+                [class.border-l-transparent]="!isUnread(n)"
+              >
+                <!-- The row is a <button> even when there is no link,
+                     because activating it still marks it read - and a row
+                     that is sometimes focusable and sometimes not is worse
+                     to keyboard through than one that always is. -->
+                <button
+                  type="button"
+                  (click)="activate(n)"
+                  class="min-w-0 flex-1 text-left flex items-start gap-3 pl-3 pr-2 py-3"
+                >
+                  <lucide-icon
+                    [name]="levelIcon(n.level)"
+                    [size]="16"
+                    [strokeWidth]="2"
+                    [class]="levelClass(n.level) + ' shrink-0 mt-0.5'"
+                  />
+
+                  <span class="min-w-0 flex-1">
+                    <span class="flex items-start gap-2">
+                      <span
+                        class="flex-1 text-[13px] leading-snug text-ink"
+                        [class.font-semibold]="isUnread(n)"
+                      >{{ n.title }}</span>
+
+                      <!-- Bundled row: "12 events collapsed into this one".
+                           Only rendered above 1 - a "1" on every row would
+                           be noise carrying no information. -->
+                      @if (n.item_count > 1) {
+                        <span
+                          class="shrink-0 text-[10px] font-bold text-gray-500 bg-gray-100
+                                 rounded-full px-1.5 py-0.5 tabular-nums"
+                          [attr.aria-label]="n.item_count + ' occurrences'"
+                        >{{ n.item_count }}</span>
+                      }
+                    </span>
+
+                    @if (n.body) {
+                      <span class="block text-xs text-gray-500 leading-relaxed mt-0.5">
+                        {{ n.body }}
+                      </span>
+                    }
+
+                    <span class="flex items-center gap-2 mt-1">
+                      <time
+                        [attr.datetime]="n.created_at"
+                        class="text-[11px] text-gray-400 tabular-nums"
+                      >{{ relativeTime(n.created_at) }}</time>
+                      @if (hasLink(n)) {
+                        <span class="text-[11px] text-gray-400">·</span>
+                        <span class="text-[11px] font-medium text-ink">View</span>
+                      }
+                    </span>
+                  </span>
+                </button>
+
+                <!-- Always visible, not hover-revealed: this dashboard is
+                     used on a phone, where there is no hover and a
+                     reveal-on-hover control is simply unreachable. -->
+                <button
+                  type="button"
+                  (click)="archive(n.id)"
+                  [attr.aria-label]="'Dismiss: ' + n.title"
+                  class="shrink-0 self-start mt-3 mr-2 p-1.5 rounded-md text-gray-300
+                         hover:text-ink hover:bg-gray-100 transition-colors"
+                >
+                  <lucide-icon name="x" [size]="14" [strokeWidth]="2" />
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+
+      @if (items().length > 0) {
+        <div class="border-t border-gray-100 px-4 py-2">
+          <p class="text-[11px] text-gray-400 text-center">
+            Showing your most recent notifications
+          </p>
+        </div>
+      }
+    </div>
+  }
+</div>

@@ -13,6 +13,8 @@ import { A11yModule } from '@angular/cdk/a11y';
 import { AuthStore, BillingDataService, OnboardingDataService } from '@bedge/shared';
 import type { SubscriptionStatus } from '@bedge/shared';
 
+import { NotificationBellComponent } from './notification-bell.component';
+
 /** A single navigation item in the dashboard sidebar / bottom bar. */
 interface NavItem {
   path: string;
@@ -37,7 +39,14 @@ interface NavItem {
   selector: 'bedge-dashboard-layout',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, LucideAngularModule, A11yModule],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    LucideAngularModule,
+    A11yModule,
+    NotificationBellComponent,
+  ],
   templateUrl: './dashboard-layout.component.html',
 })
 export class DashboardLayoutComponent {

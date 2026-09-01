@@ -42,6 +42,7 @@ import {
   MapPin,
   MoreHorizontal,
   Search,
+  Inbox,
 } from 'lucide-angular';
 
 import {
@@ -110,6 +111,7 @@ export const appConfig: ApplicationConfig = {
         MapPin,
         MoreHorizontal,
         Search,
+        Inbox,
       }),
     ),
 
