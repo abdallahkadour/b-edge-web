@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "broken-image",
+        "value": "*",
+        "files": [
+          "**/*.component.html"
+        ],
+        "note": "Angular property bindings only. <img [src]=\"expr\"> has no literal `src` attribute, so the rule's src===undefined branch fires on every bound image in both apps. The images are real - verified live: the customer portfolio renders 4 Cloudinary photos that filter by service and open the booking funnel. A file-scoped wildcard is the documented form for rules with no extractable value. Scoped to *.component.html deliberately: a plain .html file with a genuinely empty src must still be caught.",
+        "createdAt": "2026-09-01T20:46:28.263Z"
+      }
+    ]
+  }
+}
