@@ -1281,7 +1281,7 @@ the artist bio and store name restored; verified zero leftovers.
   `${7*7}` into the artist bio, rendered at `/a/:handle` — the codebase's only
   raw-HTML surface. All escaped, no script executed, no template evaluated.
 
-**FINDING 1 — U+202E survives into Open Graph tags (Low/Medium)**
+**FINDING 1 — U+202E survives into Open Graph tags (Low/Medium) — FIXED 2026-09-01**
 
 Setting a bio to `Book now ‮moc.live//:sptth` produces:
 
@@ -1297,7 +1297,15 @@ HTML escaping does not help: bidi controls are not HTML-special. The fix is
 to strip `U+202A–U+202E` and `U+2066–U+2069` from any text bound for a meta
 tag. Predicted by §2.5.1 and confirmed on the first attempt.
 
-**FINDING 2 — `shift_minutes: 0` is a 422 (Low)**
+**Fixed** by `stripBidiControls` in `internal/share`, applied before HTML
+escaping. U+200E/U+200F (directional *marks*) are deliberately KEPT — they are
+weak hints rather than overrides and are legitimately used to disambiguate a
+phone number inside an Arabic sentence, so stripping them would degrade the
+Arabic typography this product is meant to be good at. Retested: the override
+is gone, the visible text survives, and `صالون الجمال في بيروت` still renders
+correctly in the card.
+
+**FINDING 2 — `shift_minutes: 0` is a 422 (Low) — FIXED 2026-09-01**
 
 The field is `min=-240,max=240`, which implies 0 is in range, but Go's
 `validate:"required"` rejects a zero value. A UI slider resting at 0 would
@@ -1305,12 +1313,22 @@ produce a confusing validation error rather than a no-op preview. Decide
 whether 0 means "no shift" or is genuinely invalid, and make the contract say
 so.
 
-**FINDING 3 — no date sanity range (Low)**
+**Fixed**: the field is now `*int`, so "you sent 0" and "you sent nothing" are
+distinguishable. Zero returns `400 SHIFT_MINUTES_ZERO` with a message naming
+the valid range; omitting the field still returns `422`.
+
+**FINDING 3 — no date sanity range (Low) — FIXED 2026-09-01**
 
 `date: "0000-01-01"` returns **200**. Harmless on a read-only endpoint that
 returns an empty day, but there is no lower bound; `99999-01-01` is rejected
 only because Go's parser fails on the width. A `[today − 2y, today + 2y]`
 range would be more honest.
+
+**Fixed**: `validateScheduleDate` bounds the date to ±2 years of today,
+returning `400 DATE_OUT_OF_RANGE`. Two years either side covers rebuilding
+last season and booking a wedding well ahead, while excluding the values that
+only ever arrive by accident. Retested: `0000-01-01` and `2076-09-16` now
+rejected, `2026-09-16` still accepted.
 
 **Inconsistency noted, not filed as a bug:** archiving twice returns 404,
 but marking an archived notification read returns 204. Read is idempotent by
