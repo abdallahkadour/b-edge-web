@@ -1331,6 +1331,25 @@ state.
 Build the full matrix — 11 statuses × 8 actions — and tick off every cell.
 Untested cells are where the next bug lives.
 
+**The matrix now exists.** `B-Edge-Booking-State-Machine-Matrix-v1.md`
+enumerates all 108 (status x action) cells with the expected outcome for each,
+extracted from the code rather than reasoned from memory. Execute that rather
+than inventing cases here.
+
+Writing it produced two confirmed defects before a single test ran: one of the
+two paths to `confirmed` sends the customer no notification at all (so whether
+they are told their booking is confirmed - and now whether they get the
+calendar link - depends on which button the artist pressed), and `refund_due`
+is a terminal state with no way out, with two bookings stuck in it today, one
+holding a $30 deposit that was actually paid.
+
+Two assertion rules from that document worth repeating here, because they
+apply to every suite: assert the exact **error code**, not merely non-200 -
+today zero tests assert any of the `BOOKING_NOT_*` codes, so a rejection with
+the wrong code cannot fail anything - and assert the row **did not move**, since
+a rejected action that still writes is the worst outcome and the easiest to
+miss.
+
 ### 2.5.8 What "aggressive" means for a tester here
 
 - **Assume the developer only tested the happy path.** They mostly did.
