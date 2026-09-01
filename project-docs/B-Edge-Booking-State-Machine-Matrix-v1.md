@@ -174,24 +174,39 @@ told. The announcement now lives in one shared `announceConfirmed`, so
 anything wired to "the booking became confirmed" cannot attach to one route
 and miss the other.
 
-### 4.3 Two statuses nothing can ever produce ⚠️ *(decide)*
+### 4.3 Two statuses nothing can ever produce — ✅ RESOLVED 2026-09-01
 
 `deposit_pending` and `refunded` are in the `bookings_status_check`
 constraint and are referenced by zero write paths. `refunded` is *especially*
 suspicious given §5.2 — it looks like the missing half of the refund flow.
 
-Either wire them or drop them from the CHECK. A status that cannot occur is a
-cell every future reader has to think about and then discover is dead.
+**`deposit_pending` dropped** (migration 032) — no write path ever set it and
+zero rows ever held it. **`refunded` kept**, because §5.2's fix gave it a
+writer, so it is now a real state rather than a vestigial one. The status
+count is 12 → 11, and the matrix loses 9 cells that existed only to prove an
+impossible status rejects everything.
 
-### 4.4 Cancelling a `confirmed` booking after it has started ⚠️ *(decide)*
+### 4.4 Cancelling a booking after it has started — ✅ RESOLVED 2026-09-01, narrower than proposed
 
 `CancelBooking` has no time guard, so a booking can be cancelled at any point
 — including mid-appointment or a week afterwards. `CompleteBooking` and
 `MarkNoShow` both require the start to be past; cancel is the only one of the
 three that does not care.
 
-Probably wants a boundary: after the appointment starts, the honest outcomes
-are *completed* or *no_show*, not *cancelled*.
+The obvious answer — block cancel once the start time passes — is **wrong as
+a blanket rule**, and working through the consequences is what caught it.
+
+Only `held` and `approved` have an expiry sweep. `pending` has none and
+cannot be approved once its start time passes (`BOOKING_TIME_PASSED`), so
+cancel is its *only* disposal; `deposit_paid` has no sweep either. A blanket
+guard would have turned both into permanent dead ends — creating exactly the
+class of bug §5.2 was about, while fixing a cosmetic one.
+
+**Scoped to `confirmed` only.** There the appointment genuinely happened and
+`completed`/`no_show` are the honest outcomes, and recording it as
+"cancelled" also misreports earnings. Everything else stays cancellable at
+any time. A test asserts the *narrowness* explicitly, so widening the guard
+later fails rather than silently stranding rows.
 
 ---
 
@@ -257,7 +272,32 @@ ownership guard working, not a failure. A replay returned
 
 ---
 
-## 6. How to execute this
+## 6. Execution — ✅ BUILT 2026-09-01
+
+`internal/booking/statematrix_test.go` is this table as data plus one loop:
+**7 actions × 11 statuses × 2 time positions = 154 cells**, every one
+asserted. Adding a status or an action is a row or a column, not a new
+hand-written test somebody has to remember.
+
+It enforces both rules below, neither of which the suite had before: the
+exact **error code**, and that a rejected action **did not write the row**.
+The mock repository re-implements the SQL's own status guard, so a *missing*
+service-layer guard surfaces as the repository being reached with the wrong
+status rather than passing silently.
+
+**Mutation-tested rather than assumed.** 154 cells passing first time is
+exactly the shape of a vacuous test, so three deliberate defects were
+introduced and the matrix caught all three:
+
+| Mutation | Caught |
+|---|---|
+| Removed `CompleteBooking`'s status guard | ✅ 6 failing cells |
+| Removed `MarkNoShow`'s *time* guard, status guard intact | ✅ `confirmed (future appointment): timing must be enforced` |
+| Correct rejection, **wrong error code** | ✅ `wrong rejection code` |
+
+The third is the one no previous test in this codebase could have caught.
+
+### The original plan, kept for the parts not yet done
 
 Build it as a **runnable script**, not a manual checklist — the value is that
 it stays a regression suite once the bulk-shift write path starts adding
