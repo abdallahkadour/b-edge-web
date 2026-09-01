@@ -1043,6 +1043,150 @@ Delete a user with unread notifications → rows removed by
 
 ---
 
+### Suite 14 — "Add to calendar" links
+
+**Added Sep 1, 2026.** Covers `internal/calendar`, migration 031, and the
+calendar link in the `booking_confirmed` message.
+
+Read first, because it determines what is even testable: **an `.ics` cannot
+be attached to a WhatsApp message.** Twilio restricts `text/calendar` to MMS.
+The customer always fetches it from a link, so every case below is about a
+URL, never an attachment.
+
+**14.1 — Token lifecycle**
+
+| Booking state | Expected |
+|---|---|
+| pending (never approved) | `calendar_token` **NULL**; no link anywhere |
+| approved | token minted, 64 lowercase hex |
+| approved → confirmed | link appears in the `booking_confirmed` message |
+| approved, deposit never paid → expired | token exists but **was never sent** |
+| approved twice (if a path ever allows it) | token **unchanged** — `COALESCE` guards it; a new token would kill every link already sent |
+| completed | token still resolves; the appointment happened |
+
+Confirm the link is **not** in the `booking_approved` message. An approved
+booking whose deposit never arrives would otherwise leave a ghost event the
+customer has to clear themselves.
+
+**14.2 — RFC 5545 conformance**
+
+Do not eyeball the file. Parse it with a real implementation (`python-
+icalendar`, or `ical4j`) and assert on the parsed object.
+
+- Every line ends **CRLF**; zero bare LF. Some desktop clients reject a
+  bare-LF file outright rather than degrading.
+- **No line exceeds 75 octets**, continuations included.
+- Folding **never splits a UTF-8 sequence**. Test with Arabic (2 octets/char)
+  and emoji (4 octets/char) — in an Arabic-first product a naive byte slice
+  corrupts output almost every time, not rarely.
+- Unfolding returns the original line **exactly**.
+- `SUMMARY` with a comma, a semicolon and a backslash round-trips. Backslash
+  must be escaped first, or later escapes get double-escaped.
+- A newline inside a store name becomes `\n`, not a real break — one
+  multi-line value otherwise turns the rest of the file into garbage
+  properties.
+- `URL` is **not** escaped: a query string containing a comma must survive.
+
+**14.3 — Timezone, and Lebanon's DST specifically**
+
+- `DTSTART`/`DTEND` are **UTC instants** (trailing `Z`), never floating local
+  time.
+- Parse the file and convert back: the instant must equal the booked slot in
+  the store's zone.
+- A booking either side of a **Lebanon DST transition** resolves to the right
+  wall-clock time. This is not academic — Lebanon has moved its DST dates by
+  government decree mid-season, and a floating time would shift the
+  appointment by an hour on every device whose tz database lagged.
+- A store whose `timezone` is unloadable falls back to **UTC**, not to the
+  server's local time. A wrong time with no sign it is wrong is the worst
+  available failure.
+- The landing page shows the **store's** local time, not the viewer's — a
+  customer checking this from abroad before travelling must not read a
+  converted one.
+
+**14.4 — Reschedule and SEQUENCE ⚠ the load-bearing case**
+
+This is where the feature does real damage if it is wrong.
+
+- Shift a booking, then re-fetch: **UID identical, SEQUENCE strictly higher,
+  DTSTART moved.**
+- Import the first file into a real calendar, then the second: the event
+  **moves**. It must not appear twice.
+- Same SEQUENCE with a changed time → the client ignores the update. Confirm
+  this is what a missing increment actually costs.
+- **Bulk shift a whole day** once that write path exists, then check *every*
+  affected booking's sequence incremented. One missed row is one customer
+  with two appointments.
+- Regression guard to keep permanently: any code path writing `start_time` or
+  `end_time` without touching `calendar_sequence` is a bug. Grep for it.
+
+**14.5 — Cancellation and withdrawal**
+
+| Status | Expected |
+|---|---|
+| cancelled / expired / refunded / refund_due | resolves, `METHOD:CANCEL`, `STATUS:CANCELLED`, **same UID** |
+| soft-deleted (`deleted_at`) | same as cancelled |
+| completed / no_show | **`METHOD:PUBLISH`** — withdrawing a past event rewrites the customer's history |
+
+- A cancelled booking must **never 404**. That would strand the stale
+  appointment in the customer's calendar permanently — worse than the problem
+  this feature solves.
+- The cancelled landing page still offers the file, because that file is what
+  performs the removal.
+- Import the event, then import the cancellation: it **disappears**.
+
+**14.6 — Authorisation**
+
+The token is the only credential, so this is the whole security surface.
+
+- Wrong length, uppercase hex, non-hex, empty, `../../etc/passwd`, a UUID,
+  and another booking's `review_token` → all **404**, all identical, and
+  none reach the database.
+- A well-formed unknown token returns the **same** 404 as a malformed one. A
+  caller must not be able to distinguish "wrong shape" from "no such
+  booking" by status, body or timing.
+- The token is **not** in the guest funnel's `BookingResponse` and not in any
+  public discovery payload. Artist-facing only.
+- The page sends `noindex, nofollow` and `Cache-Control: no-store`. A private
+  appointment link must never be indexed, and a cached `.ics` hands the
+  customer a stale event exactly when they are trying to fix one.
+
+**14.7 — The landing page**
+
+- Renders at **390px** with no horizontal scroll.
+- Both buttons work: Google opens `calendar.google.com/render`, the other
+  downloads the file.
+- Artist-supplied store and service names are **HTML-escaped** — this is one
+  of only two raw-HTML surfaces in the product.
+- Bidi overrides stripped from the page, the `.ics` **and** the Google deep
+  link. Check the percent-encoded form too: `%E2%80%AE` must not appear.
+- Arabic store and service names render correctly in all three.
+
+**14.8 — Real-client acceptance ⚠ cannot be automated**
+
+Suite 11 has the same shape: the only honest test is the real client.
+
+Import the file into **Apple Calendar (iOS), Google Calendar (Android) and
+Outlook**, and confirm the event lands at the right time with the right
+title and location. Then reschedule and re-import into each, and record
+which ones update in place versus duplicating.
+
+Expected, and worth writing down rather than discovering later: the
+**Google deep link cannot update**. An event added that way carries Google's
+own id, not our UID, so a rescheduled booking gives that customer a second
+entry. Apple/Outlook users who took the `.ics` do get in-place updates.
+Fixing it would mean OAuth into the customer's Google account.
+
+**14.9 — Adversarial**
+
+- Store name at exactly 200 characters, and 200 Arabic characters, folded
+  into the file — parse it back and compare.
+- `<script>`, `{{7*7}}`, `${7*7}`, and a 10,000-character name into service
+  and store names. Inert everywhere.
+- A booking whose `end_time` precedes its `start_time` (if the data ever
+  allows it) — the file must not claim a negative duration.
+- 50 concurrent fetches of the same token → identical bytes, no errors.
+
 ## 2.5 Adversarial hardening pass — applies to EVERY suite above
 
 **Added Sep 1, 2026 after auditing this document against its own standards.**
@@ -1081,6 +1225,21 @@ description, notification title:
 | `صالون الجمال` | Basic Arabic. Must store, retrieve and render intact. |
 | Mixed `Rania صالون 2026` | Bidirectional reordering; check the *rendered* order, not just the stored bytes. |
 | `‮` (U+202E RTL override) | Can visually reverse surrounding text — a spoofing vector in a shared link preview. |
+
+**Standing rule, added Sep 1, 2026 after this was found twice.** The U+202E
+case was written against *one* surface (the share card) and found there. The
+second surface — a customer-supplied name interpolated into a notification
+body the **artist** reads — was found by accident while building unrelated
+UI, not by this plan. A third (service and store names inside an `.ics`
+rendered by the customer's own calendar app) was only caught because someone
+went looking.
+
+So test the *class*, not the instance. Whenever user-supplied text is
+rendered to a **different person**, that surface needs the bidi case, and
+escaping never covers it — a bidi override is not markup, so neither
+`html.EscapeString` nor Angular interpolation touches it. Current surfaces:
+Open Graph tags, notification titles and bodies, `.ics` SUMMARY/LOCATION,
+and the Google Calendar deep link. Any new one inherits the case.
 | `​` zero-width space | Bypasses naive "is it empty" and profanity checks. |
 | `👰🏽‍♀️💄` (ZWJ emoji) | Multi-codepoint graphemes; naive truncation splits them into garbage. |
 | `José` as NFC vs NFD | Two byte sequences, one visual string — breaks equality and dedup. |
@@ -1272,6 +1431,7 @@ All five originally-confirmed gaps are now closed (2026-08-21) — see the updat
 | 1–8 | Live-executed at least once. 12 real bugs found and fixed. |
 | 9–11 | **Written, NOT executed.** |
 | **12–13** | **Executed 2026-09-01.** Pass, with 5 findings, all fixed. Suite 13 re-run against the real UI after the bell shipped later the same day. |
+| **14** | **Partially executed 2026-09-01**, same day it was written — 14.1–14.6 verified live, including a real RFC 5545 parse. **14.7 partially, 14.8 not at all** (needs three physical devices), 14.9 unrun. |
 | **§2.5 (partial)** | **Executed 2026-09-01** for Unicode/RTL, injection, boundary values, concurrency and idempotency **against the newest surfaces only**. 1 real finding. Fault injection, fuzzing and the state-machine matrix remain unrun. |
 
 ### Execution results — 2026-09-01
@@ -1431,6 +1591,39 @@ does not help either: a bidi override is not markup. `stripBidiControls` was
 therefore extracted from `internal/share` into the leaf package
 `internal/pkg/bidi` and applied at both producers, rather than left as two
 copies of a security rule that would drift.
+
+**Third pass — Suite 14, calendar links, executed 2026-09-01**
+
+Written and partially executed the same day the feature shipped.
+
+- **14.1 Token lifecycle.** A guest booking was made through the real funnel
+  and approved through the real API; `calendar_token` appeared only at
+  approval, 64 hex characters.
+- **14.2 RFC conformance.** The document was parsed by **python-icalendar**,
+  a real RFC 5545 implementation, not by hand-rolled assertions. 429 bytes,
+  zero bare LF, ends CRLF, **max 71 octets per line**. Folding measured
+  separately against Arabic (2 octets/char) and emoji (4 octets/char): never
+  over 75, and multi-byte runes correctly force earlier breaks at 74 and 72.
+- **14.3 Timezone.** The parser resolved `DTSTART` back to
+  `Wednesday 14 October 2026, 09:00` in `Asia/Beirut` — exactly the booked
+  slot — from `20261014T060000Z`. An unknown zone fell back to UTC.
+  **The DST-boundary case was NOT run.**
+- **14.4 Reschedule.** Shifting the booking kept the UID and took SEQUENCE
+  **0 → 1**, DTSTART moving with it. **The real-client half — import, shift,
+  re-import, confirm it moves rather than duplicating — was NOT run.**
+- **14.5 Cancellation.** Cancelling through the API produced `METHOD:CANCEL`
+  / `STATUS:CANCELLED` with the same UID, and the page switched to
+  "Remove from calendar" while still offering the file.
+- **14.6 Authorisation.** Malformed tokens (short, long, non-hex, uppercase,
+  path traversal) and a well-formed unknown one all returned an identical
+  404.
+
+**Not executed, and the gap is real:** 14.8 needs the file imported into
+Apple Calendar, Google Calendar and Outlook on physical devices. Like Suite
+11, the feature's actual acceptance test cannot run in CI — the whole point
+is what a client we do not control does with the file. Until that runs, the
+claim "a rescheduled booking updates in place" is **reasoned, not
+observed**.
 
 **Inconsistency noted, not filed as a bug:** archiving twice returns 404,
 but marking an archived notification read returns 204. Read is idempotent by
