@@ -731,11 +731,24 @@ from a Beirut-local machine at midday will pass while the interesting cases go u
 - Rationale: telling a customer a salon is shut when nobody filled in the hours costs the
   artist real bookings. A "Closed" pill here is a bug, not a cosmetic issue.
 
-**9.5 — A failed hours read must not break the profile**
-- Simulate by stopping Postgres mid-request, or temporarily break the hours query
+**9.5 — A failed hours read must not break the profile** *(method corrected
+2026-09-01 — the original could not work)*
 - The profile must still render, with every store reporting `unknown`
 - A customer losing access to a salon's page because opening hours would not load is a far
   worse outcome than a missing badge
+- **Do NOT "stop Postgres mid-request".** That was this case's original method and it
+  cannot test anything: the artist and store queries run *before* `buildStoreCards`, so a
+  total outage fails the request earlier for an unrelated reason and returns a clean 500.
+  There is no profile left to degrade. Executing it that way measures the wrong thing and
+  looks like a failure.
+- The behaviour needs **query-level** fault injection — fail `GetStoreHours` while
+  everything else succeeds. That is a unit test, and it already exists:
+  `TestBuildStoreCards_HoursReadFails_ProfileStillRenders`. Both error branches in
+  `buildStoreCards` (hours *and* exceptions) swallow to `nil`, so this is verified rather
+  than assumed.
+- What the live outage *did* usefully confirm: a total database failure returns
+  `500 INTERNAL_ERROR` with a generic message and no internal detail leaked, and the API
+  recovers on its own once Postgres returns — no restart needed.
 
 **9.6 — Map pin, and the half-pin guard**
 - Artist dashboard → store edit → drop a pin → save → reload → pin persists
@@ -1448,7 +1461,8 @@ All five originally-confirmed gaps are now closed (2026-08-21) — see the updat
 | Suites | Status |
 |---|---|
 | 1–8 | Live-executed at least once. 12 real bugs found and fixed. |
-| 9–11 | **Written, NOT executed.** |
+| 9–10 | **Executed 2026-09-01.** Pass, 1 finding, fixed. 9.5's *method* was corrected — it could not work as written. |
+| 11 | **Written, NOT executed.** Cannot be automated: the acceptance test is pasting a link into WhatsApp. |
 | **12–13** | **Executed 2026-09-01.** Pass, with 5 findings, all fixed. Suite 13 re-run against the real UI after the bell shipped later the same day. |
 | **14** | **Partially executed 2026-09-01**, same day it was written — 14.1–14.6 verified live, including a real RFC 5545 parse. **14.7 partially, 14.8 not at all** (needs three physical devices), 14.9 unrun. |
 | **§2.5 (partial)** | **Executed 2026-09-01** for Unicode/RTL, injection, boundary values, concurrency and idempotency **against the newest surfaces only**. 1 real finding. Fault injection, fuzzing and the state-machine matrix remain unrun. |
@@ -1643,6 +1657,87 @@ Apple Calendar, Google Calendar and Outlook on physical devices. Like Suite
 is what a client we do not control does with the file. Until that runs, the
 claim "a rescheduled booking updates in place" is **reasoned, not
 observed**.
+
+**Fourth pass — Suites 9 and 10, executed 2026-09-01**
+
+Driven against the live stack: API by direct request, UI in headless Chrome
+over CDP with real timezone overrides.
+
+**Suite 9 — Open/Closed and map pins**
+
+- **9.1** All three trading states exact: past closing → `outside_hours` with
+  **no** `opens_at` (deliberately does not point at tomorrow); open →
+  `closes_at`; opening later today → `outside_hours` **with** `opens_at`.
+- **9.2 — the diaspora case, and the sharpest pass here.** Rendered at
+  `Asia/Beirut`, `America/New_York` and `Asia/Tokyo`. **"Closes 11:59 PM" in
+  all three**, including Tokyo where the device clock had already rolled to
+  the next day. The component reads the offset off the string rather than
+  handing it to `toLocaleTimeString`, which is what makes it hold.
+- **9.3** `closed_today` is distinct from `outside_hours` in the payload,
+  though both render the same to the customer.
+- **9.4** A store with no hours reports `unknown`, and the UI renders **no
+  badge**: two stores on screen, `badgeCount: 1`, and the word "Closed"
+  appears nowhere in the document. This is the one that costs the artist
+  bookings if it regresses.
+- **9.5** Method corrected — see the case above. Behaviour verified by unit
+  test, not by outage.
+- **9.6** All four location guards exact: `INCOMPLETE_LOCATION` for either
+  coordinate alone, `CONFLICTING_LOCATION` for pin + `clear_location`,
+  `clear_location` alone removes the pin, latitude 91 rejected. In the UI a
+  pinned store renders map + "Get directions"; an unpinned one renders
+  **neither**.
+- **9.7 — DST.** `09:00` local resolved to **07:00Z on 2027-01-13** and
+  **06:00Z on 2027-07-14**, matching Python `zoneinfo` ground truth exactly.
+  The zone is applied per-date, not once.
+
+**Suite 10 — Portfolio tagged to services**
+
+- **10.1 / 10.2** Tags save and persist; an empty list is a real replace to
+  `[]`, not a no-op.
+- **10.3** A cross-salon service is rejected `INVALID_SERVICE_ID` with *"One
+  or more services do not belong to your salon"* — the failing ID appears
+  **nowhere** in the response, and nothing was written.
+- **10.4** A foreign photo and a nonexistent one return **byte-identical**
+  404 bodies, so IDs cannot be enumerated. A product photo also 404s. (No
+  other artist had media, so one was seeded for this and removed after.)
+- **10.5** Chips were exactly `All`, `Bridal makeup`, `nails` — the artist's
+  other two services have no tagged photos and correctly got no chip. Filter
+  narrowed 4 → 2 and cleared back to 4.
+- **10.6 — verified by the outgoing request, not by the screen.** Tapping a
+  photo fires `/bookings/slots?service_id=…`, which is unambiguous evidence
+  of which service the funnel opened on. All four rules held: one-tag photo →
+  that service; both-tagged photo under a `nails` filter → nails; under a
+  `Bridal makeup` filter → Bridal makeup; and with **no** filter a
+  both-tagged photo and an untagged photo are **not interactive at all** —
+  the deliberate no-op, since guessing would start a booking for the wrong
+  treatment.
+- **10.7** Reorder returns 204 and moving a photo to position 0 **changes the
+  cover**. A bogus ID and a partial list both return `400 INVALID_REORDER`
+  and leave the order untouched.
+
+**FINDING 6 — the back button covers the artist's name (Medium) — FIXED
+2026-09-01**
+
+On the customer artist profile, the back button is `fixed top-4 left-4`,
+designed to float over a 300px photo hero. But the hero is omitted entirely
+when the artist has no avatar — so the button lands directly on the artist's
+name. Measured overlap **28px at every viewport from 320 to 1280**, which is
+why the name rendered as "nia" instead of "Rania".
+
+The existing comment had anticipated the no-avatar case for *contrast*
+("works over both the photo hero and the plain background") but not for
+*collision*.
+
+It matters more than a cosmetic nudge: the name is the single most important
+text on a screen whose entire job is answering "is this the right person?",
+and the profile is the landing page for every shared Instagram link.
+
+**Fixed** by making the content block's top padding conditional on the hero
+rendering. Re-measured: clear at all five viewports.
+
+**Environment restored:** business hours, the store pin, portfolio tags and
+photo order were all returned to the state they were found in, and the three
+seeded photos and one seeded foreign photo removed. Verified, not assumed.
 
 **Inconsistency noted, not filed as a bug:** archiving twice returns 404,
 but marking an archived notification read returns 204. Read is idempotent by

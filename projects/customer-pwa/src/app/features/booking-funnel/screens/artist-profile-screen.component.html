@@ -26,7 +26,20 @@
     </div>
   }
 
-  <div class="px-6 pt-5 flex flex-col gap-5">
+  <!-- Top padding depends on whether the hero rendered. The back button
+       above is `fixed`, so it does not participate in flow: with a hero it
+       floats over 300px of photo and clears everything, but when the artist
+       has no avatar the hero is omitted entirely and the button lands
+       directly on the artist's name - measured at 28px of overlap, at every
+       viewport from 320 to 1280. The name is the single most important text
+       on a screen whose whole job is "is this the right person?", so it
+       cannot be the thing that gets covered. pt-16 reserves the button's
+       own height plus its top offset. -->
+  <div
+    class="px-6 flex flex-col gap-5"
+    [class.pt-5]="artist().avatar_url"
+    [class.pt-16]="!artist().avatar_url"
+  >
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2">
         <h1 class="text-[24px] font-bold leading-[32px] tracking-[-0.02em]">{{ artist().name }}</h1>
