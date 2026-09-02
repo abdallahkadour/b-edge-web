@@ -1,16 +1,29 @@
 # B-Edge — Booking state machine matrix
 
-**v1, 2026-09-01.** Companion to `E2E-TEST-PLAN.md` §2.5.7. Extracted from
-`internal/booking/service.go` and `repository.go` at commit `bb776b1`, not
-reasoned from memory.
+**v1.1, 2026-09-02.** Companion to `E2E-TEST-PLAN.md` §2.5.7. Extracted from
+`internal/booking/service.go` and `repository.go`, not reasoned from memory.
+
+> **v1.1 re-verified against code 2026-09-02.** v1 was written *before* the
+> fixes it prescribes were applied, and then not re-read after — so it claimed
+> 12 statuses and 108 cells when migration 032 (decision §4.3, in this very
+> document) had dropped one, never learned about `MarkRefunded` (the action
+> added to close §5.2), and still called `refund_due` a bug and `refunded`
+> unreachable after both were fixed. Corrected throughout.
+>
+> Recorded rather than quietly patched, because it is the failure mode this
+> repository keeps hitting: **a document that prescribes a change has to be
+> re-read after the change lands**, or it becomes the most confidently wrong
+> thing in the repo.
 
 ---
 
 ## 1. Why this document exists
 
-`bookings.status` has **12 legal values**. Nine service actions change it,
-plus two background sweeps. That is **108 (status × action) cells**, of which
-**9 are legal transitions** and **99 must be rejected**.
+`bookings.status` has **11 legal values** (12 until migration 032 dropped
+`deposit_pending`). **Ten** service actions change it, plus two background
+sweeps. That is **110 (status × action) cells**, of which **14 are legal** —
+nine actions with a single legal source, plus `CancelBooking`, legal from all
+five non-terminal states — and **96 must be rejected**.
 
 The existing test suite covers happy paths, ownership checks, and a handful
 of wrong-status cases. Nobody has ever enumerated the 99. So for most cells
@@ -44,15 +57,14 @@ single test was run.
 | `held` | `HoldGuestSlot` | no |
 | `pending` | `SubmitGuestBooking` / `SubmitBooking` | no |
 | `approved` | `ApproveBooking` | no |
-| `deposit_pending` | **nothing** — see §4.3 | — |
 | `deposit_paid` | `MarkDepositReceived` | no |
 | `confirmed` | `ConfirmDeposit` **or** `ConfirmDepositReceived` | no |
 | `completed` | `CompleteBooking` | yes |
 | `cancelled` | `CancelBooking` | yes |
 | `expired` | the two sweeps | yes |
 | `no_show` | `MarkNoShow` | yes |
-| `refund_due` | `CancelBooking(refundDue=true)` | **yes — and that is a bug, §5.2** |
-| `refunded` | **nothing** — see §4.3 | — |
+| `refund_due` | `CancelBooking(refundDue=true)` | no — `MarkRefunded` closes it (was a dead end until §5.2 was fixed) |
+| `refunded` | `MarkRefunded` | yes |
 
 ### Actions (9) and their guards, as they exist today
 
@@ -66,7 +78,8 @@ single test was run.
 | `ConfirmDepositReceived` | `approved` | none | `BOOKING_NOT_APPROVED` |
 | `CompleteBooking` | `confirmed` | **start must be past** | `BOOKING_NOT_CONFIRMED` |
 | `MarkNoShow` | `confirmed` | **start must be past** | `BOOKING_NOT_CONFIRMED` |
-| `CancelBooking` | any non-terminal | none | `BOOKING_NOT_CANCELLABLE` |
+| `MarkRefunded` | `refund_due` | none | `BOOKING_NOT_REFUND_DUE` |
+| `CancelBooking` | any non-terminal | **`confirmed` only: start must be future** | `BOOKING_NOT_CANCELLABLE` · `BOOKING_ALREADY_STARTED` |
 
 ### Sweeps (2) — lazy, on read, no scheduler
 
@@ -84,12 +97,15 @@ questionable, decision needed (§4)
 
 ### 3a. Artist actions
 
+`MarkRefunded` is legal from `refund_due` only and rejects every other status
+with `BOOKING_NOT_REFUND_DUE`. It is left out of the grid below purely to keep
+the table readable, not because it is exempt.
+
 | status ↓ / action → | Approve | MarkDepRcvd | ConfirmDep | ConfirmDepRcvd | Complete | NoShow |
 |---|---|---|---|---|---|---|
 | `held` | ✗ NOT_PENDING | ✗ NOT_APPROVED | ✗ NOT_DEPOSIT_PAID | ✗ NOT_APPROVED | ✗ NOT_CONFIRMED | ✗ NOT_CONFIRMED |
 | `pending` | ✅ *(future only)* | ✗ NOT_APPROVED | ✗ NOT_DEPOSIT_PAID | ✗ NOT_APPROVED | ✗ NOT_CONFIRMED | ✗ NOT_CONFIRMED |
 | `approved` | ✗ NOT_PENDING | ✅ ⚠️ | ✗ NOT_DEPOSIT_PAID | ✅ ⚠️ | ✗ NOT_CONFIRMED | ✗ NOT_CONFIRMED |
-| `deposit_pending` | ✗ NOT_PENDING | ✗ NOT_APPROVED | ✗ NOT_DEPOSIT_PAID | ✗ NOT_APPROVED | ✗ NOT_CONFIRMED | ✗ NOT_CONFIRMED |
 | `deposit_paid` | ✗ NOT_PENDING | ✗ NOT_APPROVED | ✅ ⚠️ **silent** | ✗ NOT_APPROVED | ✗ NOT_CONFIRMED | ✗ NOT_CONFIRMED |
 | `confirmed` | ✗ NOT_PENDING | ✗ NOT_APPROVED | ✗ NOT_DEPOSIT_PAID | ✗ NOT_APPROVED | ✅ *(past only)* | ✅ *(past only)* |
 | `completed` | ✗ NOT_PENDING | ✗ NOT_APPROVED | ✗ NOT_DEPOSIT_PAID | ✗ NOT_APPROVED | ✗ NOT_CONFIRMED | ✗ NOT_CONFIRMED |
@@ -106,14 +122,13 @@ questionable, decision needed (§4)
 | `held` | ✅ | ✅ | ✅ | ✅ *(if expired)* | — |
 | `pending` | ✗ HOLD_EXPIRED | ✗ NOT_HELD | ✅ | — | — |
 | `approved` | ✗ HOLD_EXPIRED | ✗ NOT_HELD | ✅ | — | ✅ *(if past deadline)* |
-| `deposit_pending` | ✗ HOLD_EXPIRED | ✗ NOT_HELD | ✅ | — | — |
 | `deposit_paid` | ✗ HOLD_EXPIRED | ✗ NOT_HELD | ✅ | — | — |
-| `confirmed` | ✗ HOLD_EXPIRED | ✗ NOT_HELD | ✅ ⚠️ | — | — |
+| `confirmed` | ✗ HOLD_EXPIRED | ✗ NOT_HELD | ✅ *(future only, §4.4)* | — | — |
 | `completed` | ✗ HOLD_EXPIRED | ✗ NOT_HELD | ✗ NOT_CANCELLABLE | — | — |
 | `cancelled` | ✗ HOLD_EXPIRED | ✗ NOT_HELD | ✗ NOT_CANCELLABLE | — | — |
 | `expired` | ✗ HOLD_EXPIRED | ✗ NOT_HELD | ✗ NOT_CANCELLABLE | — | — |
 | `no_show` | ✗ HOLD_EXPIRED | ✗ NOT_HELD | ✗ NOT_CANCELLABLE | — | — |
-| `refund_due` | ✗ HOLD_EXPIRED | ✗ NOT_HELD | ✗ NOT_CANCELLABLE ⚠️ | — | — |
+| `refund_due` | ✗ HOLD_EXPIRED | ✗ NOT_HELD | ✗ NOT_CANCELLABLE | — | — |
 | `refunded` | ✗ HOLD_EXPIRED | ✗ NOT_HELD | ✗ NOT_CANCELLABLE | — | — |
 
 ---
@@ -176,8 +191,8 @@ and miss the other.
 
 ### 4.3 Two statuses nothing can ever produce — ✅ RESOLVED 2026-09-01
 
-`deposit_pending` and `refunded` are in the `bookings_status_check`
-constraint and are referenced by zero write paths. `refunded` is *especially*
+`deposit_pending` and `refunded` **were** in the `bookings_status_check`
+constraint and referenced by zero write paths. `refunded` is *especially*
 suspicious given §5.2 — it looks like the missing half of the refund flow.
 
 **`deposit_pending` dropped** (migration 032) — no write path ever set it and
@@ -303,7 +318,7 @@ Build it as a **runnable script**, not a manual checklist — the value is that
 it stays a regression suite once the bulk-shift write path starts adding
 transitions to this same machine.
 
-For each of the 108 cells: seed a booking in the row's status, call the
+For each of the 110 cells: seed a booking in the row's status, call the
 column's action as the correct role, assert the exact status code **and error
 code** from §3, then re-read the row and assert the status did or did not
 change.
