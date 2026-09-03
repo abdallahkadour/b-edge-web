@@ -211,6 +211,37 @@ export class CalendarComponent implements OnInit {
     return `https://wa.me/${booking.customer_phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
   }
 
+  /**
+   * "Send calendar link" - the manual stopgap for the add-to-calendar
+   * feature, and an exact sibling of reviewRequestLink above.
+   *
+   * The link itself is served by the API (GET /c/:token), not the customer
+   * PWA, so the host is derived from apiBaseUrl rather than customerPwaUrl.
+   * Deriving rather than adding a third environment field is deliberate: the
+   * calendar page lives on the API host BY DEFINITION, so tying it to
+   * apiBaseUrl means it cannot drift out of step, whereas a separate field
+   * could be updated in one environment file and forgotten in the other.
+   *
+   * Only offered once the booking is confirmed and still in the future.
+   * A calendar link for an appointment that has already happened is clutter,
+   * and one for an unconfirmed booking would put an event in someone's
+   * calendar that may still expire unpaid - the same reasoning that keeps the
+   * automated message on the CONFIRMED transition rather than the approved
+   * one (see announceConfirmed in the Go service).
+   */
+  calendarShareLink(booking: EnrichedBooking): string | null {
+    if (!booking.calendar_token || !booking.customer_phone) return null;
+    if (booking.status !== 'confirmed') return null;
+    if (new Date(booking.start_time) <= new Date()) return null;
+
+    const apiOrigin = environment.apiBaseUrl.replace(/\/api\/v1\/?$/, '');
+    const calendarUrl = `${apiOrigin}/c/${booking.calendar_token}`;
+    const message =
+      `Hi ${booking.customer_name}! Here's your appointment - ` +
+      `tap to add it to your calendar: ${calendarUrl}`;
+    return `https://wa.me/${booking.customer_phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+  }
+
   private load(): void {
     this.loading.set(true);
     this.errorMessage.set(null);

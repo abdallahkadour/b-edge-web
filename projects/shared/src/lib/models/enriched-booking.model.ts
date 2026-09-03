@@ -28,6 +28,11 @@ export interface EnrichedBooking {
   readonly deposit_paid_at?: string;
   readonly deposit_reference?: string;
   readonly review_token?: string; // present once completed; see leave-review.page.ts
+  /** Present once the booking is APPROVED. Builds the customer's
+   *  "add to calendar" link (`<api-origin>/c/<token>`). Artist-facing only,
+   *  for the same reason as review_token above: until WhatsApp delivery is
+   *  live, the artist sending it by hand is the only way it reaches anyone. */
+  readonly calendar_token?: string;
   readonly channel: BookingChannel;
   readonly special_requests?: string;
   readonly cancellation_reason?: string;
