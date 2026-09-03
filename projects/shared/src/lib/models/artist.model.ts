@@ -109,6 +109,11 @@ export interface Service {
   readonly description?: string;
   readonly duration_min: number;
   readonly active_duration_min?: number;
+  /** Cleanup minutes reserved AFTER the appointment; 0 = none (default).
+   *  Deliberately never rendered in the customer PWA - the customer did not
+   *  buy the cleanup, and a slot always advertises the service duration.
+   *  See migration 033. */
+  readonly buffer_min?: number;
   readonly price: string;          // decimal as string
   readonly deposit_amount: string; // decimal as string
   readonly deposit_deadline_hours: number;
@@ -154,6 +159,7 @@ export interface CreateServiceRequest {
   description?: string;
   duration_min: number;          // 15–480
   active_duration_min?: number;  // min 15
+  buffer_min?: number;           // 0–120 cleanup after the appointment
   price: string;                 // decimal string
   deposit_amount: string;        // decimal string
   deposit_deadline_hours: number; // 1–168
@@ -166,6 +172,7 @@ export interface UpdateServiceRequest {
   name_ar?: string;
   description?: string;
   duration_min?: number;
+  buffer_min?: number;           // 0–120 cleanup after the appointment
   price?: string;
   deposit_amount?: string;
   deposit_deadline_hours?: number;

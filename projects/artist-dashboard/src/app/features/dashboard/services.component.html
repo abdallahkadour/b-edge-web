@@ -163,6 +163,27 @@
                 />
               </div>
               <div>
+                <!-- Cleanup time, deliberately worded from the artist's side.
+                     "Buffer" is our word; "cleanup time" is hers. The helper
+                     line states the one thing that is not obvious: the
+                     customer never sees it. -->
+                <label class="block text-xs text-gray-400 mb-1">Cleanup after (min)</label>
+                <input
+                  bedgeInput
+                  type="number"
+                  class="h-9 text-sm"
+                  min="0"
+                  max="120"
+                  step="5"
+                  [value]="editForm().buffer_min"
+                  (input)="editForm.update(f => ({...f, buffer_min: +$any($event.target).value}))"
+                />
+                <p class="text-[11px] text-gray-400 mt-1 leading-snug">
+                  Held on your calendar after each appointment. Customers never
+                  see it, and it is released if you finish early.
+                </p>
+              </div>
+              <div>
                 <label class="block text-xs text-gray-400 mb-1">Deposit (USD)</label>
                 <input
                   type="text"

@@ -21,12 +21,13 @@ interface ServiceForm {
   name: string;
   price: string;
   duration_min: number;
+  buffer_min: number;
   deposit_amount: string;
   description: string;
 }
 
 const emptyForm = (): ServiceForm => ({
-  name: '', price: '', duration_min: 60, deposit_amount: '0', description: '',
+  name: '', price: '', duration_min: 60, buffer_min: 0, deposit_amount: '0', description: '',
 });
 
 /**
@@ -65,7 +66,7 @@ export class ServicesComponent implements OnInit {
 
   canCreate(): boolean {
     const f = this.addForm();
-    return f.name.trim().length >= 2 && parseFloat(f.price) >= 0 && f.duration_min >= 15;
+    return f.name.trim().length >= 2 && parseFloat(f.price) >= 0 && f.duration_min >= 15 && f.buffer_min >= 0 && f.buffer_min <= 120;
   }
 
   depositSummary(svc: Service): string {
@@ -95,6 +96,7 @@ export class ServicesComponent implements OnInit {
       name: f.name.trim(),
       price: f.price,
       duration_min: f.duration_min,
+      buffer_min: f.buffer_min,
       deposit_amount: f.deposit_amount || '0',
       deposit_deadline_hours: 24,
       description: f.description.trim() || undefined,
@@ -124,6 +126,7 @@ export class ServicesComponent implements OnInit {
       name: svc.name,
       price: svc.price,
       duration_min: svc.duration_min,
+      buffer_min: svc.buffer_min ?? 0,
       deposit_amount: svc.deposit_amount,
       description: svc.description ?? '',
     });
@@ -141,6 +144,7 @@ export class ServicesComponent implements OnInit {
       name: f.name.trim(),
       price: f.price,
       duration_min: f.duration_min,
+      buffer_min: f.buffer_min,
       deposit_amount: f.deposit_amount,
       description: f.description.trim() || undefined,
     };
