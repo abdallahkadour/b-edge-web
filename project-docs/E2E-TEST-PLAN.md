@@ -1200,6 +1200,124 @@ Fixing it would mean OAuth into the customer's Google account.
   allows it) — the file must not claim a negative duration.
 - 50 concurrent fetches of the same token → identical bytes, no errors.
 
+### Suite 15 — Service buffer / cleanup time
+
+**Added Sep 3, 2026.** Covers migration 033, `services.buffer_min`,
+`bookings.blocked_until`, and the release on early completion.
+
+**Sprint 5's interval algebra has no suite here, deliberately.** It shipped
+zero user-visible change — that was the point — so there is nothing to drive
+through a UI. Its safety net is `slots_golden_test.go`, which pins the exact
+slot output, plus `occupancy_test.go` at 100%. Inventing E2E cases for it
+would be theatre.
+
+**15.1 — The artist sets it, the customer never sees it**
+
+- Dashboard → Services → edit → **Cleanup after (min)** → set 30 → save →
+  reload → persists.
+- Customer funnel for that service → every slot still advertises the
+  **service duration**, never duration+buffer. Read the actual `end_time` in
+  the network response, not the rendered label.
+- The word "cleanup", "buffer" or the number must appear **nowhere** in the
+  customer PWA. Search the rendered DOM.
+
+**15.2 — It actually reserves time**
+
+- Book a slot, then re-query availability.
+- The next offered start must be at or after `end_time + buffer`, rounded up
+  to the 15-minute grid.
+- A slot ending exactly when the buffer window begins is still offered —
+  half-open, same as everywhere.
+
+**15.3 — The database is the guard, not the application ⚠**
+
+The point of `blocked_until` being a stored column. Bypass the API entirely:
+
+- `INSERT` a booking starting inside another's cleanup window → must fail
+  with **`23P01`**, the exclusion constraint.
+- One starting exactly when cleanup ends → accepted.
+- Confirm `CHECK (blocked_until >= end_time)` rejects an inverted value.
+
+If these pass only through the API and not through raw SQL, the guard has
+been demoted to an application rule and a race can walk through it.
+
+**15.4 — Release on early completion**
+
+- Book with a 30-minute buffer, mark the appointment **complete** before its
+  `end_time` has passed... which `CompleteBooking` refuses
+  (`BOOKING_NOT_STARTED`). So: complete it *after* the start but while the
+  buffer would still be running.
+- `blocked_until` collapses toward `NOW()`, never below `end_time`.
+- Re-query availability → the freed minutes are **immediately** bookable, on
+  the next read, with no scheduler.
+- This is what separates a buffer from padding. If it fails, the artist is
+  being punished for finishing early.
+
+**15.5 — Boundaries and configuration**
+
+- `buffer_min` of `-1` and `121` → rejected by both the form and the API
+  (`CHECK (0..120)`).
+- `0` is valid and is the default — a zero buffer must behave exactly as
+  before migration 033.
+- Change a service's buffer **after** a booking exists → the existing
+  booking's `blocked_until` is **unchanged**. It is a snapshot.
+
+---
+
+### Suite 16 — Waitlist cascade and sweep
+
+**Added Sep 3, 2026.** Covers the cascade on every slot-freeing event, and
+the background sweep for stalled queues.
+
+**16.1 — Every event that frees a slot cascades**
+
+Until Sep 3 only cancellation did. Each row below frees real time:
+
+| Event | Expect |
+|---|---|
+| Cancel | next waiting entry → `notified` |
+| **No-show** | same |
+| **Complete** (releases unused cleanup) | same |
+| **Hold expiry** (lazy sweep on read) | same |
+| **Deposit-deadline expiry** (lazy sweep) | same |
+
+Drive each through the real API, then read `waitlist_entries.status`. The
+last two fire on the read path of an availability query, so trigger them by
+querying slots after letting a hold lapse.
+
+**16.2 — The stall the sweep exists for ⚠**
+
+The case lazy cascading **cannot** reach:
+
+- Seed a queue: person A `notified` with `confirm_deadline` in the past,
+  person B `waiting` behind them.
+- Do **nothing else** — no cancellation, no new slot for that
+  (artist, store, service, date).
+- Wait for the sweep (≤5 min) or invoke it directly.
+- A → `expired`, B → `notified` with a **fresh** deadline.
+
+Without the sweep this queue stays frozen forever, which is exactly what
+migration 016 predicted.
+
+**16.3 — The sweep is safe to run forever**
+
+- Nothing stalled → no writes, no notifications.
+- One group failing (delete its artist mid-sweep) → the **other** groups
+  still cascade. A single bad row must not freeze every queue.
+- Run the sweep twice in a row → the second is a no-op, not a second
+  notification to a second person for one slot.
+
+**16.4 — The message**
+
+`waitlist_slot_open` is enqueued with the confirm window and a booking link.
+Verify the row lands in `notifications` with the right `user_id` and a body
+naming the date and the minutes remaining.
+
+**Delivery is D8-blocked** — the row queues and sends when a sender exists.
+The confirm-window UI needs customer login, also D8. Both are written here so
+they are not forgotten, and marked unrunnable until then.
+
+
 ## 2.5 Adversarial hardening pass — applies to EVERY suite above
 
 **Added Sep 1, 2026 after auditing this document against its own standards.**
@@ -1464,6 +1582,7 @@ All five originally-confirmed gaps are now closed (2026-08-21) — see the updat
 | 9–10 | **Executed 2026-09-01.** Pass, 1 finding, fixed. 9.5's *method* was corrected — it could not work as written. |
 | 11 | **Written, NOT executed.** Cannot be automated: the acceptance test is pasting a link into WhatsApp. |
 | **12–13** | **Executed 2026-09-01.** Pass, with 5 findings, all fixed. Suite 13 re-run against the real UI after the bell shipped later the same day. |
+| **15–16** | **Written 2026-09-03**, same day the features shipped. 15.1/15.2/15.4 and 16.1/16.2 verified live during development; the raw-SQL guard cases (15.3) and the sweep-safety cases (16.3) are written but **not yet run as a suite**. 16.4's delivery half is D8-blocked. |
 | **14** | **Partially executed 2026-09-01**, same day it was written — 14.1–14.6 verified live, including a real RFC 5545 parse. **14.7 partially, 14.8 not at all** (needs three physical devices), 14.9 unrun. |
 | **§2.5 (partial)** | **Executed 2026-09-01** for Unicode/RTL, injection, boundary values, concurrency and idempotency **against the newest surfaces only**. 1 real finding. Fault injection, fuzzing and the state-machine matrix remain unrun. |
 
