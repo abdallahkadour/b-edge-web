@@ -110,7 +110,42 @@
           }
 
           <!-- Actions -->
-          @if (confirmingCancelId() === booking.id) {
+          <!-- Two-step like cancel, and for the same reason: recording a
+               refund is the artist asserting money left her account, and
+               there is no undo. The reference is her own reconciliation
+               note - an OMT or Whish code - never shown to the customer. -->
+          @if (confirmingRefundId() === booking.id) {
+            <div class="pt-3 border-t border-gray-100">
+              <p class="text-xs text-gray-600 mb-2">
+                Record that you sent this refund? This cannot be undone here.
+              </p>
+              <input
+                type="text"
+                bedgeInput
+                [value]="refundReference()"
+                (input)="refundReference.set($any($event.target).value)"
+                placeholder="Reference, e.g. Whish #94821 (optional)"
+                maxlength="255"
+                class="h-9 text-xs mb-2"
+              />
+              <div class="flex gap-2">
+                <bedge-button
+                  variant="primary"
+                  size="sm"
+                  class="flex-1"
+                  [fullWidth]="true"
+                  (click)="markRefunded(booking.id)"
+                >Yes, refunded</bedge-button>
+                <bedge-button
+                  variant="ghost"
+                  size="sm"
+                  class="flex-1"
+                  [fullWidth]="true"
+                  (click)="dismissRefund()"
+                >Not yet</bedge-button>
+              </div>
+            </div>
+          } @else if (confirmingCancelId() === booking.id) {
             <div class="pt-3 border-t border-gray-100">
               <p class="text-xs text-gray-600 mb-2">
                 Cancel this booking?
@@ -148,8 +183,18 @@
                 >Never mind</bedge-button>
               </div>
             </div>
-          } @else if (canApprove(booking) || canComplete(booking) || canMarkNoShow(booking) || canCancel(booking)) {
+          } @else if (canApprove(booking) || canComplete(booking) || canMarkNoShow(booking) || canCancel(booking) || canMarkRefunded(booking)) {
             <div class="flex gap-2 pt-3 border-t border-gray-100">
+
+              @if (canMarkRefunded(booking)) {
+                <bedge-button
+                  variant="secondary"
+                  size="sm"
+                  class="flex-1"
+                  [fullWidth]="true"
+                  (click)="askToMarkRefunded(booking.id)"
+                >Mark refunded</bedge-button>
+              }
 
               @if (canApprove(booking)) {
                 <bedge-button

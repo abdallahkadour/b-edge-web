@@ -135,6 +135,22 @@ export class BookingDataService {
     return this.api.patch<Booking>(`/bookings/${id}/deposit-received`);
   }
 
+  /**
+   * PATCH /bookings/:id/refunded - records that an owed refund was paid.
+   *
+   * Refunds in Lebanon are out-of-band bank transfers, so this records the
+   * artist's own assertion that she sent the money; there is no rail to
+   * verify it against. Without it `refund_due` is terminal and the refund
+   * alert in the notification centre can never be cleared.
+   *
+   * `reference` is her own note (an OMT or Whish code) and is never shown
+   * to the customer.
+   */
+  markRefunded(id: string, reference?: string): Observable<Booking> {
+    return this.api.patch<Booking>(`/bookings/${id}/refunded`,
+      reference ? { reference } : {});
+  }
+
   /** PATCH /bookings/:id/confirm-deposit - deposit_paid → confirmed (artist action). */
   confirmDeposit(id: string): Observable<Booking> {
     return this.api.patch<Booking>(`/bookings/${id}/confirm-deposit`);

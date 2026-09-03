@@ -71,6 +71,8 @@ export class BookingsComponent implements OnInit {
 
   /** Error message to display, or null. */
   readonly errorMessage = signal<string | null>(null);
+  readonly confirmingRefundId = signal<string | null>(null);
+  readonly refundReference = signal('');
 
   /** The resolved artist UUID, fetched on init. */
   private readonly artistId = signal<string | null>(null);
@@ -160,6 +162,42 @@ export class BookingsComponent implements OnInit {
       next: () => this.loadBookings(),
       error: () => this.errorMessage.set('Failed to mark no-show.'),
     });
+  }
+
+  /** Whether this booking is still owed a refund. */
+  canMarkRefunded(b: EnrichedBooking): boolean {
+    return b.status === 'refund_due';
+  }
+
+  /**
+   * Records that an owed refund was paid.
+   *
+   * Closes a loop that previously had no end: `refund_due` was terminal,
+   * so the notification centre could tell her a refund was owed and she had
+   * no way to say she had sent it. The reference is optional and is her own
+   * reconciliation note.
+   */
+  markRefunded(bookingId: string): void {
+    const ref = this.refundReference().trim();
+    this.bookingSvc.markRefunded(bookingId, ref || undefined).subscribe({
+      next: () => {
+        this.confirmingRefundId.set(null);
+        this.refundReference.set('');
+        this.loadBookings();
+      },
+      error: () => this.errorMessage.set('Could not record the refund. Please try again.'),
+    });
+  }
+
+  /** First tap arms an inline row asking for the transfer reference -
+   *  same two-step shape as cancel, because both are irreversible. */
+  askToMarkRefunded(bookingId: string): void {
+    this.refundReference.set('');
+    this.confirmingRefundId.set(bookingId);
+  }
+
+  dismissRefund(): void {
+    this.confirmingRefundId.set(null);
   }
 
   /** First tap: arm the inline "are you sure?" row for this card. */
