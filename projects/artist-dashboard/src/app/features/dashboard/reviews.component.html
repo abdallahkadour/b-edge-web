@@ -47,14 +47,40 @@
           [class.opacity-60]="!review.is_visible"
         >
           <div class="flex items-start justify-between mb-2">
-            <div class="flex items-center gap-0.5">
-              @for (star of stars; track star) {
-                <lucide-icon
-                  name="star"
-                  [size]="15"
-                  [strokeWidth]="2"
-                  [class]="review.rating >= star ? 'fill-ink stroke-ink' : 'stroke-gray-300 fill-none'"
-                />
+            <!-- Both scores, labelled. The artist needs to see them apart:
+                 "the room was tired" is not feedback about their work, and a
+                 single merged number is exactly the misattributed-blame
+                 failure dual-layer reviews exist to prevent. The salon row is
+                 omitted when unanswered, never shown as zero. -->
+            <div class="space-y-1">
+              <div class="flex items-center gap-1.5">
+                <div class="flex items-center gap-0.5">
+                  @for (star of stars; track star) {
+                    <lucide-icon
+                      name="star"
+                      [size]="15"
+                      [strokeWidth]="2"
+                      [class]="review.rating >= star ? 'fill-ink stroke-ink' : 'stroke-gray-300 fill-none'"
+                    />
+                  }
+                </div>
+                <span class="text-[10px] uppercase tracking-wider font-semibold text-gray-400">You</span>
+              </div>
+
+              @if (review.salon_rating) {
+                <div class="flex items-center gap-1.5">
+                  <div class="flex items-center gap-0.5">
+                    @for (star of stars; track star) {
+                      <lucide-icon
+                        name="star"
+                        [size]="13"
+                        [strokeWidth]="2"
+                        [class]="review.salon_rating! >= star ? 'fill-gray-500 stroke-gray-500' : 'stroke-gray-300 fill-none'"
+                      />
+                    }
+                  </div>
+                  <span class="text-[10px] uppercase tracking-wider font-semibold text-gray-400">Salon</span>
+                </div>
               }
             </div>
             @if (!review.is_visible) {

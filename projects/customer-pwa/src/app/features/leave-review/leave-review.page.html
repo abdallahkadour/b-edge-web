@@ -63,7 +63,7 @@
 
       <!-- Rating -->
       <div class="space-y-3.5 text-center">
-        <h4 class="text-xs font-bold text-ink uppercase tracking-wider">How was your experience?</h4>
+        <h4 class="text-xs font-bold text-ink uppercase tracking-wider">How was {{ ctx.artist_name }}?</h4>
 
         <div class="flex justify-center gap-2">
           @for (star of stars; track star) {
@@ -85,6 +85,46 @@
         </div>
 
         <p class="text-sm font-black text-ink tracking-tight pt-1">{{ ratingLabel(rating()) }}</p>
+      </div>
+
+      <!-- Venue rating - the second, independent score.
+           Separated by a rule and explicitly optional: a customer rating the
+           person must not be nudged into also rating the room. An unanswered
+           question is submitted as absent, never as a zero. -->
+      <div class="space-y-3.5 text-center border-t border-gray-100 pt-6">
+        <div>
+          <h4 class="text-xs font-bold text-ink uppercase tracking-wider">And the salon?</h4>
+          <p class="text-[11px] text-gray-400 font-medium mt-1">
+            {{ ctx.store_name }} · optional
+          </p>
+        </div>
+
+        <div class="flex justify-center gap-2">
+          @for (star of stars; track star) {
+            <button
+              type="button"
+              (click)="selectSalonRating(star)"
+              [attr.aria-label]="'Rate the salon ' + star + ' star' + (star > 1 ? 's' : '')"
+              [attr.aria-pressed]="salonRating() === star"
+              class="p-1 active:scale-125 transition-transform"
+            >
+              <lucide-icon
+                name="star"
+                [size]="26"
+                [strokeWidth]="2"
+                [class]="salonRating() >= star ? 'fill-ink stroke-ink' : 'stroke-gray-300 fill-none'"
+              />
+            </button>
+          }
+        </div>
+
+        @if (salonRating() > 0) {
+          <button
+            type="button"
+            (click)="selectSalonRating(salonRating())"
+            class="text-[11px] text-gray-400 font-medium underline underline-offset-2"
+          >Clear</button>
+        }
       </div>
 
       <!-- Comment -->

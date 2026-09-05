@@ -49,6 +49,17 @@ export class LeaveReviewPage implements OnInit {
    *  a 5-star review they never actually chose, since nothing gated
    *  submit on the rating being touched. */
   readonly rating = signal(0);
+
+  /** The VENUE score, kept entirely separate from `rating` above.
+   *
+   *  0 means unanswered, and unanswered is submitted as ABSENT rather than as
+   *  a score - the two ratings are independent and a customer who only wants
+   *  to rate the person must not silently rate the room as well.
+   *
+   *  Optional by design: the assessment §2.2 warns that a required second
+   *  question is how response rates fall, and a review with only the
+   *  specialist score is complete. */
+  readonly salonRating = signal(0);
   readonly comment = signal('');
   readonly submitting = signal(false);
   readonly submitError = signal<string | null>(null);
@@ -84,6 +95,13 @@ export class LeaveReviewPage implements OnInit {
     this.rating.set(star);
   }
 
+  /** Tapping the selected venue star again clears it, so a customer who
+   *  answered by accident can get back to "not answered" - there is no other
+   *  way to un-rate, and the distinction is real to the aggregate. */
+  selectSalonRating(star: number): void {
+    this.salonRating.update((current) => (current === star ? 0 : star));
+  }
+
   onCommentInput(value: string): void {
     this.comment.set(value.slice(0, 250));
   }
@@ -96,6 +114,8 @@ export class LeaveReviewPage implements OnInit {
     this.reviewSvc
       .submitReviewByToken(this.token(), {
         rating: this.rating(),
+        // Absent, not zero, when unanswered - see salonRating.
+        salon_rating: this.salonRating() || undefined,
         comment: this.comment().trim() || undefined,
       })
       .subscribe({

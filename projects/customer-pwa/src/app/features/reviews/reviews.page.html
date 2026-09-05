@@ -58,14 +58,41 @@
                 <span class="text-[13px] font-semibold text-ink">{{ r.reviewer_name }}</span>
                 <span class="text-xs text-gray-400">{{ formatDate(r.created_at) }}</span>
               </div>
-              <div class="flex items-center gap-0.5 mt-1.5">
-                @for (filled of starsFor(r.rating); track $index) {
-                  <lucide-icon
-                    name="star"
-                    [size]="14"
-                    [strokeWidth]="0"
-                    [class]="filled ? 'text-ink fill-ink' : 'text-gray-200 fill-gray-200'"
-                  />
+              <!-- Two scores, labelled and visually distinct.
+                   They are independent and ARE allowed to disagree - a great
+                   stylist in a tired room is real, and useful to a reader. An
+                   unlabelled pair of star rows would make that look broken, so
+                   each is named; the venue row is absent entirely when the
+                   reviewer did not answer, never shown as zero stars. -->
+              <div class="mt-1.5 space-y-1">
+                <div class="flex items-center gap-1.5">
+                  <div class="flex items-center gap-0.5">
+                    @for (filled of starsFor(r.rating); track $index) {
+                      <lucide-icon
+                        name="star"
+                        [size]="14"
+                        [strokeWidth]="0"
+                        [class]="filled ? 'text-ink fill-ink' : 'text-gray-200 fill-gray-200'"
+                      />
+                    }
+                  </div>
+                  <span class="text-[10px] uppercase tracking-wider font-semibold text-gray-400">Artist</span>
+                </div>
+
+                @if (r.salon_rating) {
+                  <div class="flex items-center gap-1.5">
+                    <div class="flex items-center gap-0.5">
+                      @for (filled of starsFor(r.salon_rating); track $index) {
+                        <lucide-icon
+                          name="star"
+                          [size]="12"
+                          [strokeWidth]="0"
+                          [class]="filled ? 'text-gray-500 fill-gray-500' : 'text-gray-200 fill-gray-200'"
+                        />
+                      }
+                    </div>
+                    <span class="text-[10px] uppercase tracking-wider font-semibold text-gray-400">Salon</span>
+                  </div>
                 }
               </div>
               @if (r.comment) {

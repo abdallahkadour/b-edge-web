@@ -15,6 +15,16 @@ export interface Review {
    *  it's what a hide/show toggle actually reflects. */
   readonly is_visible: boolean;
   readonly created_at: string;
+
+  /** Rating of the VENUE, 1-5. Independent of `rating`, which rates the
+   *  specialist, and OPTIONAL - absent when the reviewer answered only the
+   *  specialist question, which is a complete review.
+   *
+   *  Never derive one from the other, and never render an absent venue score
+   *  as 0: "not rated" and "rated badly" are different things. See migration
+   *  035. */
+  readonly salon_rating?: number;
+  readonly store_id?: string;
 }
 
 /**
@@ -31,8 +41,12 @@ export interface EnrichedReview extends Review {
 /** Request body for POST /reviews (Go review.CreateReviewRequest). */
 export interface CreateReviewRequest {
   booking_id: string;
-  rating: number;     // 1–5
-  comment?: string;   // max 1000
+  rating: number;         // 1–5, the specialist
+  /** The venue, 1–5. Optional: omitting it submits a specialist-only review.
+   *  Deliberately not defaulted client-side - an unanswered question must
+   *  reach the API as absent, not as a score the customer never chose. */
+  salon_rating?: number;
+  comment?: string;       // max 1000
 }
 
 // ── Guest review-link flow ──────────────────────────────────────────────────
@@ -56,6 +70,8 @@ export interface ReviewBookingContext {
 
 /** POST /reviews/by-token/:token request body (Go review.SubmitReviewByTokenRequest). */
 export interface SubmitReviewByTokenRequest {
-  rating: number;     // 1–5
-  comment?: string;   // max 1000
+  rating: number;         // 1–5, the specialist
+  /** The venue, 1–5. Optional, as on CreateReviewRequest. */
+  salon_rating?: number;
+  comment?: string;       // max 1000
 }
