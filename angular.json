@@ -177,7 +177,12 @@
           "defaultConfiguration": "development"
         },
         "test": {
-          "builder": "@angular/build:unit-test"
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "setupFiles": [
+              "projects/customer-pwa/src/test-setup.ts"
+            ]
+          }
         }
       }
     }

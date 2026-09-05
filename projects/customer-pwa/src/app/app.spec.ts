@@ -1,6 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { App } from './app';
 
+// Scaffolding from `ng new` also asserted the starter page's
+// <h1>Hello, customer-pwa</h1>. This app is a router shell and never had that
+// heading, so the assertion could not pass and the target failed from
+// the day the real app replaced the placeholder. Removed rather than
+// rewritten: "the shell mounts" is the useful part, and the rest is
+// covered by the feature suites.
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -14,10 +20,4 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
-  it('should render title', async () => {
-    const fixture = TestBed.createComponent(App);
-    await fixture.whenStable();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, customer-pwa');
-  });
 });
