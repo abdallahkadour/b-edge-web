@@ -24,6 +24,7 @@ export * from './lib/core/cart.store';
 export * from './lib/core/onboarding-data.service';
 export * from './lib/core/admin-data.service';
 export * from './lib/core/phone.util';
+export * from './lib/core/money.util';
 export * from './lib/core/booking-status.util';
 export * from './lib/core/billing-status.util';
 export * from './lib/core/rate-limit.store';

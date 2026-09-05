@@ -13,6 +13,9 @@ import {
   ButtonComponent,
   InputDirective,
   extractApiErrorMessage,
+  isValidMoney,
+  isBrokenMoney,
+  MONEY_HINT,
 } from '@bedge/shared';
 import type { Service, CreateServiceRequest, UpdateServiceRequest } from '@bedge/shared';
 
@@ -66,8 +69,42 @@ export class ServicesComponent implements OnInit {
 
   canCreate(): boolean {
     const f = this.addForm();
-    return f.name.trim().length >= 2 && parseFloat(f.price) >= 0 && f.duration_min >= 15 && f.buffer_min >= 0 && f.buffer_min <= 120;
+    return (
+      f.name.trim().length >= 2 &&
+      // isValidMoney, not parseFloat: parseFloat("10.999") is 10.999 and
+      // parseFloat("1e3") is 1000, so both passed this guard and were then
+      // silently altered on the way to a NUMERIC(10,2) column. The shared
+      // pattern is the same one the API enforces.
+      isValidMoney(f.price) &&
+      (f.deposit_amount === '' || isValidMoney(f.deposit_amount)) &&
+      f.duration_min >= 15 &&
+      f.buffer_min >= 0 &&
+      f.buffer_min <= 120
+    );
   }
+
+  /** True when the add form's price can no longer become a valid amount. */
+  priceIsBroken(): boolean {
+    return isBrokenMoney(this.addForm().price);
+  }
+
+  /** True when an inline edit's price can no longer become a valid amount. */
+  editPriceIsBroken(): boolean {
+    return isBrokenMoney(this.editForm().price);
+  }
+
+  /** Guards the inline edit's Save, mirroring canCreate. */
+  canSaveEdit(): boolean {
+    const f = this.editForm();
+    return (
+      f.name.trim().length >= 2 &&
+      isValidMoney(f.price) &&
+      (f.deposit_amount === '' || isValidMoney(f.deposit_amount)) &&
+      f.duration_min >= 15
+    );
+  }
+
+  protected readonly moneyHint = MONEY_HINT;
 
   depositSummary(svc: Service): string {
     const d = parseFloat(svc.deposit_amount);
@@ -137,6 +174,7 @@ export class ServicesComponent implements OnInit {
   }
 
   saveEdit(svc: Service): void {
+    if (!this.canSaveEdit()) return;
     const f = this.editForm();
     this.updating.set(true);
 

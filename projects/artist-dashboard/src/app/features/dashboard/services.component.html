@@ -137,15 +137,21 @@
                 />
               </div>
               <div>
-                <label class="block text-xs text-gray-400 mb-1">Price (USD)</label>
+                <label class="block text-xs text-gray-400 mb-1" [for]="'edit-price-' + svc.id">Price (USD)</label>
                 <input
+                  [id]="'edit-price-' + svc.id"
                   type="text"
+                  inputmode="decimal"
                   bedgeInput
                   class="h-9 text-sm"
                   placeholder="0.00"
                   [value]="editForm().price"
+                  [attr.aria-invalid]="editPriceIsBroken() ? 'true' : null"
                   (input)="editForm.update(f => ({...f, price: $any($event.target).value}))"
                 />
+                @if (editPriceIsBroken()) {
+                  <p class="text-xs text-danger-dark mt-1">{{ moneyHint }}</p>
+                }
               </div>
             </div>
 
@@ -215,7 +221,7 @@
               <bedge-button
                 size="sm"
                 [loading]="updating()"
-                [disabled]="updating()"
+                [disabled]="updating() || !canSaveEdit()"
                 (click)="saveEdit(svc)"
               >Save</bedge-button>
             </div>
@@ -253,15 +259,22 @@
             />
           </div>
           <div>
-            <label class="block text-xs text-gray-400 mb-1">Price (USD)</label>
+            <label class="block text-xs text-gray-400 mb-1" for="add-price">Price (USD)</label>
             <input
+              id="add-price"
               type="text"
+              inputmode="decimal"
               bedgeInput
               class="h-9 text-sm"
               placeholder="0.00"
               [value]="addForm().price"
+              [attr.aria-invalid]="priceIsBroken() ? 'true' : null"
+              [attr.aria-describedby]="priceIsBroken() ? 'add-price-hint' : null"
               (input)="addForm.update(f => ({...f, price: $any($event.target).value}))"
             />
+            @if (priceIsBroken()) {
+              <p id="add-price-hint" class="text-xs text-danger-dark mt-1">{{ moneyHint }}</p>
+            }
           </div>
         </div>
 
