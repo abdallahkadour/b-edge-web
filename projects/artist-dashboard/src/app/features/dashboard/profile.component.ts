@@ -36,9 +36,17 @@ import { PortfolioComponent } from './portfolio.component';
  *     to Cloudinary - see that service's doc comment for why.
  *  3. The returned URL is saved via PATCH /artists/:id (avatar_url field).
  *
- * Avatar removal sends an empty string rather than null: the Go repository
- * uses COALESCE($4, avatar_url), so null would preserve the existing value.
- * An empty string clears it, and the template treats it as "no avatar".
+ * Avatar removal sends an empty string. That began as a workaround - the Go
+ * repository used COALESCE($4, avatar_url), so null meant "keep the current
+ * value" and there was no way to remove one - and since 2026-09-05 it is
+ * simply one of two spellings that work: the API now uses optional.Field, so
+ * an explicit null clears the value too, and optional.Text folds an empty or
+ * whitespace-only string to SQL NULL.
+ *
+ * Left as '' deliberately rather than switched to null. Both are correct, the
+ * current form is already covered by the E2E pass, and changing it would be
+ * churn for no behaviour. New code should prefer null, which now says what it
+ * means.
  */
 @Component({
   selector: 'bedge-profile',
