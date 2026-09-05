@@ -120,6 +120,29 @@ export interface Service {
   readonly is_active: boolean;
 }
 
+/**
+ * A service as an UNAUTHENTICATED customer receives it
+ * (Go artist.PublicServiceResponse, GET /artists/:id/services).
+ *
+ * Narrower than Service on purpose, and not interchangeable with it: that
+ * route has no JWT, so it omits salon_id, is_active, active_duration_min and
+ * buffer_min. Typing this call as Service would declare four fields the
+ * response does not contain — and buffer_min in particular is documented in
+ * migration 033 as never customer-facing.
+ *
+ * duration_min here is the SERVICE duration, never duration + buffer.
+ */
+export interface PublicService {
+  readonly id: string;
+  readonly name: string;
+  readonly name_ar?: string;
+  readonly description?: string;
+  readonly duration_min: number;
+  readonly price: string;          // decimal as string
+  readonly deposit_amount: string; // decimal as string
+  readonly deposit_deadline_hours: number;
+}
+
 /** Working hours for one day (Go artist.BusinessHours). */
 export interface BusinessHours {
   readonly id: string;

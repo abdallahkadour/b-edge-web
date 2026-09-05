@@ -13,6 +13,7 @@ import {
 import type {
   Artist,
   Service,
+  PublicService,
   Store,
   MediaItem,
   Booking,
@@ -86,7 +87,7 @@ export class BookingFunnelPage implements OnInit {
 
   // ── Loaded data ────────────────────────────────────────────────────────────
   protected readonly artist = signal<Artist | null>(null);
-  protected readonly services = signal<Service[]>([]);
+  protected readonly services = signal<PublicService[]>([]);
   protected readonly stores = signal<Store[]>([]);
   /** Display-only cards carrying open/closed status and the map pin. */
   protected readonly storeCards = signal<DiscoveryStoreCard[]>([]);

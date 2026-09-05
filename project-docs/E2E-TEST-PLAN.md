@@ -1551,7 +1551,7 @@ These require DB date manipulation (see Suite 8 setup). Run them after Suite 8's
 - Try to reach every `/dashboard/*` URL directly, logged out → redirected to `/login`, and back to the originally-requested page after logging in
 - Log in as a plain artist, try to navigate to `/admin` directly → redirected away, not shown an error page
 - Let an access token expire mid-session (or simulate it) → confirm the silent-refresh works, or you're cleanly bounced to login — not stuck with broken API calls
-- Try to view/edit another artist's booking, client, or product by editing the URL's ID directly → should be rejected (403/404), not served
+- Try to view/edit another artist's booking, client, or product by editing the URL's ID directly → **404, and byte-identical to a nonexistent ID**. Not 403: since 2026-09-05 every ownership failure returns the same error as not-found, so a 403 here is now a regression, not an acceptable alternative. Compare the two responses, don't just check it was refused.
 
 ### 3.6 Visual sweep at every required viewport
 
@@ -1585,6 +1585,40 @@ All five originally-confirmed gaps are now closed (2026-08-21) — see the updat
 | **15–16** | **Written 2026-09-03**, same day the features shipped. 15.1/15.2/15.4 and 16.1/16.2 verified live during development; the raw-SQL guard cases (15.3) and the sweep-safety cases (16.3) are written but **not yet run as a suite**. 16.4's delivery half is D8-blocked. |
 | **14** | **Partially executed 2026-09-01**, same day it was written — 14.1–14.6 verified live, including a real RFC 5545 parse. **14.7 partially, 14.8 not at all** (needs three physical devices), 14.9 unrun. |
 | **§2.5 (partial)** | **Executed 2026-09-01** for Unicode/RTL, injection, boundary values, concurrency and idempotency **against the newest surfaces only**. 1 real finding. Fault injection, fuzzing and the state-machine matrix remain unrun. |
+
+**Update — 2026-09-05 (API-level re-execution).** Suites re-run by driving the
+API directly rather than the browser, so this covers request/response contracts
+and not rendering. Read it as complementary to the 2026-09-01 UI pass, not a
+replacement for it.
+
+| Suite | 2026-09-05 result |
+|---|---|
+| **9** | **12/12 at API level**, including **9.7 (DST)** which had not been executed before: the same 09:00 store-local opening resolves to **07:00Z in January and 06:00Z in July**, so the zone really is applied per date. All four `open_status.reason` values distinguished (`open`, `outside_hours`, `holiday`, `closed_today`), `opens_at` present only when the store opens later the same day, and both 9.6 pin guards (`INCOMPLETE_LOCATION`, `CONFLICTING_LOCATION`) firing. |
+| **3** | Guest hold → submit → approve, live. `special_requests` persisted and readable. |
+| **14** | **14/14 at API level.** RFC 5545 details re-verified byte-wise: CRLF endings, longest line 74 octets, `UID` + `SEQUENCE` present, UTC instants, and a forged calendar token → 404. |
+| **12, 16** | Read paths pass; waitlist cross-tenant correctly refused. |
+| **10** | **Could not run.** No artist in the roster has any portfolio photos, so there is nothing to tag. Needs a Cloudinary upload first — this is a fixture gap, not a defect. |
+| **15** | See the structural note below. |
+
+**Two plan-wide adjustments, both from changes made 2026-09-05:**
+
+1. **Ownership failures are now 404 everywhere, byte-identical to not-found.**
+   This plan already expected 404 in 10.4 and 13, which turned out to be the
+   correct posture all along — but bookings, stores and services were returning
+   403 until a security pass found it. Any case that accepts "403 *or* 404" is
+   now too loose: assert 404 **and** compare the body against a nonexistent ID.
+2. **`GET /artists/:id/services` returns fewer fields.** It is unauthenticated,
+   so it now omits `buffer_min`, `salon_id`, `is_active` and
+   `active_duration_min`. Suite 15's regression guard — "the customer funnel
+   shows `duration_min` only, never duration+buffer" — is therefore no longer
+   only a UI convention: the field is **absent from the public payload**, so a
+   template cannot render it even by mistake. 15's UI cases still matter for
+   the artist-facing screens, where `buffer_min` legitimately appears.
+
+Money validation also tightened: any case sending a price with **more than 2
+decimal places, scientific notation, a leading `+`, or `NaN`/`Infinity` now
+expects a `400`, where several used to be silently accepted and rounded. See
+§2.5.2's boundary tables — the price rows there are now stricter than written.
 
 ### Execution results — 2026-09-01
 

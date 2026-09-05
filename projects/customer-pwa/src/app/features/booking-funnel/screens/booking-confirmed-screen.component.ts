@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { LucideAngularModule } from 'lucide-angular';
 
-import type { Booking, Service } from '@bedge/shared';
+import type { Booking, PublicService } from '@bedge/shared';
 
 const STORE_TIMEZONE = 'Asia/Beirut';
 
@@ -19,7 +19,10 @@ const STORE_TIMEZONE = 'Asia/Beirut';
 })
 export class BookingConfirmedScreenComponent {
   readonly booking = input.required<Booking>();
-  readonly service = input.required<Service>();
+  // PublicService, not Service: this screen only ever shows a service the
+  // customer fetched from the unauthenticated GET /artists/:id/services,
+  // which omits salon_id, is_active, buffer_min and active_duration_min.
+  readonly service = input.required<PublicService>();
   readonly storeName = input.required<string>();
   readonly artistName = input.required<string>();
 

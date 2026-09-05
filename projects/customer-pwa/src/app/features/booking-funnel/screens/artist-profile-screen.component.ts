@@ -3,7 +3,7 @@ import { LucideAngularModule } from 'lucide-angular';
 
 import { BadgeComponent, LocationMapComponent } from '@bedge/shared';
 import type { BadgeTone } from '@bedge/shared';
-import type { Artist, Service, MediaItem, DiscoveryStoreCard } from '@bedge/shared';
+import type { Artist, PublicService, MediaItem, DiscoveryStoreCard } from '@bedge/shared';
 
 /**
  * Public artist profile - the screen a customer lands on from a shared link.
@@ -20,7 +20,7 @@ import type { Artist, Service, MediaItem, DiscoveryStoreCard } from '@bedge/shar
 })
 export class ArtistProfileScreenComponent {
   readonly artist = input.required<Artist>();
-  readonly services = input.required<Service[]>();
+  readonly services = input.required<PublicService[]>();
   readonly portfolio = input.required<MediaItem[]>();
   /**
    * Display-only store cards from the public discovery profile. Optional,
@@ -115,7 +115,7 @@ export class ArtistProfileScreenComponent {
     return !!this.activeFilter() || (photo.service_ids ?? []).length === 1;
   }
 
-  protected hasDeposit(service: Service): boolean {
+  protected hasDeposit(service: PublicService): boolean {
     return Number(service.deposit_amount) > 0;
   }
 

@@ -12,7 +12,7 @@ import {
 import { LucideAngularModule } from 'lucide-angular';
 
 import { isValidLocalPhone } from '@bedge/shared';
-import type { Service } from '@bedge/shared';
+import type { PublicService } from '@bedge/shared';
 
 /** The store's timezone. See pick-datetime-screen for why this isn't the browser's. */
 const STORE_TIMEZONE = 'Asia/Beirut';
@@ -36,7 +36,10 @@ const STORE_TIMEZONE = 'Asia/Beirut';
 export class GuestDetailsScreenComponent {
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly service = input.required<Service>();
+  // PublicService, not Service: this screen only ever shows a service the
+  // customer fetched from the unauthenticated GET /artists/:id/services,
+  // which omits salon_id, is_active, buffer_min and active_duration_min.
+  readonly service = input.required<PublicService>();
   readonly storeName = input.required<string>();
   readonly startTime = input.required<string>(); // ISO 8601
   readonly heldUntil = input.required<string>(); // ISO 8601 — 10-minute hold deadline

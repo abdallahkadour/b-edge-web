@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { LucideAngularModule } from 'lucide-angular';
 
-import type { Service } from '@bedge/shared';
+import type { PublicService } from '@bedge/shared';
 
 /**
  * Step 2 of the guest funnel — pick one service.
@@ -19,7 +19,7 @@ import type { Service } from '@bedge/shared';
 })
 export class SelectServiceScreenComponent {
   readonly artistName = input.required<string>();
-  readonly services = input.required<Service[]>();
+  readonly services = input.required<PublicService[]>();
   readonly selectedServiceId = input<string | null>(null);
 
   readonly selectService = output<string>();
@@ -44,7 +44,7 @@ export class SelectServiceScreenComponent {
     return rest === 0 ? hourLabel : `${hourLabel} ${rest} min`;
   }
 
-  protected hasDeposit(service: Service): boolean {
+  protected hasDeposit(service: PublicService): boolean {
     return Number(service.deposit_amount) > 0;
   }
 }

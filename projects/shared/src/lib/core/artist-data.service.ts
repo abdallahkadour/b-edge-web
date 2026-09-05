@@ -7,6 +7,7 @@ import type {
   ArtistProfile,
   Store,
   Service,
+  PublicService,
   BusinessHours,
   BusinessHoursException,
   UpdateProfileRequest,
@@ -61,8 +62,8 @@ export class ArtistDataService {
    * Accepts either a real UUID or a public handle in :id (backend resolves
    * either form transparently).
    */
-  getServicesByArtist(artistId: string): Observable<Service[]> {
-    return this.api.getArray<Service>(`/artists/${artistId}/services`);
+  getServicesByArtist(artistId: string): Observable<PublicService[]> {
+    return this.api.getArray<PublicService>(`/artists/${artistId}/services`);
   }
 
   // ── Stores ─────────────────────────────────────────────────────────────────

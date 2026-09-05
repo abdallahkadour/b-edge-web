@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>B-Edge</title>
+<meta name="description" content="B-Edge is a beauty booking platform in Lebanon. Book hair, makeup and beauty appointments with independent artists and salons — at their chair or at your door.">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="B-Edge">
+<meta property="og:title" content="B-Edge — beauty booking in Lebanon">
+<meta property="og:description" content="Book hair, makeup and beauty appointments with independent artists and salons across Lebanon.">
+<meta property="og:locale" content="en_US">
+
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,700&family=Karla:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --ink:#141212;
+  --paper:#FBF9F7;
+  --rose:#A8365A;
+  --muted:#6E6469;
+  --line:#E6DFDB;
+  --card:#FFFFFF;
+
+  --display:"Bodoni Moda",Georgia,"Times New Roman",serif;
+  --body:"Karla",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+
+  --measure:34rem;
+  --gutter:clamp(1.25rem,5vw,4rem);
+}
+
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ink:#F2EDEA;
+    --paper:#141212;
+    --rose:#E0768F;
+    --muted:#A2969B;
+    --line:#2E2829;
+    --card:#1C1919;
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#F2EDEA;
+  --paper:#141212;
+  --rose:#E0768F;
+  --muted:#A2969B;
+  --line:#2E2829;
+  --card:#1C1919;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--body);
+  font-weight:400;
+  font-size:1.0625rem;
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:inherit}
+
+.wrap{max-width:64rem;margin:0 auto;padding-inline:var(--gutter)}
+
+/* ── masthead ─────────────────────────────────────── */
+.masthead{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:1rem;padding-block:1.75rem;
+  border-bottom:1px solid var(--line);
+}
+.mark{
+  display:flex;align-items:center;gap:.625rem;
+  font-family:var(--display);font-size:1.375rem;font-weight:700;
+  letter-spacing:.01em;text-decoration:none;
+}
+.mark .glyph{
+  width:1.75rem;height:1.75rem;border-radius:.375rem;
+  background:var(--ink);color:var(--paper);
+  display:grid;place-items:center;
+  font-size:1.0625rem;line-height:1;
+}
+.masthead nav{
+  display:flex;gap:1.5rem;
+  font-size:.75rem;font-weight:600;
+  text-transform:uppercase;letter-spacing:.11em;
+}
+.masthead nav a{color:var(--muted);text-decoration:none}
+.masthead nav a:hover{color:var(--rose)}
+@media (max-width:34rem){ .masthead nav{display:none} }
+
+/* ── hero ─────────────────────────────────────────── */
+.hero{padding-block:clamp(3.5rem,10vw,7rem) clamp(3rem,7vw,5rem)}
+.eyebrow{
+  font-size:.75rem;font-weight:600;color:var(--rose);
+  text-transform:uppercase;letter-spacing:.16em;
+  margin:0 0 1.5rem;
+}
+h1{
+  font-family:var(--display);
+  font-weight:400;
+  font-size:clamp(2.75rem,8vw,5rem);
+  line-height:1.02;
+  letter-spacing:-.015em;
+  text-wrap:balance;
+  margin:0 0 1.5rem;
+  max-width:18ch;
+}
+h1 em{font-style:italic;color:var(--rose)}
+.lede{
+  font-size:clamp(1.0625rem,2.2vw,1.25rem);
+  color:var(--muted);
+  max-width:var(--measure);
+  margin:0;
+}
+.rule{height:1px;background:var(--line);border:0;margin:0}
+
+/* ── sections ─────────────────────────────────────── */
+section{padding-block:clamp(3rem,7vw,4.75rem)}
+h2{
+  font-family:var(--display);
+  font-weight:400;
+  font-size:clamp(1.75rem,4vw,2.5rem);
+  line-height:1.15;letter-spacing:-.01em;
+  text-wrap:balance;
+  margin:0 0 1.75rem;
+}
+h3{
+  font-family:var(--display);
+  font-weight:500;font-size:1.375rem;line-height:1.25;
+  margin:0 0 .625rem;
+}
+p{max-width:var(--measure)}
+
+/* ── two-audience split ───────────────────────────── */
+.split{
+  display:grid;gap:1.25rem;
+  grid-template-columns:repeat(auto-fit,minmax(17rem,1fr));
+}
+.panel{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:.5rem;
+  padding:1.875rem;
+}
+.panel .tag{
+  font-size:.6875rem;font-weight:600;color:var(--rose);
+  text-transform:uppercase;letter-spacing:.14em;
+  display:block;margin-bottom:.875rem;
+}
+.panel p{margin:0 0 1.125rem;color:var(--muted);font-size:1rem}
+.panel ul{margin:0;padding:0;list-style:none;font-size:.9375rem}
+.panel li{
+  padding-block:.5rem;
+  border-top:1px solid var(--line);
+}
+.panel li:first-child{border-top:0;padding-top:0}
+
+/* ── how it works — a real sequence ───────────────── */
+.steps{
+  display:grid;gap:2rem;
+  grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));
+  counter-reset:step;
+}
+.step{counter-increment:step}
+.step::before{
+  content:counter(step,decimal-leading-zero);
+  display:block;
+  font-family:var(--display);
+  font-size:.9375rem;font-weight:500;
+  color:var(--rose);
+  padding-bottom:.75rem;margin-bottom:.75rem;
+  border-bottom:1px solid var(--line);
+}
+.step p{margin:0;color:var(--muted);font-size:.9375rem}
+
+/* ── business record — what Meta reads ────────────── */
+.record{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:.5rem;
+  padding:clamp(1.5rem,4vw,2.25rem);
+}
+dl{margin:0;display:grid;gap:0}
+dl div{
+  display:grid;
+  grid-template-columns:minmax(7.5rem,auto) 1fr;
+  gap:1.5rem;
+  padding-block:.875rem;
+  border-top:1px solid var(--line);
+}
+dl div:first-child{border-top:0;padding-top:0}
+dt{
+  font-size:.6875rem;font-weight:600;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.12em;
+  padding-top:.25rem;
+}
+dd{margin:0;font-size:1rem}
+dd a{color:var(--rose)}
+@media (max-width:32rem){
+  dl div{grid-template-columns:1fr;gap:.25rem}
+}
+
+/* ── legal ────────────────────────────────────────── */
+.legal{border-top:1px solid var(--line)}
+.legal h2{font-size:clamp(1.5rem,3vw,1.875rem)}
+.legal h3{font-size:1.0625rem;font-family:var(--body);font-weight:600;margin-top:1.75rem}
+.legal p,.legal li{font-size:.9375rem;color:var(--muted)}
+.legal ul{max-width:var(--measure);padding-left:1.125rem}
+.legal li{margin-bottom:.375rem}
+
+footer{
+  border-top:1px solid var(--line);
+  padding-block:2rem 3rem;
+  font-size:.8125rem;color:var(--muted);
+  display:flex;flex-wrap:wrap;gap:.5rem 1.5rem;
+  justify-content:space-between;
+}
+
+:focus-visible{outline:2px solid var(--rose);outline-offset:3px;border-radius:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <a class="mark" href="#top"><span class="glyph">B</span>B-Edge</a>
+    <nav>
+      <a href="#how">How it works</a>
+      <a href="#artists">For artists</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </header>
+
+  <div class="hero" id="top">
+    <p class="eyebrow">Beauty booking · Lebanon</p>
+    <h1>Book the chair, or bring the <em>chair to you</em>.</h1>
+    <p class="lede">
+      B-Edge connects people in Lebanon with independent beauty artists and salons —
+      hair, makeup, nails and skin. Browse real work, see genuine availability,
+      and book in a few taps.
+    </p>
+  </div>
+
+  <hr class="rule">
+
+  <section>
+    <div class="split">
+      <div class="panel">
+        <span class="tag">For clients</span>
+        <h3>Find someone whose work you have actually seen</h3>
+        <p>Every artist has a portfolio tied to the services they offer, so what you browse is what you can book.</p>
+        <ul>
+          <li>Live availability — no waiting on a reply</li>
+          <li>At the salon, or at your address</li>
+          <li>Prices shown before you book</li>
+          <li>Reminders so nothing is forgotten</li>
+        </ul>
+      </div>
+
+      <div class="panel" id="artists">
+        <span class="tag">For artists &amp; salons</span>
+        <h3>Your calendar, your prices, your clients</h3>
+        <p>Built for how beauty work in Lebanon actually runs — independents, home visits, and salons with several chairs.</p>
+        <ul>
+          <li>Set hours, services and travel radius</li>
+          <li>Deposits to protect against no-shows</li>
+          <li>One calendar across every location</li>
+          <li>Earnings and history in one place</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section id="how">
+    <h2>How it works</h2>
+    <div class="steps">
+      <div class="step">
+        <h3>Browse</h3>
+        <p>Search by service, area or artist. Portfolios show real, recent work.</p>
+      </div>
+      <div class="step">
+        <h3>Book</h3>
+        <p>Pick a time from live availability. Choose the salon or your own address.</p>
+      </div>
+      <div class="step">
+        <h3>Confirm</h3>
+        <p>The artist approves. Where a deposit applies, you're told the amount up front.</p>
+      </div>
+      <div class="step">
+        <h3>Enjoy</h3>
+        <p>You get a reminder before the appointment, and can review afterwards.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section id="contact">
+    <h2>Business details</h2>
+    <div class="record">
+      <dl>
+        <div>
+          <dt>Business</dt>
+          <dd>[ REGISTERED LEGAL NAME — must match your registration document exactly ]</dd>
+        </div>
+        <div>
+          <dt>Trading as</dt>
+          <dd>B-Edge</dd>
+        </div>
+        <div>
+          <dt>Address</dt>
+          <dd>[ STREET, BUILDING, CITY ], Lebanon</dd>
+        </div>
+        <div>
+          <dt>Email</dt>
+          <dd><a href="mailto:hello@example.com">[ BUSINESS EMAIL ]</a></dd>
+        </div>
+        <div>
+          <dt>Phone</dt>
+          <dd>+961 70 388 337</dd>
+        </div>
+        <div>
+          <dt>Activity</dt>
+          <dd>Online booking platform for beauty and personal-care services.</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="legal" id="privacy">
+    <h2>Privacy policy</h2>
+    <p>This policy explains what B-Edge collects and why. It applies to the B-Edge website and applications.</p>
+
+    <h3>What we collect</h3>
+    <ul>
+      <li><strong>Account details</strong> — your name, phone number and email, so an artist knows who is booked in.</li>
+      <li><strong>Booking information</strong> — the services, times, locations and prices of appointments you make.</li>
+      <li><strong>Address information</strong> — only where you request a service at your own location, so the artist can reach you.</li>
+      <li><strong>Images</strong> — photographs artists upload to their own portfolios.</li>
+      <li><strong>Technical data</strong> — basic device and log information needed to keep the service running and secure.</li>
+    </ul>
+
+    <h3>How we use it</h3>
+    <ul>
+      <li>To create, confirm and manage your appointments.</li>
+      <li>To send booking confirmations, reminders and changes — including by WhatsApp, where you have provided your number for that purpose.</li>
+      <li>To let artists and salons manage their schedules and earnings.</li>
+      <li>To keep the platform secure and prevent misuse.</li>
+    </ul>
+
+    <h3>Sharing</h3>
+    <p>Your details are shared with the artist or salon you book with, because they need them to provide the service. We use service providers for messaging, hosting and image storage, who process data only on our instructions. We do not sell personal data.</p>
+
+    <h3>Messaging</h3>
+    <p>Where you provide a phone number, we use it to send messages about your own bookings — confirmations, reminders, changes and cancellations. You can stop these at any time by replying STOP or contacting us.</p>
+
+    <h3>Retention and your rights</h3>
+    <p>We keep booking records for as long as needed to run the service and meet legal obligations. You may request a copy of your data, ask for corrections, or ask us to delete your account by contacting us at the address above.</p>
+
+    <h3>Children</h3>
+    <p>B-Edge is not intended for use by anyone under 18 without the consent of a parent or guardian.</p>
+
+    <h3>Changes</h3>
+    <p>If this policy changes materially we will make the updated version available here.</p>
+  </section>
+
+  <section class="legal" id="terms">
+    <h2>Terms of service</h2>
+
+    <h3>What B-Edge is</h3>
+    <p>B-Edge is a booking platform. Beauty services are provided by the independent artists and salons listed on it, not by B-Edge. Your agreement for the service itself is with that artist or salon.</p>
+
+    <h3>Bookings and deposits</h3>
+    <p>A booking is confirmed once the artist accepts it. Where a deposit is required, the amount and deadline are shown before you commit. Deposits are arranged directly with the artist.</p>
+
+    <h3>Cancellations</h3>
+    <p>Cancellation terms are set by each artist or salon and shown at the time of booking. Please cancel as early as you can so the slot can be offered to someone else.</p>
+
+    <h3>Your account</h3>
+    <p>Keep your account details accurate and your access secure. Do not use B-Edge unlawfully, or to harass artists or other users.</p>
+
+    <h3>Content</h3>
+    <p>Artists are responsible for the portfolio images and service descriptions they publish, and confirm they hold the rights to them.</p>
+
+    <h3>Liability</h3>
+    <p>B-Edge is not liable for the quality or outcome of services provided by independent artists and salons. Concerns about a service should be raised with the provider; you can also contact us and we will assist where we can.</p>
+
+    <h3>Governing law</h3>
+    <p>These terms are governed by the laws of Lebanon.</p>
+  </section>
+
+  <footer>
+    <span>© <span id="yr">2026</span> B-Edge · Lebanon</span>
+    <span><a href="#privacy">Privacy</a> · <a href="#terms">Terms</a> · <a href="#contact">Contact</a></span>
+  </footer>
+
+</div>
+
+<script>document.getElementById('yr').textContent=new Date().getFullYear();</script>
+</body>
+</html>
