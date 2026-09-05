@@ -68,6 +68,17 @@ export interface DiscoveryStoreCard {
   readonly latitude?: number;
   readonly longitude?: number;
   readonly open_status: OpenStatus;
+
+  /** The VENUE's own rating, per store and never averaged across a salon's
+   *  stores — Beirut Downtown and Tripoli are different rooms.
+   *
+   *  ABSENT when nobody has rated the venue, and that distinction is
+   *  load-bearing: a store nobody has reviewed is not a zero-star store.
+   *  Render nothing at all rather than an empty row of stars, the same way an
+   *  unknown open_status renders no badge. Check this field, not
+   *  review_count === 0. */
+  readonly rating?: string; // decimal as string
+  readonly review_count: number;
 }
 
 /** A service entry inside a public artist profile. */

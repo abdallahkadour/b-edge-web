@@ -88,6 +88,20 @@
                   <p class="text-[13px] text-gray-400 leading-[18px]" dir="auto">
                     {{ store.address || store.city }}
                   </p>
+                  <!-- The VENUE's rating, distinct from the artist's own score
+                       shown at the top of this profile. Rendered only when the
+                       store has actually been rated: `rating` is absent for an
+                       unrated venue, and showing 0 stars there would read as a
+                       bad venue rather than an unrated one. -->
+                  @if (store.rating) {
+                    <p class="flex items-center gap-1 mt-1 text-[12px] text-gray-500 leading-[16px]">
+                      <lucide-icon name="star" [size]="12" [strokeWidth]="0" class="text-gray-500 fill-gray-500" />
+                      <span class="font-semibold">{{ store.rating }}</span>
+                      <span class="text-gray-400">
+                        salon · {{ store.review_count }} {{ store.review_count === 1 ? 'review' : 'reviews' }}
+                      </span>
+                    </p>
+                  }
                 </div>
                 @if (showsOpenBadge(store)) {
                   <bedge-badge [tone]="openTone(store)">{{ openLabel(store) }}</bedge-badge>
