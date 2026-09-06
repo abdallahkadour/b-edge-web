@@ -10,7 +10,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 
-import { InputDirective, ReviewDataService } from '@bedge/shared';
+import { InputDirective, ReviewDataService, StarRatingComponent } from '@bedge/shared';
 import type { ReviewBookingContext } from '@bedge/shared';
 
 /**
@@ -29,7 +29,7 @@ import type { ReviewBookingContext } from '@bedge/shared';
 @Component({
   selector: 'app-leave-review-page',
   standalone: true,
-  imports: [LucideAngularModule, InputDirective],
+  imports: [LucideAngularModule, InputDirective, StarRatingComponent],
   templateUrl: './leave-review.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -65,7 +65,6 @@ export class LeaveReviewPage implements OnInit {
   readonly submitError = signal<string | null>(null);
   readonly submitted = signal(false);
 
-  protected readonly stars = [1, 2, 3, 4, 5];
 
   ngOnInit(): void {
     this.reviewSvc.getBookingContextByToken(this.token()).subscribe({

@@ -11,7 +11,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 
-import { ReviewDataService, ArtistDataService } from '@bedge/shared';
+import { ReviewDataService, ArtistDataService, StarRatingComponent } from '@bedge/shared';
 import type { EnrichedReview } from '@bedge/shared';
 
 /**
@@ -23,7 +23,7 @@ import type { EnrichedReview } from '@bedge/shared';
 @Component({
   selector: 'app-reviews-page',
   standalone: true,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, StarRatingComponent],
   templateUrl: './reviews.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

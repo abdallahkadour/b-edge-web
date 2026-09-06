@@ -64,33 +64,19 @@
                    unlabelled pair of star rows would make that look broken, so
                    each is named; the venue row is absent entirely when the
                    reviewer did not answer, never shown as zero stars. -->
+              <!-- Two independent scores, labelled and visually distinct so a
+                   disagreement between them reads as informative rather than
+                   broken. The salon row is absent when unanswered, never zero
+                   stars. See B-Edge-Review-Attribution-Spec-v1.md §2.2. -->
               <div class="mt-1.5 space-y-1">
                 <div class="flex items-center gap-1.5">
-                  <div class="flex items-center gap-0.5">
-                    @for (filled of starsFor(r.rating); track $index) {
-                      <lucide-icon
-                        name="star"
-                        [size]="14"
-                        [strokeWidth]="0"
-                        [class]="filled ? 'text-ink fill-ink' : 'text-gray-200 fill-gray-200'"
-                      />
-                    }
-                  </div>
+                  <bedge-star-rating [value]="r.rating" label="Artist" />
                   <span class="text-[10px] uppercase tracking-wider font-semibold text-gray-400">Artist</span>
                 </div>
 
                 @if (r.salon_rating) {
                   <div class="flex items-center gap-1.5">
-                    <div class="flex items-center gap-0.5">
-                      @for (filled of starsFor(r.salon_rating); track $index) {
-                        <lucide-icon
-                          name="star"
-                          [size]="12"
-                          [strokeWidth]="0"
-                          [class]="filled ? 'text-gray-500 fill-gray-500' : 'text-gray-200 fill-gray-200'"
-                        />
-                      }
-                    </div>
+                    <bedge-star-rating [value]="r.salon_rating!" [size]="12" tone="muted" label="Salon" />
                     <span class="text-[10px] uppercase tracking-wider font-semibold text-gray-400">Salon</span>
                   </div>
                 }

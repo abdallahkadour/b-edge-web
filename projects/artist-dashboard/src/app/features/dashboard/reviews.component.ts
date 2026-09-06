@@ -8,7 +8,7 @@ import {
 import { HttpErrorResponse } from '@angular/common/http';
 import { LucideAngularModule } from 'lucide-angular';
 
-import { ArtistDataService, ReviewDataService, extractApiErrorMessage } from '@bedge/shared';
+import { ArtistDataService, ReviewDataService, extractApiErrorMessage, StarRatingComponent } from '@bedge/shared';
 import type { Review } from '@bedge/shared';
 
 /**
@@ -28,7 +28,7 @@ import type { Review } from '@bedge/shared';
   selector: 'bedge-reviews',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, StarRatingComponent],
   templateUrl: './reviews.component.html',
 })
 export class ReviewsComponent implements OnInit {
@@ -42,7 +42,6 @@ export class ReviewsComponent implements OnInit {
   /** ID of the review currently being hidden/shown, for per-row loading state. */
   readonly togglingId = signal<string | null>(null);
 
-  protected readonly stars = [1, 2, 3, 4, 5];
 
   ngOnInit(): void {
     this.load();

@@ -65,23 +65,14 @@
       <div class="space-y-3.5 text-center">
         <h4 class="text-xs font-bold text-ink uppercase tracking-wider">How was {{ ctx.artist_name }}?</h4>
 
-        <div class="flex justify-center gap-2">
-          @for (star of stars; track star) {
-            <button
-              type="button"
-              (click)="selectRating(star)"
-              [attr.aria-label]="'Rate ' + star + ' star' + (star > 1 ? 's' : '')"
-              [attr.aria-pressed]="rating() === star"
-              class="p-1 active:scale-125 transition-transform"
-            >
-              <lucide-icon
-                name="star"
-                [size]="32"
-                [strokeWidth]="2"
-                [class]="rating() >= star ? 'fill-ink stroke-ink' : 'stroke-gray-300 fill-none'"
-              />
-            </button>
-          }
+        <div class="flex justify-center">
+          <bedge-star-rating
+            [value]="rating()"
+            [size]="32"
+            interactive
+            [label]="'How was ' + ctx.artist_name + '?'"
+            (pick)="selectRating($event)"
+          />
         </div>
 
         <p class="text-sm font-black text-ink tracking-tight pt-1">{{ ratingLabel(rating()) }}</p>
@@ -99,23 +90,15 @@
           </p>
         </div>
 
-        <div class="flex justify-center gap-2">
-          @for (star of stars; track star) {
-            <button
-              type="button"
-              (click)="selectSalonRating(star)"
-              [attr.aria-label]="'Rate the salon ' + star + ' star' + (star > 1 ? 's' : '')"
-              [attr.aria-pressed]="salonRating() === star"
-              class="p-1 active:scale-125 transition-transform"
-            >
-              <lucide-icon
-                name="star"
-                [size]="26"
-                [strokeWidth]="2"
-                [class]="salonRating() >= star ? 'fill-ink stroke-ink' : 'stroke-gray-300 fill-none'"
-              />
-            </button>
-          }
+        <div class="flex justify-center">
+          <bedge-star-rating
+            [value]="salonRating()"
+            [size]="26"
+            interactive
+            tone="muted"
+            label="How was the salon?"
+            (pick)="selectSalonRating($event)"
+          />
         </div>
 
         @if (salonRating() > 0) {
