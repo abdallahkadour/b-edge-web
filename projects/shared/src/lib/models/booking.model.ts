@@ -177,4 +177,11 @@ export interface SubmitGuestBookingRequest {
   name: string;
   phone: string;
   special_requests?: string;
+  /**
+   * Applied HERE and not at hold time, because a hold has no real customer
+   * yet - it carries a placeholder until this call creates the guest user,
+   * and eligibility is per customer. The preview endpoint therefore cannot
+   * check "already used" either; see DiscountPreview.
+   */
+  discount_code?: string;
 }

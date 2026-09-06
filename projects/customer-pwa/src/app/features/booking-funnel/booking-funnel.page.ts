@@ -6,6 +6,7 @@ import { LucideAngularModule } from 'lucide-angular';
 import {
   ArtistDataService,
   BookingDataService,
+  DiscountDataService,
   DiscoveryDataService,
   MediaDataService,
   extractApiErrorMessage,
@@ -14,6 +15,7 @@ import type {
   Artist,
   Service,
   PublicService,
+  DiscountPreview,
   Store,
   MediaItem,
   Booking,
@@ -69,6 +71,7 @@ export class BookingFunnelPage implements OnInit {
   private readonly artistApi = inject(ArtistDataService);
   private readonly mediaApi = inject(MediaDataService);
   private readonly bookingApi = inject(BookingDataService);
+  private readonly discountApi = inject(DiscountDataService);
   private readonly discoveryApi = inject(DiscoveryDataService);
   private readonly router = inject(Router);
 
@@ -120,6 +123,9 @@ export class BookingFunnelPage implements OnInit {
   // ── Submit ─────────────────────────────────────────────────────────────────
   protected readonly submitting = signal(false);
   protected readonly submitError = signal<string | null>(null);
+  protected readonly customerPromo = signal('');
+  protected readonly discountPreview = signal<DiscountPreview | null>(null);
+  protected readonly checkingDiscount = signal(false);
   protected readonly confirmedBooking = signal<Booking | null>(null);
 
   protected readonly selectedService = computed(
@@ -271,7 +277,45 @@ export class BookingFunnelPage implements OnInit {
     this.step.set('slot-unavailable');
   }
 
-  protected onDetailsSubmit(details: { name: string; phone: string; notes: string }): void {
+  /**
+   * Ask the server what a code would do.
+   *
+   * Preview only - nothing is committed. Note the honest limitation: a held
+   * GUEST booking has no real customer yet, so "already used" and
+   * "first-time only" cannot be checked here and run for real at submit. A
+   * customer can therefore see a code accepted here and refused on confirm.
+   * The submit handler treats that as a normal outcome rather than an error.
+   */
+  protected onApplyPromo(code: string): void {
+    const bookingId = this.holdBookingId();
+    if (!bookingId) return;
+
+    this.checkingDiscount.set(true);
+    this.discountApi.previewForBooking(bookingId, code).subscribe({
+      next: (preview) => {
+        this.checkingDiscount.set(false);
+        this.discountPreview.set(preview);
+        this.customerPromo.set(preview.valid ? preview.code : '');
+      },
+      error: () => {
+        this.checkingDiscount.set(false);
+        // A network failure must not read as "your code is invalid" - the
+        // customer would go looking for a new code that they do not need.
+        this.discountPreview.set({
+          code,
+          valid: false,
+          reason: "Couldn't check that code just now. Please try again.",
+        });
+      },
+    });
+  }
+
+  protected onClearPromo(): void {
+    this.discountPreview.set(null);
+    this.customerPromo.set('');
+  }
+
+  protected onDetailsSubmit(details: { name: string; phone: string; notes: string; promo: string }): void {
     const bookingId = this.holdBookingId();
     if (!bookingId) return;
 
@@ -283,6 +327,7 @@ export class BookingFunnelPage implements OnInit {
         name: details.name,
         phone: details.phone,
         special_requests: details.notes || undefined,
+        discount_code: details.promo || undefined,
       })
       .subscribe({
         next: (booking) => {

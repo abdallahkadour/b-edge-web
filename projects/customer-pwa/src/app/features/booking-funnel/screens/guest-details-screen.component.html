@@ -109,6 +109,86 @@
             class="w-full p-3 bg-white border border-gray-200 rounded text-[15px] placeholder-gray-400 outline-none transition-all resize-none focus:border-ink disabled:bg-gray-100 disabled:text-gray-400"
           ></textarea>
         </div>
+
+        <!-- Promo code.
+             Applying is an explicit action, not a keystroke: one request per
+             character would be noise and would rate-limit the customer. Once
+             accepted the field locks, so nobody is left wondering whether
+             editing it silently un-applied the discount - clearing is
+             deliberate. -->
+        <div class="flex flex-col gap-1.5">
+          <label for="promo-code" class="text-[14px] font-medium leading-[20px] text-ink">
+            Promo code (optional)
+          </label>
+
+          @if (promoApplied()) {
+            <div class="flex items-center justify-between gap-3 p-3 bg-success-light border border-success/30 rounded">
+              <div class="flex items-center gap-2 min-w-0">
+                <lucide-icon name="check" [size]="16" [strokeWidth]="2.5" class="text-success-dark shrink-0" />
+                <span class="text-[14px] font-semibold text-success-dark truncate">
+                  {{ discountPreview()!.code }} applied
+                </span>
+              </div>
+              <button
+                type="button"
+                (click)="onClearPromo()"
+                class="text-[13px] text-gray-500 underline underline-offset-2 shrink-0"
+              >Remove</button>
+            </div>
+          } @else {
+            <div class="flex gap-2">
+              <input
+                id="promo-code"
+                type="text"
+                autocapitalize="characters"
+                autocomplete="off"
+                [value]="promo()"
+                (input)="onPromoInput($any($event.target).value)"
+                (keyup.enter)="onApplyPromo()"
+                placeholder="Enter a code"
+                [disabled]="isExpired() || checkingDiscount()"
+                [attr.aria-invalid]="promoError() ? 'true' : null"
+                [attr.aria-describedby]="promoError() ? 'promo-error' : null"
+                class="flex-1 min-w-0 p-3 bg-white border border-gray-200 rounded text-[15px] uppercase placeholder-gray-400 placeholder:normal-case outline-none transition-all focus:border-ink disabled:bg-gray-100 disabled:text-gray-400"
+              />
+              <button
+                type="button"
+                (click)="onApplyPromo()"
+                [disabled]="!promo().trim() || checkingDiscount() || isExpired()"
+                class="px-4 h-[46px] shrink-0 bg-ink text-white text-[14px] font-semibold rounded disabled:bg-gray-200 disabled:text-gray-400 transition-colors"
+              >{{ checkingDiscount() ? 'Checking…' : 'Apply' }}</button>
+            </div>
+
+            @if (promoError(); as err) {
+              <p id="promo-error" class="text-[13px] text-danger-dark">{{ err }}</p>
+            }
+          }
+        </div>
+
+        <!-- The breakdown, shown only once a code actually reduced something.
+             Every line is named: a total that changed with no explanation is
+             what makes people abandon a checkout. -->
+        @if (discountPreview(); as p) {
+          @if (p.valid) {
+            <div class="flex flex-col gap-1.5 p-3 bg-gray-50 border border-gray-200 rounded text-[14px]">
+              <div class="flex justify-between text-gray-500">
+                <span>Subtotal</span><span>${{ p.subtotal }}</span>
+              </div>
+              <div class="flex justify-between text-success-dark font-medium">
+                <span>{{ p.code }}</span><span>−${{ p.discount_total }}</span>
+              </div>
+              <div class="flex justify-between font-bold text-ink pt-1.5 border-t border-gray-200">
+                <span>Total</span><span>${{ p.final }}</span>
+              </div>
+              @if (hasDeposit()) {
+                <p class="text-[13px] text-gray-400 leading-[18px] pt-0.5">
+                  The ${{ p.deposit }} deposit is unchanged — the discount comes off
+                  the ${{ p.balance }} balance due on the day.
+                </p>
+              }
+            </div>
+          }
+        }
       </div>
 
       <p class="text-[14px] text-gray-400 leading-[20px] mt-1">

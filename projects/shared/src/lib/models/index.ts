@@ -3,6 +3,7 @@ export * from './api-response.model';
 export * from './auth.model';
 export * from './booking.model';
 export * from './artist.model';
+export * from './discount.model';
 export * from './discovery.model';
 export * from './review.model';
 export * from './customer-auth.model';

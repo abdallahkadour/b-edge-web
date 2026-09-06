@@ -40,6 +40,7 @@ export * from './lib/core/auth.guard';
 // ── Data services ─────────────────────────────────────────────────────────────
 export * from './lib/core/booking-data.service';
 export * from './lib/core/artist-data.service';
+export * from './lib/core/discount-data.service';
 export * from './lib/core/discovery-data.service';
 export * from './lib/core/review-data.service';
 export * from './lib/core/earnings-data.service';

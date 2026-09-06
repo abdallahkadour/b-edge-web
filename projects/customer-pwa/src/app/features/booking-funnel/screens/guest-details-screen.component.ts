@@ -12,7 +12,7 @@ import {
 import { LucideAngularModule } from 'lucide-angular';
 
 import { isValidLocalPhone } from '@bedge/shared';
-import type { PublicService } from '@bedge/shared';
+import type { DiscountPreview, PublicService } from '@bedge/shared';
 
 /** The store's timezone. See pick-datetime-screen for why this isn't the browser's. */
 const STORE_TIMEZONE = 'Asia/Beirut';
@@ -58,9 +58,18 @@ export class GuestDetailsScreenComponent {
   readonly initialName = input<string>('');
   readonly initialPhone = input<string>('');
   readonly initialNotes = input<string>('');
+  readonly initialPromo = input<string>('');
+
+  /** The container owns the preview call; this screen only renders the result. */
+  readonly discountPreview = input<DiscountPreview | null>(null);
+  readonly checkingDiscount = input<boolean>(false);
 
   readonly back = output<void>();
-  readonly submitDetails = output<{ name: string; phone: string; notes: string }>();
+  readonly submitDetails = output<{ name: string; phone: string; notes: string; promo: string }>();
+  /** Emitted when the customer asks to check a code, not on every keystroke -
+   *  a request per character would be noise and would rate-limit them. */
+  readonly applyPromo = output<string>();
+  readonly clearPromo = output<void>();
   /** Emitted once, the moment the local countdown reaches zero. */
   readonly holdExpired = output<void>();
   /** Emitted on every keystroke so the container can preserve values across a re-hold. */
@@ -80,6 +89,7 @@ export class GuestDetailsScreenComponent {
     this.name.set(this.initialName());
     this.phoneDigits.set(this.initialPhone());
     this.notes.set(this.initialNotes());
+    this.promo.set(this.initialPromo());
 
     const intervalId = setInterval(() => this.nowMs.set(Date.now()), 1000);
     this.destroyRef.onDestroy(() => clearInterval(intervalId));
@@ -94,6 +104,18 @@ export class GuestDetailsScreenComponent {
       }
     });
   }
+
+  protected readonly promo = signal('');
+
+  /** True once a code has been accepted, so the field locks and the customer
+   *  is not left wondering whether editing it silently un-applies the
+   *  discount. Clearing is explicit. */
+  protected readonly promoApplied = computed(() => this.discountPreview()?.valid === true);
+
+  protected readonly promoError = computed(() => {
+    const p = this.discountPreview();
+    return p && !p.valid ? (p.reason ?? "That code isn't valid.") : null;
+  });
 
   protected readonly hasDeposit = computed(() => Number(this.service().deposit_amount) > 0);
 
@@ -160,6 +182,25 @@ export class GuestDetailsScreenComponent {
       name: this.name().trim(),
       phone: this.phoneDigits(),
       notes: this.notes().trim(),
+      // Sent only when it was actually accepted. Submitting a code the
+      // preview refused would re-run the same refusal server-side and change
+      // nothing, while making the customer wonder why it was still attached.
+      promo: this.promoApplied() ? this.promo().trim().toUpperCase() : '',
     });
+  }
+
+  protected onPromoInput(value: string): void {
+    this.promo.set(value.slice(0, 32));
+  }
+
+  protected onApplyPromo(): void {
+    const code = this.promo().trim();
+    if (!code || this.checkingDiscount()) return;
+    this.applyPromo.emit(code);
+  }
+
+  protected onClearPromo(): void {
+    this.promo.set('');
+    this.clearPromo.emit();
   }
 }
