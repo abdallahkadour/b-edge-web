@@ -56,8 +56,11 @@
         >
           @for (url of allPhotoUrls(); track url) {
             <img
-              [src]="url"
+              [ngSrc]="url"
               [alt]="p.name"
+              width="640"
+              height="640"
+              sizes="100vw"
               class="w-full h-full object-cover shrink-0 snap-center"
               [class.opacity-50]="isSoldOut(p)"
             />

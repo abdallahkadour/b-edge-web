@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { NgOptimizedImage } from '@angular/common';
 import { LucideAngularModule } from 'lucide-angular';
 
 import {
@@ -37,7 +38,7 @@ import type { Product } from '@bedge/shared';
 @Component({
   selector: 'app-product-detail-page',
   standalone: true,
-  imports: [LucideAngularModule, ButtonComponent],
+  imports: [LucideAngularModule, ButtonComponent, NgOptimizedImage],
   templateUrl: './product-detail.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

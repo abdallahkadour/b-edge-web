@@ -90,10 +90,15 @@
             >
               <div class="aspect-square bg-gray-100 flex items-center justify-center text-gray-300 relative">
                 @if (p.image_url) {
+                  <!-- fill: the aspect-square parent already reserves the
+                       box, which is what stops the grid reflowing as images
+                       land. No priority - a grid has no single LCP element. -->
                   <img
-                    [src]="p.image_url"
+                    [ngSrc]="p.image_url!"
                     [alt]="p.name"
-                    class="w-full h-full object-cover"
+                    fill
+                    sizes="(max-width: 640px) 50vw, 240px"
+                    class="object-cover"
                     [class.opacity-50]="isSoldOut(p)"
                   />
                 } @else {

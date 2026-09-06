@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { NgOptimizedImage } from '@angular/common';
 import { LucideAngularModule } from 'lucide-angular';
 
 import {
@@ -33,7 +34,7 @@ import {
 @Component({
   selector: 'app-cart-page',
   standalone: true,
-  imports: [LucideAngularModule, ButtonComponent, InputDirective, LocationMapComponent],
+  imports: [LucideAngularModule, ButtonComponent, InputDirective, LocationMapComponent, NgOptimizedImage],
   templateUrl: './cart.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

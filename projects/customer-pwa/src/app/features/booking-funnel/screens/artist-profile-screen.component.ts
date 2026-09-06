@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import { NgOptimizedImage } from '@angular/common';
 import { LucideAngularModule } from 'lucide-angular';
 
 import { BadgeComponent, LocationMapComponent } from '@bedge/shared';
@@ -14,7 +15,7 @@ import type { Artist, PublicService, MediaItem, DiscoveryStoreCard } from '@bedg
 @Component({
   selector: 'app-artist-profile-screen',
   standalone: true,
-  imports: [LucideAngularModule, BadgeComponent, LocationMapComponent],
+  imports: [LucideAngularModule, BadgeComponent, LocationMapComponent, NgOptimizedImage],
   templateUrl: './artist-profile-screen.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

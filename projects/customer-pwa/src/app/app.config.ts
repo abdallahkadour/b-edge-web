@@ -1,4 +1,5 @@
 import {
+  provideZonelessChangeDetection,
   ApplicationConfig,
   provideBrowserGlobalErrorListeners,
   provideAppInitializer,
@@ -39,6 +40,7 @@ import {
   customerAuthInterceptor,
   customerAuthErrorInterceptor,
   rateLimitInterceptor,
+  provideCloudinaryImageLoader,
 } from '@bedge/shared';
 
 import { routes } from './app.routes';
@@ -46,6 +48,15 @@ import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    // Serves every Cloudinary image through f_auto,q_auto and a width
+    // limit. These are the LCP element on the busiest screens and were
+    // previously delivered at upload resolution in the uploader's format.
+    // Explicit rather than implied. These apps run zoneless because zone.js
+    // is simply not a dependency - which makes the single biggest performance
+    // property of this frontend invisible, and one stray polyfills entry
+    // enough to silently restore whole-tree change detection.
+    provideZonelessChangeDetection(),
+    provideCloudinaryImageLoader(),
     provideBrowserGlobalErrorListeners(),
 
     // withComponentInputBinding() is what binds the :artistId route parameter
