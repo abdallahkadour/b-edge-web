@@ -94,6 +94,13 @@ export class ApiService {
   /**
    * GET a single resource, unwrapping the envelope's `data`.
    * Do NOT use for arrays - see `getArray()`.
+   *
+   * The reason that warning matters got smaller on 2026-09-06 but did not go
+   * away. Every list endpoint now builds its slice with `make([]*T, 0)`, so an
+   * empty collection serialises as `[]` rather than `null` and would no longer
+   * break an `@for`. That is the server keeping a promise, not this method
+   * defending itself: a future handler that returns a nil slice would still
+   * hand you `null` here, where `getArray` coalesces it away.
    */
   get<T>(path: string, params?: Record<string, string | number>): Observable<T> {
     return this.http

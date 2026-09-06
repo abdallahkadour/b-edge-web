@@ -77,6 +77,11 @@ export class ClientDetailComponent implements OnInit {
   saveNote(): void {
     const p = this.profile();
     if (!p) return;
+    // Re-entrancy guard, matching every other mutating handler in the
+    // dashboard. Without it a double-tap on a slow connection sends two
+    // upserts; the endpoint is idempotent so the note survives intact, but it
+    // is two requests against a 20-connection pool for one intent.
+    if (this.saving()) return;
 
     this.saving.set(true);
     this.errorMessage.set(null);
