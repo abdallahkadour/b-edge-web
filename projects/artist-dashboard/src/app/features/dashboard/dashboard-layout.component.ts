@@ -129,6 +129,7 @@ export class DashboardLayoutComponent {
     { path: '/dashboard/clients',  label: 'Clients',  icon: 'users' },
     { path: '/dashboard/earnings', label: 'Earnings', icon: 'banknote' },
     { path: '/dashboard/services', label: 'Services', icon: 'scissors' },
+    { path: '/dashboard/discounts', label: 'Promos', icon: 'tag' },
     { path: '/dashboard/hours',    label: 'Hours',    icon: 'clock' },
     { path: '/dashboard/profile',  label: 'Profile',  icon: 'user' },
   ];

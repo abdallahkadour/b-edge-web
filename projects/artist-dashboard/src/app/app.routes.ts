@@ -163,6 +163,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'discounts',
+        loadComponent: () =>
+          import('./features/dashboard/discounts.component').then(
+            (m) => m.DiscountsComponent,
+          ),
+      },
+      {
         path: 'services',
         loadComponent: () =>
           import('./features/dashboard/services.component').then(
