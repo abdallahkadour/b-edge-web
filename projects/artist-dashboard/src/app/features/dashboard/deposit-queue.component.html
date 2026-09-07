@@ -9,7 +9,7 @@
 
   <!-- Error banner -->
   @if (errorMessage(); as msg) {
-    <div class="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+    <div class="mb-4 rounded-lg bg-danger-light border border-danger/30 px-4 py-3 text-sm text-danger-dark">
       {{ msg }}
     </div>
   }
@@ -81,7 +81,7 @@
                       </span>
                     }
                     @if (item.status === 'deposit_paid') {
-                      <span class="bg-amber-100 text-amber-800 text-[8px] font-bold uppercase px-1.5 py-0.5 rounded tracking-wide">
+                      <span class="bg-warning-light text-warning-dark text-[8px] font-bold uppercase px-1.5 py-0.5 rounded tracking-wide">
                         Deposit received
                       </span>
                     }
@@ -161,7 +161,7 @@
                 {{ formatBookingTime(item.start_time) }}
               </span>
               @if (item.deposit_paid_at) {
-                <span class="text-[#16a34a] font-bold">Received {{ formatDueDate(item.deposit_paid_at) }}</span>
+                <span class="text-success font-bold">Received {{ formatDueDate(item.deposit_paid_at) }}</span>
               }
             </div>
 
@@ -231,7 +231,7 @@
             type="button"
             (click)="confirmVerify()"
             [disabled]="verifying()"
-            class="flex-1 h-10 bg-[#16a34a] hover:opacity-90 rounded-lg text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 disabled:opacity-50 transition-opacity"
+            class="flex-1 h-10 bg-success hover:opacity-90 rounded-lg text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 disabled:opacity-50 transition-opacity"
           >
             @if (verifying()) {
               <lucide-icon name="loader-2" [size]="13" [strokeWidth]="2" class="animate-spin" />

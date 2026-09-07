@@ -13,6 +13,7 @@ import {
   BadgeComponent,
   BookingDataService,
   CustomerAuthStore,
+  ThemeToggleComponent,
   bookingStatusTone,
   formatStatusLabel,
 } from '@bedge/shared';
@@ -31,7 +32,7 @@ const PAST_STATUSES = new Set(['completed', 'no_show']);
 @Component({
   selector: 'app-my-bookings-page',
   standalone: true,
-  imports: [LucideAngularModule, BadgeComponent],
+  imports: [LucideAngularModule, BadgeComponent, ThemeToggleComponent],
   templateUrl: './my-bookings.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

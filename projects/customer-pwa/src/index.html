@@ -9,7 +9,35 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icon.svg" />
-  </head>
+    <script>
+    /*
+     * Applies the saved theme BEFORE first paint.
+     *
+     * ThemeStore does the same thing, but it runs in an Angular constructor -
+     * i.e. after the bundle has parsed and bootstrapped. On a mid-range phone
+     * over Lebanese mobile data that is comfortably long enough to show a
+     * full-brightness white page to someone who chose dark, which is both
+     * jarring and, at night, genuinely unpleasant.
+     *
+     * Deliberately absent: any handling of 'system'. That case needs NO
+     * attribute - the prefers-color-scheme query in the stylesheet has
+     * already resolved it by the time this runs, with no JavaScript at all.
+     * Stamping something here would break OS following.
+     *
+     * Kept in sync with ThemeStore by hand. Both read the same key and write
+     * the same attribute; if that ever diverges the symptom is a flash of the
+     * wrong theme, not a broken app.
+     */
+    try {
+      var t = localStorage.getItem('bedge_theme');
+      if (t === 'dark' || t === 'light') {
+        document.documentElement.setAttribute('data-theme', t);
+      }
+    } catch (e) {
+      /* private mode: fall through to prefers-color-scheme */
+    }
+  </script>
+</head>
   <body>
     <app-root></app-root>
   </body>

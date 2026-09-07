@@ -85,7 +85,7 @@ export class ButtonComponent {
       primary: 'bg-ink text-white hover:opacity-90',
       secondary: 'bg-white text-ink border border-ink hover:bg-gray-50',
       ghost: 'bg-white text-ink border border-gray-200 hover:bg-gray-50',
-      danger: 'bg-white text-danger-dark border border-danger-light hover:bg-red-50',
+      danger: 'bg-white text-danger-dark border border-danger-light hover:bg-danger-light',
     };
 
     return [

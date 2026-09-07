@@ -49,7 +49,7 @@
           </div>
           <div class="h-1.5 mt-1">
             @if (day.hasBooking) {
-              <div class="w-1.5 h-1.5 rounded-full bg-[#16a34a]"></div>
+              <div class="w-1.5 h-1.5 rounded-full bg-success"></div>
             }
           </div>
         </button>
@@ -59,7 +59,7 @@
 
   <!-- Error banner -->
   @if (errorMessage(); as msg) {
-    <div class="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+    <div class="mb-4 rounded-lg bg-danger-light border border-danger/30 px-4 py-3 text-sm text-danger-dark">
       {{ msg }}
     </div>
   }
@@ -91,7 +91,7 @@
           (click)="openDetail(item.booking)"
           [style.top.px]="item.topPx"
           [style.height.px]="item.heightPx"
-          class="absolute left-6 right-2 bg-ink text-white hover:opacity-90 rounded-lg p-3 text-left shadow-sm border-l-4 border-[#16a34a] flex flex-col justify-between overflow-hidden transition-opacity"
+          class="absolute left-6 right-2 bg-ink text-white hover:opacity-90 rounded-lg p-3 text-left shadow-sm border-l-4 border-success flex flex-col justify-between overflow-hidden transition-opacity"
         >
           <div>
             <div class="flex justify-between items-center gap-2">
@@ -112,10 +112,10 @@
       @if (currentTimeTopPx(); as top) {
         <div
           [style.top.px]="top"
-          class="absolute left-0 right-0 h-0.5 bg-red-500 z-10 pointer-events-none flex items-center"
+          class="absolute left-0 right-0 h-0.5 bg-danger z-10 pointer-events-none flex items-center"
         >
-          <div class="w-2.5 h-2.5 rounded-full bg-red-500 -ml-1.5"></div>
-          <span class="bg-red-500 text-white font-semibold text-[8px] px-1 py-0.5 rounded ml-2 tracking-wide font-mono">
+          <div class="w-2.5 h-2.5 rounded-full bg-danger -ml-1.5"></div>
+          <span class="bg-danger text-white font-semibold text-[8px] px-1 py-0.5 rounded ml-2 tracking-wide font-mono">
             {{ currentTimeLabel }} (now)
           </span>
         </div>
@@ -219,7 +219,7 @@
               [href]="reviewLink"
               target="_blank"
               rel="noopener"
-              class="mt-2 w-full h-10 bg-[#16a34a]/10 hover:bg-[#16a34a]/20 text-[#16a34a] text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5"
+              class="mt-2 w-full h-10 bg-success/10 hover:bg-success/20 text-success text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5"
             >
               <lucide-icon name="star" [size]="14" [strokeWidth]="2" />
               Send review request

@@ -55,7 +55,7 @@
   </div>
 
   @if (errorMessage(); as msg) {
-    <div class="mt-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+    <div class="mt-4 rounded-lg bg-danger-light border border-danger/30 px-4 py-3 text-sm text-danger-dark">
       {{ msg }}
     </div>
   }
@@ -310,7 +310,7 @@
           }
 
           @if (formError(); as err) {
-            <div class="rounded-lg bg-red-50 border border-red-200 px-3.5 py-2.5 text-xs text-red-700">
+            <div class="rounded-lg bg-danger-light border border-danger/30 px-3.5 py-2.5 text-xs text-danger-dark">
               {{ err }}
             </div>
           }

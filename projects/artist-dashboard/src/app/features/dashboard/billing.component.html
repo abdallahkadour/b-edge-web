@@ -199,7 +199,7 @@
           type="button"
           (click)="submitPayment()"
           [disabled]="submitting()"
-          class="flex-1 h-10 bg-[#16a34a] hover:opacity-90 rounded-lg text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 disabled:opacity-50 transition-opacity"
+          class="flex-1 h-10 bg-success hover:opacity-90 rounded-lg text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 disabled:opacity-50 transition-opacity"
         >
           @if (submitting()) {
             <lucide-icon name="loader-2" [size]="13" [strokeWidth]="2" class="animate-spin" />

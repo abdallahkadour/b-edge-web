@@ -10,6 +10,11 @@
         }
       </div>
       <div class="flex items-center gap-3">
+        <!-- Compact, because this header already carries two actions and the
+             frame is 480px at its widest. The customer app has no settings
+             screen; this is its only account surface, so the control lives
+             here rather than nowhere. -->
+        <bedge-theme-toggle [compact]="true" />
         <button type="button" (click)="goToOrders()" class="text-xs text-ink font-semibold underline">
           My orders
         </button>
@@ -54,7 +59,7 @@
   <div class="px-5 py-4">
 
     @if (errorMessage(); as msg) {
-      <div class="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+      <div class="mb-4 rounded-lg bg-danger-light border border-danger/30 px-4 py-3 text-sm text-danger-dark">
         {{ msg }}
       </div>
     }

@@ -105,7 +105,7 @@
                   type="button"
                   (click)="move(photo, -1)"
                   [disabled]="movingId() === photo.id"
-                  class="w-6 h-10 bg-black/50 text-white text-xs rounded-r hover:bg-black/70 disabled:opacity-40"
+                  class="w-6 h-10 bg-black/50 text-on-scrim text-xs rounded-r hover:bg-black/70 disabled:opacity-40"
                   aria-label="Move photo earlier"
                   title="Move earlier"
                 >‹</button>
@@ -117,7 +117,7 @@
                   type="button"
                   (click)="move(photo, 1)"
                   [disabled]="movingId() === photo.id"
-                  class="w-6 h-10 bg-black/50 text-white text-xs rounded-l hover:bg-black/70 disabled:opacity-40"
+                  class="w-6 h-10 bg-black/50 text-on-scrim text-xs rounded-l hover:bg-black/70 disabled:opacity-40"
                   aria-label="Move photo later"
                   title="Move later"
                 >›</button>

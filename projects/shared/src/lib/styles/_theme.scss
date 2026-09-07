@@ -1,0 +1,163 @@
+/**
+ * Theme tokens.
+ *
+ * WHY THIS EXISTS AND WHY IT TOUCHES NO TEMPLATES
+ *
+ * The obvious way to add dark mode is to rename ~1,400 class occurrences
+ * across 56 files: bg-white -> bg-surface, text-gray-400 -> text-muted, and
+ * so on. That is an unreviewable diff on a frontend with 22 tests, and every
+ * mistake in it is invisible until someone opens the app in the dark.
+ *
+ * The palette does not need renaming. It needs REDEFINING. `ink` and `white`
+ * are already used as an inverted PAIR - `bg-ink text-white` appears 81 times
+ * as a dark chip on a light page - so if both flip together, every pair stays
+ * correct with no edit at all:
+ *
+ *   light:  bg-white text-ink    = white card,  dark text
+ *           bg-ink   text-white  = dark chip,   light text
+ *
+ *   dark:   bg-white text-ink    = dark card,   light text
+ *           bg-ink   text-white  = light chip,  dark text
+ *
+ * The gray ramp inverts the same way: gray-50 is the recessive ground in both
+ * themes, gray-900 the strongest text. A template asking for `bg-gray-100`
+ * wants "one step off the page" and gets it either way.
+ *
+ * SEMANTIC COLOURS DO NOT INVERT. Success stays green and danger stays red -
+ * they only shift lightness so they still read on a dark ground. A red that
+ * became green in dark mode would be a genuinely dangerous bug, not a
+ * cosmetic one.
+ *
+ * THREE STATES, NOT TWO
+ *
+ *   :root                            light, and the default
+ *   @media (prefers-color-scheme)    the OS preference, when the user has
+ *                                    expressed none in-app
+ *   [data-theme="dark"|"light"]      an explicit in-app choice, which wins
+ *
+ * The media query is guarded with :not([data-theme='light']) so choosing
+ * light in-app beats a dark OS. Without that guard the toggle only works in
+ * one direction, which is the classic version of this bug.
+ *
+ * Values are space-separated RGB triples, not hex, because Tailwind composes
+ * them as `rgb(var(--x) / <alpha-value>)` - that is what keeps `bg-white/95`
+ * and `bg-ink/10` working.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Page and inverted-chip pair. These two always flip together. */
+  --c-white: 255 255 255;
+  --c-ink: 10 10 10;
+  --c-ink-800: 26 26 26;
+  --c-ink-700: 42 42 42;
+
+  /* Neutral ramp: 50 is the recessive ground a card sits on, 900 the
+   * strongest text. `white` is the raised surface above gray-50 - that
+   * relationship is what the dark palette preserves, rather than inverting
+   * the values one for one. */
+  --c-gray-50: 250 250 250;
+  --c-gray-100: 244 244 245;
+  --c-gray-200: 228 228 231;
+  --c-gray-300: 212 212 216;
+  --c-gray-400: 161 161 170;
+  --c-gray-500: 113 113 122;
+  --c-gray-600: 82 82 91;
+  --c-gray-700: 63 63 70;
+  --c-gray-800: 39 39 42;
+  --c-gray-900: 24 24 27;
+
+  /* Semantic. Hue is fixed; only lightness moves between themes. */
+  --c-success: 22 163 74;
+  --c-success-light: 220 252 231;
+  --c-success-dark: 21 128 61;
+
+  --c-danger: 220 38 38;
+  --c-danger-light: 254 226 226;
+  --c-danger-dark: 185 28 28;
+
+  --c-warning: 217 119 6;
+  --c-warning-light: 254 243 199;
+  --c-warning-dark: 180 83 9;
+}
+
+/*
+ * The dark palette, defined once and applied by both selectors below - the OS
+ * preference and the explicit in-app choice. A mixin rather than a shared
+ * selector list because the two live at different specificities and one of
+ * them is inside a media query.
+ *
+ * --c-white is not white here, it is the raised surface. That reads oddly in
+ * isolation and is the deliberate consequence of not renaming 1,400 classes:
+ * the token keeps its name so `bg-white` keeps meaning "a card", which is
+ * what every template using it actually intends.
+ */
+@mixin dark-tokens {
+  color-scheme: dark;
+
+  /* ELEVATION IS PRESERVED, NOT INVERTED.
+   *
+   * `white` is the raised surface (cards, sheets, the app frame) and
+   * `gray-50` the ground it sits on. In light mode white is the LIGHTER of
+   * the two; the naive dark palette makes white the darkest value in the
+   * file, which flips that and leaves every card reading as a hole punched
+   * in the page rather than a card lying on it.
+   *
+   * So the dark ramp is ordered by elevation, not by mechanically inverting
+   * the hex values: gray-50 (ground) < white (card) < gray-100 (fills on a
+   * card) < gray-200 (borders). */
+  --c-white: 26 26 29;
+  --c-ink: 250 250 250;
+  --c-ink-800: 235 235 238;
+  --c-ink-700: 218 218 222;
+
+  --c-gray-50: 18 18 20;
+  --c-gray-100: 38 38 42;
+  --c-gray-200: 52 52 57;
+  --c-gray-300: 74 74 80;
+  --c-gray-400: 140 140 150;
+  --c-gray-500: 165 165 175;
+  --c-gray-600: 190 190 198;
+  --c-gray-700: 212 212 218;
+  --c-gray-800: 232 232 237;
+  --c-gray-900: 245 245 248;
+
+  /* Lighter and less saturated, so they carry on a dark ground without
+     glowing. The -light tints become dark tints; the -dark shades, which are
+     used as TEXT on those tints, become light. */
+  --c-success: 74 222 128;
+  --c-success-light: 20 61 40;
+  --c-success-dark: 134 239 172;
+
+  --c-danger: 248 113 113;
+  --c-danger-light: 69 26 26;
+  --c-danger-dark: 252 165 165;
+
+  --c-warning: 251 191 36;
+  --c-warning-light: 66 45 12;
+  --c-warning-dark: 253 224 71;
+}
+
+@media (prefers-color-scheme: dark) {
+  /* :not([data-theme='light']) so an explicit in-app choice of light beats a
+     dark OS. Without the guard the toggle only works in one direction. */
+  :root:not([data-theme='light']) {
+    @include dark-tokens;
+  }
+}
+
+:root[data-theme='dark'] {
+  @include dark-tokens;
+}
+
+/*
+ * The page itself. Without this the browser paints its own default behind
+ * everything and a dark theme shows white gutters wherever a container does
+ * not reach.
+ */
+html,
+body {
+  background-color: rgb(var(--c-white));
+  color: rgb(var(--c-ink));
+}

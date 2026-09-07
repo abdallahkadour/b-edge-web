@@ -54,7 +54,7 @@
   <div class="px-5 py-4">
 
     @if (errorMessage(); as msg) {
-      <div class="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+      <div class="mb-4 rounded-lg bg-danger-light border border-danger/30 px-4 py-3 text-sm text-danger-dark">
         {{ msg }}
       </div>
     }
@@ -189,7 +189,7 @@
                 <div class="mt-3 pt-3 border-t border-gray-100">
                   <p class="text-xs text-gray-600 mb-2">Cancel order #{{ shortRef(o.id) }}?</p>
                   @if (cancelError(); as err) {
-                    <p class="text-xs text-red-600 mb-2">{{ err }}</p>
+                    <p class="text-xs text-danger mb-2">{{ err }}</p>
                   }
                   <div class="flex gap-2">
                     <bedge-button

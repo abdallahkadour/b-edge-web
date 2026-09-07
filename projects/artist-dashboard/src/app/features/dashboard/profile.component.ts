@@ -16,6 +16,7 @@ import {
   ButtonComponent,
   CloudinaryUploadService,
   InputDirective,
+  ThemeToggleComponent,
   extractApiErrorMessage,
   validateImageFile,
   resizeImageToFit,
@@ -58,6 +59,7 @@ import { PortfolioComponent } from './portfolio.component';
     ButtonComponent,
     BadgeComponent,
     InputDirective,
+    ThemeToggleComponent,
   ],
   templateUrl: './profile.component.html',
 })

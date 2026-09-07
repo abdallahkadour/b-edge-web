@@ -5,7 +5,7 @@
   <div class="px-5 pt-4 pb-2.5 flex justify-between items-center bg-white sticky top-0 z-20">
     <span class="text-lg font-bold tracking-tight text-ink uppercase flex items-center gap-1.5">
       B-Edge
-      <span class="w-1.5 h-1.5 rounded-full bg-[#16a34a]"></span>
+      <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
     </span>
     <button
       type="button"
@@ -62,7 +62,7 @@
 
     <!-- Error banner -->
     @if (errorMessage(); as msg) {
-      <div class="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+      <div class="rounded-lg bg-danger-light border border-danger/30 px-4 py-3 text-sm text-danger-dark">
         {{ msg }}
       </div>
     }

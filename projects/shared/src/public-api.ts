@@ -21,6 +21,7 @@ export * from './lib/core/customer-auth-error.interceptor';
 export * from './lib/core/customer-auth.guard';
 export * from './lib/core/product-data.service';
 export * from './lib/core/cart.store';
+export * from './lib/core/theme.store';
 export * from './lib/core/onboarding-data.service';
 export * from './lib/core/admin-data.service';
 export * from './lib/core/phone.util';

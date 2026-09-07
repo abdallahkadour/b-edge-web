@@ -45,9 +45,9 @@
 
         <!-- Hover / busy overlay -->
         <div class="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/45
-                    transition-colors flex items-center justify-center text-white">
+                    transition-colors flex items-center justify-center text-on-scrim">
           @if (avatarBusy()) {
-            <span class="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
+            <span class="animate-spin inline-block w-4 h-4 border-2 border-on-scrim border-t-transparent rounded-full"></span>
           } @else {
             <span class="opacity-0 group-hover:opacity-100 transition-opacity">
               <lucide-icon name="camera" [size]="18" [strokeWidth]="2" />
@@ -273,6 +273,24 @@
           [loading]="changingPassword()"
           (click)="changePassword()"
         >Change password</bedge-button>
+      </div>
+    </div>
+
+    <!-- ── Appearance ────────────────────────────────────────────────────── -->
+    <div class="mt-8 pt-6 border-t border-gray-100">
+      <h2 class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Appearance</h2>
+
+      <div class="flex items-center justify-between gap-4 p-4 rounded-lg border border-gray-200">
+        <div>
+          <p class="text-sm font-medium text-ink">Theme</p>
+          <!-- Says what "System" actually does. Users read it as "some
+               default" otherwise and pick an explicit value they did not
+               want, which then stops tracking the phone at sunset. -->
+          <p class="text-xs text-gray-500 mt-1 max-w-md">
+            System follows your device setting. This is saved on this device only.
+          </p>
+        </div>
+        <bedge-theme-toggle />
       </div>
     </div>
 

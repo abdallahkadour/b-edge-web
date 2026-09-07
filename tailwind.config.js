@@ -1,5 +1,11 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  // Dark mode is driven by the token layer in
+  // projects/shared/src/lib/styles/theme.css, so almost nothing needs a
+  // `dark:` variant. This is declared anyway for the genuine one-offs -
+  // a shadow or a ring that cannot be expressed as a colour token - and
+  // it must match the attribute the ThemeService stamps on <html>.
+  darkMode: ['class', '[data-theme="dark"]'],
   // Scan both apps and the shared library for class names
   content: [
     './projects/artist-dashboard/src/**/*.{html,ts}',
@@ -9,46 +15,81 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // ── Theme tokens ────────────────────────────────────────────
+        // Every value below resolves through a CSS custom property
+        // defined in projects/shared/src/lib/styles/theme.css, which is
+        // imported by both apps' styles.scss. That file carries the full
+        // rationale; the short version is that dark mode is implemented by
+        // REDEFINING this palette rather than renaming ~1,400 utility
+        // classes across 56 files.
+        //
+        // The `rgb(var(--x) / <alpha-value>)` form is what keeps opacity
+        // modifiers working - `bg-white/95` and `bg-ink/10` both appear in
+        // the templates and would silently break under a plain `var(--x)`.
+        //
+        // `white` is overridden deliberately. It is a Tailwind default, and
+        // leaving it as literal #ffffff would strand every `bg-white` card
+        // and every `text-white` button label in light mode forever.
+
         // ── Ink: the near-black foundation ──────────────────────────
-        // Primary accent. Buttons, active states, headings.
+        // Primary accent. Buttons, active states, headings. Flips with
+        // `white`, so the `bg-ink text-white` pair stays inverted in both
+        // themes.
         ink: {
-          DEFAULT: '#0a0a0a', // near-black, not pure #000 (softer on screens)
-          900: '#0a0a0a',
-          800: '#1a1a1a',
-          700: '#2a2a2a',
+          DEFAULT: 'rgb(var(--c-ink) / <alpha-value>)',
+          900: 'rgb(var(--c-ink) / <alpha-value>)',
+          800: 'rgb(var(--c-ink-800) / <alpha-value>)',
+          700: 'rgb(var(--c-ink-700) / <alpha-value>)',
         },
+        // ── White: the raised surface (cards, sheets, the app frame) ─
+        white: 'rgb(var(--c-white) / <alpha-value>)',
+        // ── on-scrim: the ONE colour that must never flip ────────────
+        // Content laid over a black scrim or a photograph. `text-white`
+        // cannot be used there: it flips with the theme, so a caption over
+        // a `bg-black/50` overlay would turn dark-on-dark and vanish in
+        // dark mode - the scrim is literally black in both themes, because
+        // it darkens a photograph rather than the page.
+        //
+        // Not pure #fff, to match `gray-50`'s softness on a photo.
+        'on-scrim': 'rgb(250 250 250 / <alpha-value>)',
         // ── Gray: the precise neutral scale ─────────────────────────
-        // Text, borders, backgrounds. The workhorse of the whole UI.
+        // Text, borders, backgrounds. The workhorse of the whole UI. The
+        // ramp inverts wholesale: 50 is the faintest surface and 900 the
+        // strongest text in BOTH themes, which is what every call site
+        // already assumes.
         gray: {
-          50:  '#fafafa',
-          100: '#f4f4f5',
-          200: '#e4e4e7',
-          300: '#d4d4d8',
-          400: '#a1a1aa',
-          500: '#71717a',
-          600: '#52525b',
-          700: '#3f3f46',
-          800: '#27272a',
-          900: '#18181b',
+          50:  'rgb(var(--c-gray-50) / <alpha-value>)',
+          100: 'rgb(var(--c-gray-100) / <alpha-value>)',
+          200: 'rgb(var(--c-gray-200) / <alpha-value>)',
+          300: 'rgb(var(--c-gray-300) / <alpha-value>)',
+          400: 'rgb(var(--c-gray-400) / <alpha-value>)',
+          500: 'rgb(var(--c-gray-500) / <alpha-value>)',
+          600: 'rgb(var(--c-gray-600) / <alpha-value>)',
+          700: 'rgb(var(--c-gray-700) / <alpha-value>)',
+          800: 'rgb(var(--c-gray-800) / <alpha-value>)',
+          900: 'rgb(var(--c-gray-900) / <alpha-value>)',
         },
         // ── Success: the one warm functional color ──────────────────
-        // Booking confirmed, deposit received, review posted.
+        // Booking confirmed, deposit received, review posted. Semantic
+        // colours keep their HUE across themes and only shift lightness -
+        // a danger red that turned green in the dark would be a safety
+        // bug, not a styling one.
         success: {
-          DEFAULT: '#16a34a',
-          light:   '#dcfce7',
-          dark:    '#15803d',
+          DEFAULT: 'rgb(var(--c-success) / <alpha-value>)',
+          light:   'rgb(var(--c-success-light) / <alpha-value>)',
+          dark:    'rgb(var(--c-success-dark) / <alpha-value>)',
         },
         // ── Danger: errors, cancellations, destructive actions ──────
         danger: {
-          DEFAULT: '#dc2626',
-          light:   '#fee2e2',
-          dark:    '#b91c1c',
+          DEFAULT: 'rgb(var(--c-danger) / <alpha-value>)',
+          light:   'rgb(var(--c-danger-light) / <alpha-value>)',
+          dark:    'rgb(var(--c-danger-dark) / <alpha-value>)',
         },
         // ── Warning: pending states, deposit deadlines ──────────────
         warning: {
-          DEFAULT: '#d97706',
-          light:   '#fef3c7',
-          dark:    '#b45309',
+          DEFAULT: 'rgb(var(--c-warning) / <alpha-value>)',
+          light:   'rgb(var(--c-warning-light) / <alpha-value>)',
+          dark:    'rgb(var(--c-warning-dark) / <alpha-value>)',
         },
       },
       fontFamily: {

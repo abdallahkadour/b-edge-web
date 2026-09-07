@@ -25,15 +25,15 @@
   </div>
 
   @if (errorMessage(); as msg) {
-    <div class="mt-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+    <div class="mt-4 rounded-lg bg-danger-light border border-danger/30 px-4 py-3 text-sm text-danger-dark">
       {{ msg }}
     </div>
   }
 
   <!-- Attention banner -->
   @if (activeTab() === 'placed' && needsPaymentCount() > 0) {
-    <div class="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-3.5 flex items-center gap-3 text-amber-900">
-      <lucide-icon name="clock" [size]="18" [strokeWidth]="2" class="text-amber-600 shrink-0" />
+    <div class="mt-4 bg-warning-light border border-warning/30 rounded-xl p-3.5 flex items-center gap-3 text-warning-dark">
+      <lucide-icon name="clock" [size]="18" [strokeWidth]="2" class="text-warning shrink-0" />
       <span class="text-[13px] font-medium">
         {{ needsPaymentCount() }} {{ needsPaymentCount() === 1 ? 'order' : 'orders' }} waiting on payment confirmation
       </span>
@@ -144,7 +144,7 @@
                     rel="noopener"
                     class="h-9 px-3 bg-white hover:bg-gray-50 text-gray-700 font-medium text-xs rounded-lg border border-gray-200 flex items-center gap-1.5 transition-colors"
                   >
-                    <lucide-icon name="message-square" [size]="14" [strokeWidth]="2" class="text-[#16a34a]" />
+                    <lucide-icon name="message-square" [size]="14" [strokeWidth]="2" class="text-success" />
                     Message
                   </a>
                 }
@@ -175,7 +175,7 @@
                     >Mark delivered</bedge-button>
                   }
                   @case ('delivered') {
-                    <div class="flex items-center gap-1 text-xs font-bold text-[#16a34a] px-2.5 py-1.5 bg-[#16a34a]/10 rounded-lg">
+                    <div class="flex items-center gap-1 text-xs font-bold text-success px-2.5 py-1.5 bg-success/10 rounded-lg">
                       <lucide-icon name="check" [size]="14" [strokeWidth]="2" />
                       Completed
                     </div>
@@ -228,7 +228,7 @@
           </div>
 
           @if (modalError(); as err) {
-            <div class="rounded-lg bg-red-50 border border-red-200 px-3.5 py-2.5 text-xs text-red-700">
+            <div class="rounded-lg bg-danger-light border border-danger/30 px-3.5 py-2.5 text-xs text-danger-dark">
               {{ err }}
             </div>
           }

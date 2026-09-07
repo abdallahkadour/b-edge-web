@@ -1,3 +1,17 @@
+// The colour token layer, which every Tailwind colour in both apps resolves
+// through. See the partial itself for how dark mode works.
+//
+// @use rather than @import, and therefore ABOVE @tailwind: `@import` is
+// deprecated in Dart Sass and warns on every build, but `@use` is only legal
+// before other rules. That ordering is fine and slightly preferable - the
+// tokens land before the utilities, so a `bg-*` utility still wins over the
+// html/body defaults the partial sets, which is what those defaults are for.
+//
+// Both apps load the same partial. A palette that drifted between the
+// customer app and the dashboard would be a bug nobody notices until a
+// screenshot puts them side by side.
+@use '../../shared/src/lib/styles/theme';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,7 +21,7 @@
 // there, so there's no backdrop to see.
 @media (min-width: 768px) {
   body {
-    background-color: #f3f4f6; // tailwind gray-100
+    background-color: rgb(var(--c-gray-100));
   }
 }
 
@@ -39,9 +53,14 @@ input:-webkit-autofill:focus,
 textarea:-webkit-autofill,
 textarea:-webkit-autofill:hover,
 textarea:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
-  box-shadow: 0 0 0 1000px #ffffff inset;
-  -webkit-text-fill-color: #0a0a0a;
-  caret-color: #0a0a0a;
+  // Tokens, not literals. These four lines are the one place in the app
+  // that paints a surface without going through Tailwind, so they are also
+  // the one place a theme change can silently miss - and the symptom would
+  // be a white-on-white login field in dark mode, on the single screen that
+  // most needs to look trustworthy.
+  -webkit-box-shadow: 0 0 0 1000px rgb(var(--c-white)) inset;
+  box-shadow: 0 0 0 1000px rgb(var(--c-white)) inset;
+  -webkit-text-fill-color: rgb(var(--c-ink));
+  caret-color: rgb(var(--c-ink));
   transition: background-color 5000s ease-in-out 0s;
 }
