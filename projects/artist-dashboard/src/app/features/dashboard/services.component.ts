@@ -37,6 +37,23 @@ const emptyForm = (): ServiceForm => ({
  * Services screen — CRUD for the salon service catalogue.
  * Lists services, inline edit, add new, deactivate.
  */
+
+/**
+ * True when a deposit is larger than the price it secures.
+ *
+ * The API refuses this and a CHECK constraint backs it (migration 038). This
+ * is only here so the artist sees it while typing rather than as a rejected
+ * save - and because the figure being guarded is the one a client is asked to
+ * transfer directly, by OMT or Whish, with no escrow behind it.
+ *
+ * Both values are compared as numbers only once isValidMoney has accepted
+ * them, so parseFloat cannot be handed anything exotic here.
+ */
+function depositExceedsPrice(price: string, deposit: string): boolean {
+  if (deposit === '' || !isValidMoney(price) || !isValidMoney(deposit)) return false;
+  return parseFloat(deposit) > parseFloat(price);
+}
+
 @Component({
   selector: 'bedge-services',
   standalone: true,
@@ -77,6 +94,7 @@ export class ServicesComponent implements OnInit {
       // pattern is the same one the API enforces.
       isValidMoney(f.price) &&
       (f.deposit_amount === '' || isValidMoney(f.deposit_amount)) &&
+      !depositExceedsPrice(f.price, f.deposit_amount) &&
       f.duration_min >= 15 &&
       f.buffer_min >= 0 &&
       f.buffer_min <= 120
@@ -100,8 +118,21 @@ export class ServicesComponent implements OnInit {
       f.name.trim().length >= 2 &&
       isValidMoney(f.price) &&
       (f.deposit_amount === '' || isValidMoney(f.deposit_amount)) &&
+      !depositExceedsPrice(f.price, f.deposit_amount) &&
       f.duration_min >= 15
     );
+  }
+
+  /** True when the add form's deposit is above its price. */
+  depositTooHigh(): boolean {
+    const f = this.addForm();
+    return depositExceedsPrice(f.price, f.deposit_amount);
+  }
+
+  /** True when an inline edit's deposit is above its price. */
+  editDepositTooHigh(): boolean {
+    const f = this.editForm();
+    return depositExceedsPrice(f.price, f.deposit_amount);
   }
 
   protected readonly moneyHint = MONEY_HINT;

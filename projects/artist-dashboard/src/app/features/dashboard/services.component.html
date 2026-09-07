@@ -198,7 +198,13 @@
                   placeholder="0.00"
                   [value]="editForm().deposit_amount"
                   (input)="editForm.update(f => ({...f, deposit_amount: $any($event.target).value}))"
+                  [attr.aria-invalid]="editDepositTooHigh() ? 'true' : null"
                 />
+                @if (editDepositTooHigh()) {
+                  <p class="text-xs text-danger-dark mt-1">
+                    The deposit cannot be more than the price.
+                  </p>
+                }
               </div>
             </div>
 
@@ -301,7 +307,14 @@
               placeholder="0.00"
               [value]="addForm().deposit_amount"
               (input)="addForm.update(f => ({...f, deposit_amount: $any($event.target).value}))"
+              [attr.aria-invalid]="depositTooHigh() ? 'true' : null"
+              [attr.aria-describedby]="depositTooHigh() ? 'add-deposit-hint' : null"
             />
+            @if (depositTooHigh()) {
+              <p id="add-deposit-hint" class="text-xs text-danger-dark mt-1">
+                The deposit cannot be more than the price.
+              </p>
+            }
           </div>
         </div>
 
