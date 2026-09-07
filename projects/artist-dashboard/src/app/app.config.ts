@@ -45,6 +45,7 @@ import {
   MoreHorizontal,
   Search,
   Inbox,
+  CircleHelp,
 } from 'lucide-angular';
 
 import {
@@ -125,6 +126,7 @@ export const appConfig: ApplicationConfig = {
         MoreHorizontal,
         Search,
         Inbox,
+        CircleHelp,
       }),
     ),
 

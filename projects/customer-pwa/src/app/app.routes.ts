@@ -83,6 +83,13 @@ export const routes: Routes = [
       import('./features/booking-detail/booking-detail.page').then((m) => m.BookingDetailPage),
   },
   {
+    // Deliberately NOT behind customerAuthGuard. Booking does not require an
+    // account, so the people most likely to need help are the ones who
+    // cannot sign in.
+    path: 'help',
+    loadComponent: () => import('./features/help/help.page').then((m) => m.HelpPage),
+  },
+  {
     // Must stay last - Angular matches routes in declared order, and a
     // wildcard placed earlier would swallow every route below it. Before
     // this existed, an unmatched URL rendered nothing at all: a blank

@@ -104,6 +104,10 @@ export class MyBookingsPage implements OnInit {
     this.router.navigateByUrl('/my-orders');
   }
 
+  goToHelp(): void {
+    this.router.navigateByUrl('/help');
+  }
+
   openBooking(id: string): void {
     this.router.navigate(['/my-bookings', id]);
   }

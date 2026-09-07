@@ -36,6 +36,7 @@ export * from './lib/core/image-upload.util';
 
 // UI primitives
 export * from './lib/ui';
+export * from './lib/help';
 export * from './lib/core/auth.guard';
 
 // ── Data services ─────────────────────────────────────────────────────────────

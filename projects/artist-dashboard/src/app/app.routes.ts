@@ -190,6 +190,13 @@ export const routes: Routes = [
             (m) => m.ProfileComponent,
           ),
       },
+      {
+        path: 'help',
+        loadComponent: () =>
+          import('./features/dashboard/help/help.component').then(
+            (m) => m.HelpComponent,
+          ),
+      },
     ],
   },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },

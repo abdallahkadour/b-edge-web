@@ -132,6 +132,7 @@ export class DashboardLayoutComponent {
     { path: '/dashboard/discounts', label: 'Promos', icon: 'tag' },
     { path: '/dashboard/hours',    label: 'Hours',    icon: 'clock' },
     { path: '/dashboard/profile',  label: 'Profile',  icon: 'user' },
+    { path: '/dashboard/help',     label: 'Help',     icon: 'circle-help' },
   ];
 
   /** Navigation items shared between the sidebar and the mobile bottom bar.
@@ -141,7 +142,9 @@ export class DashboardLayoutComponent {
    *  is worse than not offering it at all. */
   readonly navItems = computed<NavItem[]>(() =>
     this.isPending()
-      ? this.allNavItems.filter((item) => item.path === '/dashboard/profile')
+      ? this.allNavItems.filter(
+          (item) => item.path === '/dashboard/profile' || item.path === '/dashboard/help',
+        )
       : this.allNavItems,
   );
 
@@ -171,7 +174,8 @@ export class DashboardLayoutComponent {
     this.navItems().filter(
       (item) =>
         !DashboardLayoutComponent.MOBILE_PRIMARY_PATHS.includes(item.path) &&
-        item.path !== '/dashboard/profile',
+        item.path !== '/dashboard/profile' &&
+        item.path !== '/dashboard/help',
     ),
   );
 
