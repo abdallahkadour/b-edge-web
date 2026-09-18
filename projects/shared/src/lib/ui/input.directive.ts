@@ -1,4 +1,10 @@
-import { Directive, computed, input } from '@angular/core';
+import {
+  Directive,
+  ElementRef,
+  computed,
+  inject,
+  input,
+} from '@angular/core';
 
 /**
  * Text input styling, as a DIRECTIVE rather than a wrapper component.
@@ -20,6 +26,70 @@ import { Directive, computed, input } from '@angular/core';
 })
 export class InputDirective {
   readonly invalid = input(false);
+
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+
+  /**
+   * Associates this control with its visible label.
+   *
+   * WHY THE DIRECTIVE DOES THIS AND NOT THE TEMPLATES
+   *
+   * An audit found 99 of 120 form controls with no programmatic label. The
+   * markup was almost always this shape:
+   *
+   *     <label class="block text-xs ...">Account name</label>
+   *     <input bedgeInput ... />
+   *
+   * Visually labelled, programmatically invisible: a screen reader announces
+   * "edit text, blank", and tapping the label does not focus the field -
+   * which is a loss for everyone, not only assistive-tech users.
+   *
+   * Fixing it in the templates means 99 edits, and 63 of those sit inside
+   * `@for` blocks where a hand-written id would be duplicated across every
+   * iteration - an id collision is its own accessibility bug. Doing it here
+   * gives every instance a genuinely unique id for free.
+   *
+   * Deliberately conservative. It only acts when the control has NO id and NO
+   * aria-label, and it only claims a label that has no `for` of its own, so
+   * it can never override an association someone wrote on purpose. If it
+   * finds nothing, it leaves the DOM alone rather than inventing a label -
+   * a wrong label is worse than a missing one.
+   */
+  constructor() {
+    const el = this.host.nativeElement;
+    if (el.id || el.hasAttribute('aria-label') || el.hasAttribute('aria-labelledby')) return;
+
+    const label = this.findLabel(el);
+    if (!label) return;
+
+    const id = `bi${Math.random().toString(36).slice(2, 9)}`;
+    el.id = id;
+    label.setAttribute('for', id);
+  }
+
+  /**
+   * Finds the label this control belongs to.
+   *
+   * Two shapes, in order of confidence: the immediately preceding sibling,
+   * which is how nearly every form in this codebase is written; then a lone
+   * unclaimed label inside the same parent, which covers the cases where a
+   * wrapper div sits between them.
+   *
+   * "Lone" matters - if a parent holds two unclaimed labels there is no way
+   * to know which is ours, and guessing would attach the wrong text to the
+   * wrong field. Better to leave it.
+   */
+  private findLabel(el: HTMLElement): HTMLLabelElement | null {
+    const prev = el.previousElementSibling;
+    if (prev instanceof HTMLLabelElement && !prev.hasAttribute('for')) return prev;
+
+    const parent = el.parentElement;
+    if (!parent) return null;
+    const free = Array.from(parent.querySelectorAll('label')).filter(
+      (l) => !l.hasAttribute('for') && !l.querySelector('input, select, textarea'),
+    );
+    return free.length === 1 ? (free[0] as HTMLLabelElement) : null;
+  }
 
   protected readonly classes = computed(() =>
     [
