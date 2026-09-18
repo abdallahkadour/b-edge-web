@@ -327,6 +327,42 @@ export const ARTIST_GUIDE: Guide = {
       ],
     },
     {
+      id: 'safety',
+      title: 'Protecting your business',
+      blurb: 'The scams that target artists, and what the platform already does about them.',
+      topics: [
+        {
+          id: 'fake-bookings',
+          title: 'Spotting a fake booking',
+          summary: 'A request that blocks your best slot and never arrives.',
+          steps: [
+            'Before approving a large or unusual request, look at the details: a name that reads oddly, an unreachable number, a booking for your most valuable slot from someone with no history.',
+            'Message the client on WhatsApp before you approve. A real client answers.',
+            'Ask for the deposit before confirming. It is the single most effective filter there is.',
+            'If they will not confirm or pay, decline the request rather than leaving the slot held.',
+          ],
+          notes: [
+            'Nothing is held until you approve, so an unapproved request is not costing you the slot yet - but approving one that never pays does.',
+            'A client\'s history is on their record in **Clients**, including any no-shows. Check it before accepting a large booking from someone who has let you down before.',
+          ],
+        },
+        {
+          id: 'payment-safety',
+          title: 'Deposits and payment safety',
+          summary: 'What to check before you treat a deposit as received.',
+          steps: [
+            'Only mark a deposit received once you have seen it in your own OMT or Whish account. A screenshot is not proof - screenshots are trivial to fake.',
+            'Record the transaction reference when you verify it. It is what you will look for if there is ever a dispute.',
+            'Never send money back to anyone who claims they overpaid, until you have confirmed the original transfer cleared in your own account.',
+          ],
+          notes: [
+            'The overpayment scam is common in this industry: a client "accidentally" sends too much and asks for the difference back. The original payment is then reversed or was never real, and the refund is gone.',
+            'B-Edge will never ask you for your password, and never asks for payment details by message. Subscription invoices are always paid from **Billing** inside the dashboard.',
+          ],
+        },
+      ],
+    },
+    {
       id: 'subscription',
       title: 'Your B-Edge subscription',
       blurb: 'What you pay B-Edge to use the platform.',

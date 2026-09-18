@@ -142,6 +142,56 @@ export const CUSTOMER_GUIDE: Guide = {
       ],
     },
     {
+      id: 'safety',
+      title: 'Staying safe',
+      blurb: 'Money moves directly between you and the artist, so these are worth knowing.',
+      topics: [
+        {
+          id: 'deposit-safety',
+          title: 'Protecting yourself when you send a deposit',
+          summary: 'There is no card in the middle, so the record you keep is your protection.',
+          steps: [
+            'Send only the deposit amount shown in the app before you confirm. Never more.',
+            'Never send anything before your appointment beyond that deposit. The rest is paid in person.',
+            'Keep the OMT or Whish reference for the transfer. It is the only proof that links your money to your booking.',
+            'Check your booking afterwards. Once the artist records your deposit, it shows on the booking in **My Bookings**.',
+            'If the artist has not recorded it after a day, message them and quote your reference.',
+          ],
+          notes: [
+            'B-Edge never holds your money and never asks for it. The deposit goes straight from you to the artist, so there is no card company to reverse it - which is exactly why the amount, the reference and the record on your booking all matter.',
+            'A deposit can never be more than the price of the service. If you are ever asked for more than the app shows, something is wrong.',
+            'Nobody at B-Edge will ever ask you for a password, a card number or a one-time code. The only code we send is the 6-digit one you asked for when signing in.',
+          ],
+        },
+        {
+          id: 'trust-signals',
+          title: 'Knowing an artist is real',
+          summary: 'What the app checks, and what you should check yourself.',
+          steps: [
+            'Every artist is reviewed by the B-Edge team before they can take a single booking.',
+            'Read the reviews. They can only be left by someone who actually had an appointment, through a private link sent afterwards - so they cannot be bought or faked.',
+            'Look at the portfolio. A real one has variety: different clients, angles and lighting, built up over time.',
+            'Check the location and the hours are ones a real business would keep.',
+          ],
+          notes: [
+            'Be wary of anyone pressing you to decide immediately, or offering a price far below everyone else. Urgency and an unbeatable price are the two oldest tools there are.',
+          ],
+        },
+        {
+          id: 'stay-on-platform',
+          title: 'Why booking through the app protects you',
+          summary: 'An off-app booking has no record at all.',
+          steps: [
+            'Book and pay your deposit against a booking that exists in the app.',
+            'If someone asks you to book outside B-Edge, or to send a deposit for an appointment that is not in your **My Bookings**, treat that as a warning sign.',
+          ],
+          notes: [
+            'A booking made in the app has a record: what you agreed, what it cost, what deposit was asked for and whether it was confirmed. A booking arranged privately has none of that, and neither you nor the artist can point to anything afterwards.',
+          ],
+        },
+      ],
+    },
+    {
       id: 'shop',
       title: 'Buying products',
       blurb: 'Some artists sell products as well as appointments.',
