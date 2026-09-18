@@ -142,8 +142,13 @@
 
   <!-- Waitlist join modal -->
   @if (showWaitlistForm()) {
+    <!-- z-60, not z-50. The sticky bottom CTA on this screen is also z-50,
+         so the modal only covered it because it happens to be declared
+         later in the template. Reordering these two blocks would have
+         silently floated the CTA on top of the dimmed backdrop. An
+         explicit layer does not depend on source order. -->
     <div
-      class="fixed inset-0 bg-ink/60 flex items-end justify-center z-50"
+      class="fixed inset-0 bg-ink/60 flex items-end justify-center z-[60]"
       (click)="closeWaitlistForm()"
       (keydown.escape)="closeWaitlistForm()"
     >
