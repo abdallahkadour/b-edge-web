@@ -23,6 +23,7 @@ import {
 } from '@bedge/shared';
 import type { ArtistProfile } from '@bedge/shared';
 
+import { PaymentMethodsComponent } from './payment-methods.component';
 import { PortfolioComponent } from './portfolio.component';
 
 /**
@@ -60,6 +61,7 @@ import { PortfolioComponent } from './portfolio.component';
     BadgeComponent,
     InputDirective,
     ThemeToggleComponent,
+    PaymentMethodsComponent,
   ],
   templateUrl: './profile.component.html',
 })

@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { LucideAngularModule } from 'lucide-angular';
 
+import { DepositInstructionsComponent } from '../../../shared/deposit-instructions.component';
+
 import type { Booking, PublicService } from '@bedge/shared';
 
 const STORE_TIMEZONE = 'Asia/Beirut';
@@ -13,7 +15,7 @@ const STORE_TIMEZONE = 'Asia/Beirut';
 @Component({
   selector: 'app-booking-confirmed-screen',
   standalone: true,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, DepositInstructionsComponent],
   templateUrl: './booking-confirmed-screen.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -25,6 +27,8 @@ export class BookingConfirmedScreenComponent {
   readonly service = input.required<PublicService>();
   readonly storeName = input.required<string>();
   readonly artistName = input.required<string>();
+  /** From the selected store - the funnel never has a salon id of its own. */
+  readonly salonId = input.required<string>();
 
   readonly backToProfile = output<void>();
 

@@ -347,6 +347,24 @@ export const ARTIST_GUIDE: Guide = {
           ],
         },
         {
+          id: 'payment-details',
+          title: 'Set where clients should pay you',
+          summary: 'So B-Edge shows your details instead of you sending a number by message.',
+          steps: [
+            'Go to **Profile** and find **Getting paid**.',
+            'Choose **Add** next to **Whish** or **OMT**.',
+            'Enter the **Account name** exactly as it appears on your account. Clients see this name when they confirm a transfer, so a mismatch is what tells them something is wrong.',
+            'Enter your phone number for Whish, or your account reference for OMT.',
+            'Save. Clients are now shown these details when a deposit is due.',
+            'If you stop using an account, choose **Stop using** rather than leaving it. It disappears from client screens immediately.',
+          ],
+          notes: [
+            'Until you set this, clients have nowhere to send a deposit and you have to message them a number - which is exactly where payment scams happen, because there is nothing for them to check it against.',
+            'You can have one Whish account and one OMT account. Saving again replaces the existing one rather than adding a second, so there is never any doubt about which is correct.',
+            'The same details are used for product orders.',
+          ],
+        },
+        {
           id: 'payment-safety',
           title: 'Deposits and payment safety',
           summary: 'What to check before you treat a deposit as received.',

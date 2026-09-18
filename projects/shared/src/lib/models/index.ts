@@ -4,6 +4,7 @@ export * from './auth.model';
 export * from './booking.model';
 export * from './artist.model';
 export * from './discount.model';
+export * from './payout.model';
 export * from './discovery.model';
 export * from './review.model';
 export * from './customer-auth.model';

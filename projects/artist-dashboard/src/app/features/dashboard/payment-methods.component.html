@@ -1,0 +1,120 @@
+<div>
+  <h2 class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Getting paid</h2>
+
+  @if (loading()) {
+    <div class="flex flex-col gap-2">
+      <bedge-skeleton height="96px" />
+      <bedge-skeleton height="96px" />
+    </div>
+  } @else {
+    @if (error(); as e) {
+      <p class="text-xs text-danger-dark mb-3">{{ e }}</p>
+    }
+
+    <!-- Loud, because an artist taking deposits with nothing set here is back
+         to sending an account number over WhatsApp — the exact situation this
+         screen exists to end. -->
+    @if (hasNoActiveDestination()) {
+      <div class="mb-4 p-4 rounded-lg bg-warning-light border border-warning/30">
+        <p class="text-sm font-medium text-warning-dark">No payment details set</p>
+        <p class="text-xs text-warning-dark mt-1 max-w-lg">
+          Clients booking a service with a deposit have nowhere to send it. Add at least one
+          method below so B-Edge can show them your details instead of you sending a number
+          by message.
+        </p>
+      </div>
+    }
+
+    <p class="text-xs text-gray-500 mb-4 max-w-lg">
+      These are shown to a client when they are asked for a deposit, and on your shop checkout.
+      B-Edge never holds your money — clients pay you directly.
+    </p>
+
+    @for (kind of kinds; track kind.id) {
+      <div class="mb-3 p-4 rounded-lg border border-gray-200">
+        @if (editing() === kind.id) {
+          <p class="text-sm font-medium text-ink mb-3">{{ kind.label }}</p>
+
+          <label class="block text-xs text-gray-400 mb-1" [attr.for]="'name-' + kind.id">
+            Account name
+          </label>
+          <input
+            bedgeInput
+            [id]="'name-' + kind.id"
+            type="text"
+            class="mb-1"
+            placeholder="The name on your account"
+            [value]="draft().account_name"
+            (input)="patchDraft({ account_name: $any($event.target).value })"
+          />
+          <!-- Says why the name matters, because it looks like a formality. -->
+          <p class="text-xs text-gray-400 mb-3">
+            Clients see this name when they confirm the transfer, so it must match your account
+            exactly.
+          </p>
+
+          <label class="block text-xs text-gray-400 mb-1" [attr.for]="'ref-' + kind.id">
+            {{ kind.id === 'whish' ? 'Phone number' : 'Account reference' }}
+          </label>
+          <input
+            bedgeInput
+            [id]="'ref-' + kind.id"
+            type="text"
+            class="mb-1"
+            [placeholder]="kind.id === 'whish' ? '71 900 001' : 'Your OMT reference'"
+            [value]="draft().account_ref"
+            (input)="patchDraft({ account_ref: $any($event.target).value })"
+          />
+          <p class="text-xs text-gray-400 mb-3">{{ kind.hint }}</p>
+
+          @if (saveError(); as e) {
+            <p class="text-xs text-danger-dark mb-3">{{ e }}</p>
+          }
+
+          <div class="flex gap-2">
+            <bedge-button [disabled]="!canSave() || saving()" (click)="save()">
+              {{ saving() ? 'Saving…' : 'Save' }}
+            </bedge-button>
+            <bedge-button variant="ghost" (click)="cancelEdit()">Cancel</bedge-button>
+          </div>
+        } @else {
+          <div class="flex items-start justify-between gap-4">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <p class="text-sm font-medium text-ink">{{ kind.label }}</p>
+                @if (existing(kind.id); as m) {
+                  @if (!m.is_active) {
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                      Not in use
+                    </span>
+                  }
+                }
+              </div>
+
+              @if (existing(kind.id); as m) {
+                <p class="text-sm text-ink mt-1 truncate">{{ m.account_name }}</p>
+                <p class="text-xs text-gray-500 font-mono">{{ m.account_ref }}</p>
+              } @else {
+                <p class="text-xs text-gray-500 mt-1">Not set</p>
+              }
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+              @if (existing(kind.id); as m) {
+                <button
+                  type="button"
+                  class="text-xs text-gray-400 font-semibold underline disabled:opacity-40"
+                  [disabled]="togglingId() === m.id"
+                  (click)="toggleActive(m)"
+                >{{ m.is_active ? 'Stop using' : 'Use again' }}</button>
+              }
+              <bedge-button variant="ghost" (click)="startEdit(kind.id)">
+                {{ existing(kind.id) ? 'Change' : 'Add' }}
+              </bedge-button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>
