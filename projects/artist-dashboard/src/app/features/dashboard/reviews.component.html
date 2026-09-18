@@ -31,11 +31,10 @@
 
   <!-- Empty state -->
   @if (!loading() && reviews().length === 0) {
-    <div class="rounded-lg border border-gray-200 bg-white p-10 text-center">
-      <p class="text-3xl mb-3">⭐</p>
-      <p class="text-sm font-medium text-ink">No reviews yet</p>
-      <p class="text-xs text-gray-400 mt-1">Reviews appear here once clients leave feedback after a completed booking.</p>
-    </div>
+    <bedge-empty-state
+        emoji="⭐" title="No reviews yet"
+        hint="Reviews appear here once clients leave feedback after a completed booking."
+      />
   }
 
   <!-- Review list -->

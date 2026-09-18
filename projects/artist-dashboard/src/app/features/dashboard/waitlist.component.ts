@@ -14,6 +14,7 @@ import {
   BadgeComponent,
   bookingStatusTone,
   SkeletonComponent,
+  EmptyStateComponent,
 } from '@bedge/shared';
 import type { WaitlistEntryResponse } from '@bedge/shared';
 
@@ -30,6 +31,7 @@ import type { WaitlistEntryResponse } from '@bedge/shared';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LucideAngularModule, BadgeComponent,
     SkeletonComponent,
+    EmptyStateComponent,
   ],
   templateUrl: './waitlist.component.html',
 })

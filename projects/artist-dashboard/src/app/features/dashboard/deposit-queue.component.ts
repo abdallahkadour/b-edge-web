@@ -13,6 +13,7 @@ import { A11yModule } from '@angular/cdk/a11y';
 
 import { ArtistDataService, BookingDataService, ButtonComponent,
   SkeletonComponent,
+  EmptyStateComponent,
 } from '@bedge/shared';
 import type { EnrichedBooking } from '@bedge/shared';
 
@@ -47,6 +48,7 @@ type QueueTab = 'pending' | 'received';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LucideAngularModule, ButtonComponent, A11yModule,
     SkeletonComponent,
+    EmptyStateComponent,
   ],
   templateUrl: './deposit-queue.component.html',
 })

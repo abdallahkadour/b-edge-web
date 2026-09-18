@@ -160,4 +160,21 @@ html,
 body {
   background-color: rgb(var(--c-white));
   color: rgb(var(--c-ink));
+
+  /* TABULAR FIGURES, APPLICATION-WIDE.
+   *
+   * Inter's default figures are proportional, so a "1" is narrower than a
+   * "7". In a list of prices or times that means every row starts its digits
+   * at a slightly different place, and the column visibly shakes as you
+   * scroll. It is the kind of wrongness nobody can name but everybody feels.
+   *
+   * Applied to body rather than to 63 individual money interpolations,
+   * because the alternative is remembering it at every new one - and the
+   * first one anybody forgets is the one on the checkout screen.
+   *
+   * The trade-off is real: tabular figures are slightly wider and read a
+   * little less naturally in running prose. This application has almost no
+   * prose - it is lists of prices, times, dates and counts - so the exchange
+   * is heavily in favour. */
+  font-variant-numeric: tabular-nums;
 }

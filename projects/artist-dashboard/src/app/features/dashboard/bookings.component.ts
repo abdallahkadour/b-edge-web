@@ -18,6 +18,7 @@ import {
   bookingStatusTone,
   extractApiErrorMessage,
   SkeletonComponent,
+  EmptyStateComponent,
 } from '@bedge/shared';
 import type { EnrichedBooking, BookingStatus } from '@bedge/shared';
 
@@ -55,6 +56,7 @@ interface StatusTab {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [BadgeComponent, ButtonComponent, InputDirective,
     SkeletonComponent,
+    EmptyStateComponent,
   ],
   templateUrl: './bookings.component.html',
 })

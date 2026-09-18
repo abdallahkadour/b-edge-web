@@ -125,11 +125,10 @@
         }
 
         @if (pending().length === 0) {
-          <div class="rounded-lg border border-gray-200 bg-white p-8 text-center">
-            <p class="text-2xl mb-2">✅</p>
-            <p class="text-sm font-medium text-ink">Nothing pending</p>
-            <p class="text-xs text-gray-400 mt-1">Deposits awaiting verification will show up here.</p>
-          </div>
+          <bedge-empty-state
+        emoji="✅" title="Nothing pending"
+        hint="Deposits awaiting verification will show up here."
+      />
         }
       </div>
     }
@@ -172,11 +171,10 @@
         }
 
         @if (received().length === 0) {
-          <div class="rounded-lg border border-gray-200 bg-white p-8 text-center">
-            <p class="text-2xl mb-2">📭</p>
-            <p class="text-sm font-medium text-ink">Nothing received yet</p>
-            <p class="text-xs text-gray-400 mt-1">Confirmed deposits will show up here.</p>
-          </div>
+          <bedge-empty-state
+        emoji="📭" title="Nothing received yet"
+        hint="Confirmed deposits will show up here."
+      />
         }
       </div>
     }

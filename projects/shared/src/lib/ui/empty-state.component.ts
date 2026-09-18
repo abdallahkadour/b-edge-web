@@ -29,9 +29,21 @@ import { LucideAngularModule } from 'lucide-angular';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="flex flex-col items-center justify-center text-center px-6 py-12">
-      @if (icon()) {
+      <!-- Emoji takes precedence over a lucide icon. Every hand-rolled empty
+           state in this codebase used one (📋 ⭐ 💄), and they read as warmer
+           than a grey glyph in a grey circle - which matters more in a beauty
+           product than it would in an admin console. The lucide path stays for
+           screens that want the quieter treatment.
+
+           aria-hidden on both: the title immediately below already says what
+           the state is, and a screen reader announcing "clipboard" first is
+           noise. -->
+      @if (emoji()) {
+        <p class="text-3xl mb-3" aria-hidden="true">{{ emoji() }}</p>
+      } @else if (icon()) {
         <div
           class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3 text-gray-400"
+          aria-hidden="true"
         >
           <lucide-icon [name]="icon()!" [size]="22" [strokeWidth]="1.5" />
         </div>
@@ -54,4 +66,6 @@ export class EmptyStateComponent {
   /** A lucide icon name. Omitted entirely rather than defaulted — a wrong
    *  icon is worse than none. */
   readonly icon = input<string>();
+  /** An emoji illustration. Wins over `icon` when both are set. */
+  readonly emoji = input<string>();
 }

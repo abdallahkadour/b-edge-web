@@ -10,6 +10,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 
 import { CardComponent, EarningsDataService,
   SkeletonComponent,
+  EmptyStateComponent,
 } from '@bedge/shared';
 import type { EarningsSummary, DailyEarnings } from '@bedge/shared';
 
@@ -30,6 +31,7 @@ interface ChartBar {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CardComponent,
     SkeletonComponent,
+    EmptyStateComponent,
   ],
   templateUrl: './earnings.component.html',
 })

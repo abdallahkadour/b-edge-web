@@ -10,6 +10,7 @@ import { LucideAngularModule } from 'lucide-angular';
 
 import { ArtistDataService, ReviewDataService, extractApiErrorMessage, StarRatingComponent,
   SkeletonComponent,
+  EmptyStateComponent,
 } from '@bedge/shared';
 import type { Review } from '@bedge/shared';
 
@@ -32,6 +33,7 @@ import type { Review } from '@bedge/shared';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LucideAngularModule, StarRatingComponent,
     SkeletonComponent,
+    EmptyStateComponent,
   ],
   templateUrl: './reviews.component.html',
 })

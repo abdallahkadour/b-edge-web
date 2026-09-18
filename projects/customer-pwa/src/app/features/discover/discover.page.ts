@@ -13,6 +13,7 @@ import { LucideAngularModule } from 'lucide-angular';
 
 import { DiscoveryDataService, ARTIST_CATEGORIES,
   SkeletonComponent,
+  EmptyStateComponent,
 } from '@bedge/shared';
 import type { ArtistCard, ArtistCategory } from '@bedge/shared';
 
@@ -49,6 +50,7 @@ interface CitySection {
   standalone: true,
   imports: [LucideAngularModule,
     SkeletonComponent,
+    EmptyStateComponent,
   ],
   templateUrl: './discover.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
