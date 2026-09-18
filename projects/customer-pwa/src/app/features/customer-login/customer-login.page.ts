@@ -13,7 +13,11 @@ import {
   ButtonComponent,
   CustomerAuthStore,
   extractApiErrorMessage,
-  isValidLocalPhone,
+  DEFAULT_PHONE_ISO,
+  PhoneInputComponent,
+  isValidNationalPhone,
+  stripToDigits,
+  toE164,
 } from '@bedge/shared';
 
 /** How long the "Resend code" link stays disabled after a send. Purely a
@@ -35,7 +39,9 @@ const RESEND_COOLDOWN_SECONDS = 30;
 @Component({
   selector: 'app-customer-login-page',
   standalone: true,
-  imports: [LucideAngularModule, ButtonComponent],
+  imports: [LucideAngularModule, ButtonComponent,
+    PhoneInputComponent,
+  ],
   templateUrl: './customer-login.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -46,6 +52,8 @@ export class CustomerLoginPage implements OnDestroy {
 
   readonly step = signal<'phone' | 'code'>('phone');
   readonly phoneDigits = signal('');
+  /** Selected country. MENA is supported now, not Lebanon alone. */
+  readonly phoneIso = signal(DEFAULT_PHONE_ISO);
   readonly code = signal('');
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
@@ -54,7 +62,7 @@ export class CustomerLoginPage implements OnDestroy {
   readonly resendCooldown = signal(0);
   private cooldownTimer: ReturnType<typeof setInterval> | null = null;
 
-  protected readonly isPhoneValid = () => isValidLocalPhone(this.phoneDigits());
+  protected readonly isPhoneValid = () => isValidNationalPhone(this.phoneDigits(), this.phoneIso());
   protected readonly isCodeValid = () => /^\d{6}$/.test(this.code());
 
   ngOnDestroy(): void {
@@ -62,7 +70,7 @@ export class CustomerLoginPage implements OnDestroy {
   }
 
   onPhoneInput(value: string): void {
-    this.phoneDigits.set(value.replace(/\D/g, '').slice(0, 8));
+    this.phoneDigits.set(stripToDigits(value));
   }
 
   onCodeInput(value: string): void {
@@ -76,7 +84,7 @@ export class CustomerLoginPage implements OnDestroy {
     this.loading.set(true);
     this.error.set(null);
 
-    this.auth.requestOtp({ phone: this.phoneDigits() }).subscribe({
+    this.auth.requestOtp({ phone: toE164(this.phoneDigits(), this.phoneIso()) }).subscribe({
       next: () => {
         this.loading.set(false);
         this.step.set('code');
@@ -120,7 +128,7 @@ export class CustomerLoginPage implements OnDestroy {
     this.loading.set(true);
     this.error.set(null);
 
-    this.auth.verifyOtp({ phone: this.phoneDigits(), code: this.code() }).subscribe({
+    this.auth.verifyOtp({ phone: toE164(this.phoneDigits(), this.phoneIso()), code: this.code() }).subscribe({
       next: () => {
         this.loading.set(false);
         const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');

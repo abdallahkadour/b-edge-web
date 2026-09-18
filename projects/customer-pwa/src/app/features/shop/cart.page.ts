@@ -20,6 +20,10 @@ import {
   LocationMapComponent,
   extractApiErrorMessage,
   isValidLocalPhone,
+  DEFAULT_PHONE_ISO,
+  PhoneInputComponent,
+  isValidNationalPhone,
+  toE164,
 } from '@bedge/shared';
 
 /**
@@ -34,7 +38,9 @@ import {
 @Component({
   selector: 'app-cart-page',
   standalone: true,
-  imports: [LucideAngularModule, ButtonComponent, InputDirective, LocationMapComponent, NgOptimizedImage],
+  imports: [LucideAngularModule, ButtonComponent, InputDirective, LocationMapComponent, NgOptimizedImage,
+    PhoneInputComponent,
+  ],
   templateUrl: './cart.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -48,6 +54,8 @@ export class CartPage implements OnInit {
 
   readonly name = signal('');
   readonly phoneDigits = signal('');
+
+  readonly phoneIso = signal(DEFAULT_PHONE_ISO);
   readonly deliveryNotes = signal('');
   /** Set only once the customer confirms a pin - null means "no location
    *  chosen yet", not "(0,0)", so canPlace() can tell the two apart. */
@@ -88,7 +96,7 @@ export class CartPage implements OnInit {
   }
 
   protected isPhoneValid(): boolean {
-    return isValidLocalPhone(this.phoneDigits());
+    return isValidNationalPhone(this.phoneDigits(), this.phoneIso());
   }
 
   protected canPlace(): boolean {
@@ -144,7 +152,7 @@ export class CartPage implements OnInit {
         // Bare local digits, no +961 prefix - matches how every other
         // phone in this app is stored, so a customer's orders and bookings
         // resolve to the same identity.
-        phone: this.phoneDigits(),
+        phone: toE164(this.phoneDigits(), this.phoneIso()),
         delivery_lat: location.lat,
         delivery_lng: location.lng,
         delivery_notes: this.deliveryNotes().trim() || undefined,

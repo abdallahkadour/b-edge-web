@@ -182,20 +182,10 @@
 
           <div>
             <label class="block text-xs font-medium text-ink mb-1">Phone number</label>
-            <div class="flex items-center bg-white border border-gray-200 rounded-lg h-11 overflow-hidden focus-within:border-ink">
-              <div class="flex items-center gap-1.5 px-3.5 bg-gray-50 border-r border-gray-200 h-full shrink-0">
-                <span class="text-base">🇱🇧</span>
-                <span class="text-sm font-medium text-ink">+961</span>
-              </div>
-              <input
-                type="tel"
-                inputmode="numeric"
-                [value]="waitlistPhoneDigits()"
-                (input)="onWaitlistPhoneInput($any($event.target).value)"
-                placeholder="70 000 000"
-                class="w-full h-full px-3.5 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink text-[15px]"
-              />
-            </div>
+            <bedge-phone-input
+              [(digits)]="waitlistPhoneDigits"
+              [(iso)]="waitlistPhoneIso"
+            />
           </div>
         </div>
 

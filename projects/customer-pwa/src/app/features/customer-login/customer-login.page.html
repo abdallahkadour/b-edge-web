@@ -23,33 +23,16 @@
 
       <div class="flex flex-col gap-1.5">
         <label for="login-phone" class="text-sm font-medium text-ink">Phone number</label>
-        <div
-          class="flex items-center bg-white border rounded-lg h-11 overflow-hidden transition-all focus-within:border-ink"
-          [class]="touched() && !isPhoneValid() ? 'border-danger/60' : 'border-gray-200'"
-        >
-          <div class="flex items-center gap-1.5 px-3.5 bg-gray-50 border-r border-gray-200 h-full shrink-0">
-            <span class="text-base">🇱🇧</span>
-            <span class="text-sm font-medium text-ink">+961</span>
-          </div>
-          <input
-            id="login-phone"
-            type="tel"
-            inputmode="numeric"
-            [value]="phoneDigits()"
-            (input)="onPhoneInput($any($event.target).value)"
-            (keydown.enter)="requestCode()"
-            placeholder="70 000 000"
-            class="w-full h-full px-3.5 bg-white text-[15px] placeholder-gray-400 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
-          />
-        </div>
-        <!-- Fixed-height slot so the button below doesn't jump down the
-             moment validation kicks in - this exact file and this exact
-             gap were called out by name in the code review this fixes. -->
-        <div class="h-4 mt-1">
-          @if (touched() && !isPhoneValid()) {
-            <span class="text-xs text-danger leading-4">Enter a valid 7–8 digit phone number</span>
-          }
-        </div>
+        <bedge-phone-input
+          [(digits)]="phoneDigits"
+          [(iso)]="phoneIso"
+          [forceTouched]="touched()"
+        />
+        <!-- The error now lives inside bedge-phone-input, which names the
+             selected country rather than assuming Lebanon. The reserved
+             height stays: without it the button jumps the moment validation
+             fires, which a code review called out by name. -->
+        <div class="min-h-4 mt-1"></div>
       </div>
 
       @if (error(); as err) {

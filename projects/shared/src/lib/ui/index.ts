@@ -24,3 +24,4 @@ export * from './star-rating.component';
 export * from './empty-state.component';
 export * from './skeleton.component';
 export * from './theme-toggle.component';
+export * from './phone-input.component';

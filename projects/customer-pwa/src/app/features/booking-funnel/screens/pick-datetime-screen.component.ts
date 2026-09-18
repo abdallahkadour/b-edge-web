@@ -16,6 +16,10 @@ import {
   ButtonComponent,
   InputDirective,
   isValidLocalPhone,
+  DEFAULT_PHONE_ISO,
+  PhoneInputComponent,
+  isValidNationalPhone,
+  toE164,
 } from '@bedge/shared';
 import type { Store, TimeSlot } from '@bedge/shared';
 
@@ -85,7 +89,9 @@ function storeHour24(iso: string): number {
 @Component({
   selector: 'app-pick-datetime-screen',
   standalone: true,
-  imports: [LucideAngularModule, A11yModule, ButtonComponent, InputDirective],
+  imports: [LucideAngularModule, A11yModule, ButtonComponent, InputDirective,
+    PhoneInputComponent,
+  ],
   templateUrl: './pick-datetime-screen.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -119,11 +125,13 @@ export class PickDatetimeScreenComponent {
   protected readonly showWaitlistForm = signal(false);
   protected readonly waitlistName = signal('');
   protected readonly waitlistPhoneDigits = signal('');
+
+  protected readonly waitlistPhoneIso = signal(DEFAULT_PHONE_ISO);
   protected readonly waitlistSubmitting = signal(false);
   protected readonly waitlistJoined = signal(false);
   protected readonly waitlistError = signal<string | null>(null);
 
-  protected readonly isWaitlistPhoneValid = () => isValidLocalPhone(this.waitlistPhoneDigits());
+  protected readonly isWaitlistPhoneValid = () => isValidNationalPhone(this.waitlistPhoneDigits(), this.waitlistPhoneIso());
   protected readonly isWaitlistNameValid = () => this.waitlistName().trim().length >= 2;
 
   openWaitlistForm(): void {
@@ -156,7 +164,7 @@ export class PickDatetimeScreenComponent {
         service_id: this.serviceId(),
         requested_date: this.selectedDate(),
         name: this.waitlistName().trim(),
-        phone: this.waitlistPhoneDigits(),
+        phone: toE164(this.waitlistPhoneDigits(), this.waitlistPhoneIso()),
       })
       .subscribe({
         next: () => {

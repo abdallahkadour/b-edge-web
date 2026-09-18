@@ -11,7 +11,12 @@ import {
 } from '@angular/core';
 import { LucideAngularModule } from 'lucide-angular';
 
-import { isValidLocalPhone } from '@bedge/shared';
+import { isValidLocalPhone,
+  DEFAULT_PHONE_ISO,
+  PhoneInputComponent,
+  isValidNationalPhone,
+  toE164,
+} from '@bedge/shared';
 import type { DiscountPreview, PublicService } from '@bedge/shared';
 
 /** The store's timezone. See pick-datetime-screen for why this isn't the browser's. */
@@ -29,7 +34,9 @@ const STORE_TIMEZONE = 'Asia/Beirut';
 @Component({
   selector: 'app-guest-details-screen',
   standalone: true,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule,
+    PhoneInputComponent,
+  ],
   templateUrl: './guest-details-screen.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -79,6 +86,8 @@ export class GuestDetailsScreenComponent {
 
   protected readonly name = signal('');
   protected readonly phoneDigits = signal('');
+
+  protected readonly phoneIso = signal(DEFAULT_PHONE_ISO);
   protected readonly notes = signal('');
   protected readonly touched = signal(false);
 
@@ -138,7 +147,7 @@ export class GuestDetailsScreenComponent {
     () => this.secondsRemaining() > 0 && this.secondsRemaining() <= 60,
   );
 
-  protected readonly isPhoneValid = computed(() => isValidLocalPhone(this.phoneDigits()));
+  protected readonly isPhoneValid = computed(() => isValidNationalPhone(this.phoneDigits(), this.phoneIso()));
   protected readonly isNameValid = computed(() => this.name().trim().length > 0);
   protected readonly canSubmit = computed(
     () => this.isNameValid() && this.isPhoneValid() && !this.isExpired() && !this.submitting(),
@@ -180,7 +189,7 @@ export class GuestDetailsScreenComponent {
 
     this.submitDetails.emit({
       name: this.name().trim(),
-      phone: this.phoneDigits(),
+      phone: toE164(this.phoneDigits(), this.phoneIso()),
       notes: this.notes().trim(),
       // Sent only when it was actually accepted. Submitting a code the
       // preview refused would re-run the same refusal server-side and change
