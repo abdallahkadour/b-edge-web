@@ -69,6 +69,15 @@
       >
         Artists
       </button>
+      <button
+        (click)="selectTab('reports')"
+        class="py-3 text-sm font-bold border-b-2 -mb-px transition-colors"
+        [class]="activeTab() === 'reports'
+          ? 'border-ink text-ink'
+          : 'border-transparent text-gray-400 hover:text-gray-600'"
+      >
+        Reports
+      </button>
     </div>
   </div>
 
@@ -838,3 +847,99 @@
   </div>
   }
 </div>
+
+  @if (activeTab() === 'reports') {
+  <div class="max-w-2xl mx-auto px-4 py-6">
+
+    @if (reportsError(); as msg) {
+      <div class="mb-4 rounded-lg bg-danger-light border border-danger/30 px-4 py-3 text-sm text-danger-dark">
+        {{ msg }}
+      </div>
+    }
+
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-sm font-bold text-ink">
+        {{ includeResolved() ? 'All reports' : 'Open reports' }}
+      </h2>
+      <button type="button" class="text-xs text-gray-400 font-semibold underline"
+              (click)="toggleResolved()">
+        {{ includeResolved() ? 'Show open only' : 'Include closed' }}
+      </button>
+    </div>
+
+    @if (reportsLoading()) {
+      <div class="space-y-3">
+        <div class="h-28 rounded-xl bg-gray-100 animate-pulse"></div>
+        <div class="h-28 rounded-xl bg-gray-100 animate-pulse"></div>
+      </div>
+    } @else if (reports().length === 0) {
+      <div class="py-16 text-center">
+        <p class="text-sm text-gray-400">Nothing waiting on you.</p>
+      </div>
+    } @else {
+      <div class="space-y-3">
+        @for (r of reports(); track r.id) {
+          <div class="bg-white border border-gray-200 rounded-xl p-5">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <h3 class="text-[15px] font-bold text-ink">{{ r.category_label }}</h3>
+                <p class="text-xs text-gray-400 mt-0.5">
+                  {{ r.reporter_name }} ({{ r.reporter_role }})
+                  @if (r.artist_name) { · about {{ r.artist_name }} }
+                  · {{ formatDate(r.created_at) }}
+                </p>
+              </div>
+              <bedge-badge [tone]="reportTone(r.status)">{{ r.status }}</bedge-badge>
+            </div>
+
+            <p class="mt-3 text-[13px] text-ink whitespace-pre-line">{{ r.description }}</p>
+
+            @if (r.reporter_phone) {
+              <p class="mt-2 text-xs text-gray-500">Reachable on {{ r.reporter_phone }}</p>
+            }
+
+            @if (r.resolution_note) {
+              <div class="mt-3 bg-gray-50 rounded-lg p-3">
+                <p class="text-xs font-bold uppercase tracking-wider text-gray-400">What was done</p>
+                <p class="text-[13px] text-ink mt-1">{{ r.resolution_note }}</p>
+              </div>
+            }
+
+            @if (resolvingId() === r.id) {
+              <div class="mt-3 p-3 rounded-lg border border-gray-200">
+                <p class="text-[13px] font-medium text-ink mb-2">
+                  {{ resolutionStatus() === 'resolved' ? 'Close as resolved' : 'Dismiss' }}
+                </p>
+                <input
+                  bedgeInput
+                  class="mb-2"
+                  placeholder="What was done about this?"
+                  [value]="resolutionNote()"
+                  (input)="resolutionNote.set($any($event.target).value)"
+                />
+                <div class="flex gap-2">
+                  <bedge-button [disabled]="!canResolve() || resolveSaving()" (click)="saveResolution()">
+                    {{ resolveSaving() ? 'Saving…' : 'Confirm' }}
+                  </bedge-button>
+                  <bedge-button variant="ghost" (click)="cancelResolve()">Cancel</bedge-button>
+                </div>
+              </div>
+            } @else if (r.status === 'open' || r.status === 'reviewing') {
+              <div class="mt-3 flex flex-wrap gap-2">
+                @if (r.status === 'open') {
+                  <bedge-button variant="ghost" (click)="markReviewing(r.id)">
+                    Mark under review
+                  </bedge-button>
+                }
+                <bedge-button (click)="openResolve(r.id, 'resolved')">Resolve</bedge-button>
+                <bedge-button variant="ghost" (click)="openResolve(r.id, 'dismissed')">
+                  Dismiss
+                </bedge-button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+  }

@@ -148,4 +148,14 @@
     </div>
   }
 
+
+  <!-- Recourse. Quiet by default: most people opening a booking are not in
+       trouble, and a permanent complaint form on an appointment they are
+       looking forward to reads as an expectation that something will go
+       wrong. -->
+  @if (booking(); as b) {
+    <div class="px-5 pb-8 pt-2">
+      <app-report-problem [bookingId]="b.id" />
+    </div>
+  }
 </div>

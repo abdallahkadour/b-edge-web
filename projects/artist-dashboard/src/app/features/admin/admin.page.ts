@@ -21,10 +21,19 @@ import {
   invoiceStatusTone,
   subscriptionStatusLabel,
   subscriptionStatusTone,
+  ReportDataService,
 } from '@bedge/shared';
-import type { Invoice, PendingArtist, Plan, SubscriptionOverviewRow } from '@bedge/shared';
+import type {
+  AdminReport,
+  BadgeTone,
+  Invoice,
+  PendingArtist,
+  Plan,
+  ReportStatus,
+  SubscriptionOverviewRow,
+} from '@bedge/shared';
 
-type AdminTab = 'approvals' | 'billing' | 'plans' | 'artists';
+type AdminTab = 'approvals' | 'billing' | 'plans' | 'artists' | 'reports';
 
 /**
  * Admin console - the only screens an admin account sees.
@@ -49,6 +58,7 @@ type AdminTab = 'approvals' | 'billing' | 'plans' | 'artists';
 })
 export class AdminPage implements OnInit {
   private readonly adminSvc = inject(AdminDataService);
+  private readonly reportSvc = inject(ReportDataService);
   private readonly billingSvc = inject(BillingDataService);
   private readonly auth = inject(AuthStore);
   private readonly router = inject(Router);
@@ -137,6 +147,93 @@ export class AdminPage implements OnInit {
   readonly artistBusyId = signal<string | null>(null);
   readonly artistsError = signal<string | null>(null);
 
+  // ── Reports ────────────────────────────────────────────────────────────────
+  //
+  // The queue is oldest-first from the API: someone waiting on an answer about
+  // money they have already sent must not be overtaken by a fresher complaint.
+  readonly reports = signal<AdminReport[]>([]);
+  readonly reportsLoading = signal(false);
+  readonly reportsError = signal<string | null>(null);
+  readonly includeResolved = signal(false);
+  readonly resolvingId = signal<string | null>(null);
+  readonly resolutionNote = signal('');
+  readonly resolutionStatus = signal<ReportStatus>('resolved');
+  readonly resolveSaving = signal(false);
+
+  readonly canResolve = computed(() => this.resolutionNote().trim().length > 0);
+
+  loadReports(): void {
+    this.reportsLoading.set(true);
+    this.reportsError.set(null);
+    this.reportSvc.listQueue(this.includeResolved()).subscribe({
+      next: (list) => {
+        this.reports.set(list);
+        this.reportsLoading.set(false);
+      },
+      error: () => {
+        this.reportsLoading.set(false);
+        this.reportsError.set('Could not load reports.');
+      },
+    });
+  }
+
+  toggleResolved(): void {
+    this.includeResolved.update((v) => !v);
+    this.loadReports();
+  }
+
+  /** Under review needs no note - nothing has been decided yet. */
+  markReviewing(id: string): void {
+    this.reportSvc.resolve(id, 'reviewing').subscribe({
+      next: () => this.loadReports(),
+      error: (err: HttpErrorResponse) =>
+        this.reportsError.set(extractApiErrorMessage(err, 'Could not update that report.')),
+    });
+  }
+
+  openResolve(id: string, status: ReportStatus): void {
+    this.resolvingId.set(id);
+    this.resolutionStatus.set(status);
+    this.resolutionNote.set('');
+    this.reportsError.set(null);
+  }
+
+  cancelResolve(): void {
+    this.resolvingId.set(null);
+    this.resolutionNote.set('');
+  }
+
+  saveResolution(): void {
+    const id = this.resolvingId();
+    if (!id || !this.canResolve() || this.resolveSaving()) return;
+
+    this.resolveSaving.set(true);
+    this.reportSvc.resolve(id, this.resolutionStatus(), this.resolutionNote().trim()).subscribe({
+      next: () => {
+        this.resolveSaving.set(false);
+        this.resolvingId.set(null);
+        this.loadReports();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.resolveSaving.set(false);
+        this.reportsError.set(extractApiErrorMessage(err, 'Could not close that report.'));
+      },
+    });
+  }
+
+  reportTone(status: string): BadgeTone {
+    switch (status) {
+      case 'open':
+        return 'danger';
+      case 'reviewing':
+        return 'warning';
+      case 'resolved':
+        return 'success';
+      default:
+        return 'muted';
+    }
+  }
+
   // ── Verification ───────────────────────────────────────────────────────────
   //
   // artists.is_verified renders a badge on discovery cards and artist profiles
@@ -206,6 +303,11 @@ export class AdminPage implements OnInit {
 
   selectTab(tab: AdminTab): void {
     this.activeTab.set(tab);
+    // Loaded on first view rather than at boot: the queue is usually empty and
+    // every other tab would pay for a request it does not use.
+    if (tab === 'reports' && this.reports().length === 0 && !this.reportsLoading()) {
+      this.loadReports();
+    }
   }
 
   /** Shared by both tabs - the billing tab's dates (invoice due_date,

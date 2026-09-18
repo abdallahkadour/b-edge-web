@@ -18,6 +18,8 @@ import {
   extractApiErrorMessage,
   formatStatusLabel,
 } from '@bedge/shared';
+
+import { ReportProblemComponent } from '../../shared/report-problem.component';
 import type { EnrichedBooking } from '@bedge/shared';
 
 /** Statuses a customer can still act on - mirrors the backend's own
@@ -36,7 +38,13 @@ const REFUND_WINDOW_HOURS = 24;
 @Component({
   selector: 'app-booking-detail-page',
   standalone: true,
-  imports: [LucideAngularModule, A11yModule, ButtonComponent, InputDirective],
+  imports: [
+    LucideAngularModule,
+    A11yModule,
+    ButtonComponent,
+    InputDirective,
+    ReportProblemComponent,
+  ],
   templateUrl: './booking-detail.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
