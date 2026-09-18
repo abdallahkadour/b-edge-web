@@ -17,6 +17,7 @@ import {
   InputDirective,
   extractApiErrorMessage,
   formatStatusLabel,
+  SkeletonComponent,
 } from '@bedge/shared';
 
 import { ReportProblemComponent } from '../../shared/report-problem.component';
@@ -44,6 +45,7 @@ const REFUND_WINDOW_HOURS = 24;
     ButtonComponent,
     InputDirective,
     ReportProblemComponent,
+    SkeletonComponent,
   ],
   templateUrl: './booking-detail.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

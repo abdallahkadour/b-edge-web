@@ -41,7 +41,7 @@
   @if (loading() && bookings().length === 0) {
     <div class="space-y-3">
       @for (i of [1,2,3]; track i) {
-        <div class="h-24 rounded-lg bg-gray-100 animate-pulse"></div>
+        <bedge-skeleton height="6rem" />
       }
     </div>
   }

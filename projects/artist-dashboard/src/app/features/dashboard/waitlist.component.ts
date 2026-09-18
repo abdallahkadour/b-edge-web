@@ -13,6 +13,7 @@ import {
   BookingDataService,
   BadgeComponent,
   bookingStatusTone,
+  SkeletonComponent,
 } from '@bedge/shared';
 import type { WaitlistEntryResponse } from '@bedge/shared';
 
@@ -27,7 +28,9 @@ import type { WaitlistEntryResponse } from '@bedge/shared';
   selector: 'bedge-waitlist',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [LucideAngularModule, BadgeComponent],
+  imports: [LucideAngularModule, BadgeComponent,
+    SkeletonComponent,
+  ],
   templateUrl: './waitlist.component.html',
 })
 export class WaitlistComponent implements OnInit {

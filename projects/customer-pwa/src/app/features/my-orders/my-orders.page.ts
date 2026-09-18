@@ -16,6 +16,7 @@ import {
   ButtonComponent,
   BadgeComponent,
   CardComponent,
+  SkeletonComponent,
 } from '@bedge/shared';
 import type { BadgeTone } from '@bedge/shared';
 import type { Order, OrderStatus } from '@bedge/shared';
@@ -38,7 +39,9 @@ const CANCELLABLE_STATUSES = new Set<OrderStatus>(['placed', 'confirmed']);
 @Component({
   selector: 'app-my-orders-page',
   standalone: true,
-  imports: [LucideAngularModule, ButtonComponent, BadgeComponent, CardComponent],
+  imports: [LucideAngularModule, ButtonComponent, BadgeComponent, CardComponent,
+    SkeletonComponent,
+  ],
   templateUrl: './my-orders.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

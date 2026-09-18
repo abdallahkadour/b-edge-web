@@ -11,7 +11,9 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 
-import { DiscoveryDataService, ARTIST_CATEGORIES } from '@bedge/shared';
+import { DiscoveryDataService, ARTIST_CATEGORIES,
+  SkeletonComponent,
+} from '@bedge/shared';
 import type { ArtistCard, ArtistCategory } from '@bedge/shared';
 
 type CategoryFilter = ArtistCategory | 'all';
@@ -45,7 +47,9 @@ interface CitySection {
 @Component({
   selector: 'app-discover-page',
   standalone: true,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule,
+    SkeletonComponent,
+  ],
   templateUrl: './discover.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

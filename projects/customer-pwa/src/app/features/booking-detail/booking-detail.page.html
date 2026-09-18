@@ -11,7 +11,7 @@
   <div class="px-5 py-5">
 
     @if (loading()) {
-      <div class="h-64 rounded-xl bg-gray-100 animate-pulse"></div>
+      <bedge-skeleton height="16rem" rounded="xl" />
     }
 
     @if (!loading() && errorMessage()) {

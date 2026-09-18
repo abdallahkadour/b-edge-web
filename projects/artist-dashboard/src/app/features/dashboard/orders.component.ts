@@ -18,6 +18,7 @@ import {
   CardComponent,
   InputDirective,
   LocationMapComponent,
+  SkeletonComponent,
 } from '@bedge/shared';
 import type { EnrichedOrder, OrderStatus, BadgeTone } from '@bedge/shared';
 
@@ -44,6 +45,7 @@ type FilterTab = 'placed' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
     InputDirective,
     LocationMapComponent,
     A11yModule,
+    SkeletonComponent,
   ],
   templateUrl: './orders.component.html',
 })

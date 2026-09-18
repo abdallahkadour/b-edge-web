@@ -18,6 +18,7 @@ import {
   CartStore,
   PRODUCT_CATEGORIES,
   isSoldOut,
+  SkeletonComponent,
 } from '@bedge/shared';
 import type { Product, ProductCategory } from '@bedge/shared';
 
@@ -34,7 +35,9 @@ import type { Product, ProductCategory } from '@bedge/shared';
 @Component({
   selector: 'app-shop-page',
   standalone: true,
-  imports: [LucideAngularModule, NgOptimizedImage],
+  imports: [LucideAngularModule, NgOptimizedImage,
+    SkeletonComponent,
+  ],
   templateUrl: './shop.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

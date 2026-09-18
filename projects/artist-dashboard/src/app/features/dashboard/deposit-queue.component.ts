@@ -11,7 +11,9 @@ import { forkJoin } from 'rxjs';
 import { LucideAngularModule } from 'lucide-angular';
 import { A11yModule } from '@angular/cdk/a11y';
 
-import { ArtistDataService, BookingDataService, ButtonComponent } from '@bedge/shared';
+import { ArtistDataService, BookingDataService, ButtonComponent,
+  SkeletonComponent,
+} from '@bedge/shared';
 import type { EnrichedBooking } from '@bedge/shared';
 
 type QueueTab = 'pending' | 'received';
@@ -43,7 +45,9 @@ type QueueTab = 'pending' | 'received';
   selector: 'bedge-deposit-queue',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [LucideAngularModule, ButtonComponent, A11yModule],
+  imports: [LucideAngularModule, ButtonComponent, A11yModule,
+    SkeletonComponent,
+  ],
   templateUrl: './deposit-queue.component.html',
 })
 export class DepositQueueComponent implements OnInit {

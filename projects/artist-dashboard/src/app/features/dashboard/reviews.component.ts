@@ -8,7 +8,9 @@ import {
 import { HttpErrorResponse } from '@angular/common/http';
 import { LucideAngularModule } from 'lucide-angular';
 
-import { ArtistDataService, ReviewDataService, extractApiErrorMessage, StarRatingComponent } from '@bedge/shared';
+import { ArtistDataService, ReviewDataService, extractApiErrorMessage, StarRatingComponent,
+  SkeletonComponent,
+} from '@bedge/shared';
 import type { Review } from '@bedge/shared';
 
 /**
@@ -28,7 +30,9 @@ import type { Review } from '@bedge/shared';
   selector: 'bedge-reviews',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [LucideAngularModule, StarRatingComponent],
+  imports: [LucideAngularModule, StarRatingComponent,
+    SkeletonComponent,
+  ],
   templateUrl: './reviews.component.html',
 })
 export class ReviewsComponent implements OnInit {

@@ -22,6 +22,7 @@ import {
   subscriptionStatusLabel,
   subscriptionStatusTone,
   ReportDataService,
+  SkeletonComponent,
 } from '@bedge/shared';
 import type {
   AdminReport,
@@ -52,7 +53,9 @@ type AdminTab = 'approvals' | 'billing' | 'plans' | 'artists' | 'reports';
 @Component({
   selector: 'app-admin-page',
   standalone: true,
-  imports: [LucideAngularModule, ButtonComponent, InputDirective, BadgeComponent],
+  imports: [LucideAngularModule, ButtonComponent, InputDirective, BadgeComponent,
+    SkeletonComponent,
+  ],
   templateUrl: './admin.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

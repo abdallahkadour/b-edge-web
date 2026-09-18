@@ -19,6 +19,7 @@ import {
   resizeImageToFit,
   ButtonComponent,
   BadgeComponent,
+  SkeletonComponent,
 } from '@bedge/shared';
 import type { Product, ProductCategory } from '@bedge/shared';
 import { ProductPhotoGalleryComponent } from './product-photo-gallery.component';
@@ -66,6 +67,7 @@ const EMPTY_FORM: ProductForm = {
     BadgeComponent,
     A11yModule,
     ProductPhotoGalleryComponent,
+    SkeletonComponent,
   ],
   templateUrl: './products.component.html',
 })

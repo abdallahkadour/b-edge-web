@@ -24,12 +24,44 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
   template: `<div [class]="classes()" [style.height]="height()" aria-hidden="true"></div>`,
 })
 export class SkeletonComponent {
-  /** Any CSS length. Required: see the class doc for why. */
-  readonly height = input.required<string>();
+  /** Any CSS length. Required unless `square` is set, in which case the
+   *  aspect ratio defines the box. */
+  readonly height = input<string>();
   readonly rounded = input<'sm' | 'lg' | 'xl' | 'full'>('lg');
   readonly width = input('100%');
+  /** Fills a square rather than taking an explicit height - product photo and
+   *  portfolio grids, where the tile is defined by its aspect ratio. */
+  readonly square = input(false);
 
-  protected readonly classes = computed(
-    () => `bg-gray-100 animate-pulse rounded-${this.rounded()} w-full`,
+  /**
+   * Static lookup, NOT `rounded-${this.rounded()}`.
+   *
+   * Tailwind's JIT scans source files for literal class strings. An
+   * interpolated name is invisible to it, so the class is only ever emitted by
+   * coincidence - if some unrelated template happens to use the same value.
+   * `rounded-sm` appears literally nowhere in this workspace, so
+   * `rounded="sm"` produced a class that was never generated and silently did
+   * nothing. It went unnoticed because this component had almost no callers.
+   *
+   * Spelling every option out puts all four in front of the scanner.
+   */
+  private static readonly RADIUS: Record<'sm' | 'lg' | 'xl' | 'full', string> = {
+    sm: 'rounded-sm',
+    lg: 'rounded-lg',
+    xl: 'rounded-xl',
+    full: 'rounded-full',
+  };
+
+  protected readonly classes = computed(() =>
+    [
+      'bg-gray-100 animate-pulse w-full',
+      SkeletonComponent.RADIUS[this.rounded()],
+      // A skeleton is decorative and must be suppressed for anyone who has
+      // asked for less motion; the shape still communicates the layout.
+      'motion-reduce:animate-none',
+      this.square() ? 'aspect-square' : '',
+    ]
+      .filter(Boolean)
+      .join(' '),
   );
 }

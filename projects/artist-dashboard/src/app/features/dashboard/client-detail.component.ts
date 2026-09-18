@@ -9,7 +9,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 
-import { ClientDataService, BadgeComponent, bookingStatusTone } from '@bedge/shared';
+import { ClientDataService, BadgeComponent, bookingStatusTone,
+  SkeletonComponent,
+} from '@bedge/shared';
 import type { ClientProfile } from '@bedge/shared';
 
 /**
@@ -20,7 +22,9 @@ import type { ClientProfile } from '@bedge/shared';
   selector: 'bedge-client-detail',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, BadgeComponent],
+  imports: [FormsModule, BadgeComponent,
+    SkeletonComponent,
+  ],
   templateUrl: './client-detail.component.html',
 })
 export class ClientDetailComponent implements OnInit {

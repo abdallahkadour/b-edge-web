@@ -70,10 +70,10 @@
     <!-- Loading skeleton -->
     @if (loading()) {
       <div class="grid grid-cols-2 gap-3">
-        <div class="aspect-square rounded-lg bg-gray-100 animate-pulse"></div>
-        <div class="aspect-square rounded-lg bg-gray-100 animate-pulse"></div>
-        <div class="aspect-square rounded-lg bg-gray-100 animate-pulse"></div>
-        <div class="aspect-square rounded-lg bg-gray-100 animate-pulse"></div>
+        <bedge-skeleton [square]="true" />
+        <bedge-skeleton [square]="true" />
+        <bedge-skeleton [square]="true" />
+        <bedge-skeleton [square]="true" />
       </div>
     }
 

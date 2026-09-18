@@ -16,6 +16,7 @@ import {
   ThemeToggleComponent,
   bookingStatusTone,
   formatStatusLabel,
+  SkeletonComponent,
 } from '@bedge/shared';
 import type { EnrichedBooking } from '@bedge/shared';
 
@@ -32,7 +33,9 @@ const PAST_STATUSES = new Set(['completed', 'no_show']);
 @Component({
   selector: 'app-my-bookings-page',
   standalone: true,
-  imports: [LucideAngularModule, BadgeComponent, ThemeToggleComponent],
+  imports: [LucideAngularModule, BadgeComponent, ThemeToggleComponent,
+    SkeletonComponent,
+  ],
   templateUrl: './my-bookings.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

@@ -20,7 +20,9 @@ import {
   takeUntil,
 } from 'rxjs';
 
-import { ClientDataService, InputDirective } from '@bedge/shared';
+import { ClientDataService, InputDirective,
+  SkeletonComponent,
+} from '@bedge/shared';
 import type { ClientCard } from '@bedge/shared';
 
 /**
@@ -34,7 +36,9 @@ import type { ClientCard } from '@bedge/shared';
   selector: 'bedge-clients',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [InputDirective],
+  imports: [InputDirective,
+    SkeletonComponent,
+  ],
   templateUrl: './clients.component.html',
 })
 export class ClientsComponent implements OnInit, OnDestroy {

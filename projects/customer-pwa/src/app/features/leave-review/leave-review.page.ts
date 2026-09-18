@@ -10,7 +10,9 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 
-import { InputDirective, ReviewDataService, StarRatingComponent } from '@bedge/shared';
+import { InputDirective, ReviewDataService, StarRatingComponent,
+  SkeletonComponent,
+} from '@bedge/shared';
 import type { ReviewBookingContext } from '@bedge/shared';
 
 /**
@@ -29,7 +31,9 @@ import type { ReviewBookingContext } from '@bedge/shared';
 @Component({
   selector: 'app-leave-review-page',
   standalone: true,
-  imports: [LucideAngularModule, InputDirective, StarRatingComponent],
+  imports: [LucideAngularModule, InputDirective, StarRatingComponent,
+    SkeletonComponent,
+  ],
   templateUrl: './leave-review.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

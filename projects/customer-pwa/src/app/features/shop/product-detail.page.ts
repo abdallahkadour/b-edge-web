@@ -19,6 +19,7 @@ import {
   CartStore,
   ButtonComponent,
   isSoldOut,
+  SkeletonComponent,
 } from '@bedge/shared';
 import type { Product } from '@bedge/shared';
 
@@ -38,7 +39,9 @@ import type { Product } from '@bedge/shared';
 @Component({
   selector: 'app-product-detail-page',
   standalone: true,
-  imports: [LucideAngularModule, ButtonComponent, NgOptimizedImage],
+  imports: [LucideAngularModule, ButtonComponent, NgOptimizedImage,
+    SkeletonComponent,
+  ],
   templateUrl: './product-detail.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

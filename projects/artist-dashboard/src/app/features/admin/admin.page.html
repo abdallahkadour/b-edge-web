@@ -92,8 +92,8 @@
 
     @if (loading()) {
       <div class="space-y-3">
-        <div class="h-40 rounded-xl bg-gray-100 animate-pulse"></div>
-        <div class="h-40 rounded-xl bg-gray-100 animate-pulse"></div>
+        <bedge-skeleton height="10rem" rounded="xl" />
+        <bedge-skeleton height="10rem" rounded="xl" />
       </div>
     }
 
@@ -210,8 +210,8 @@
 
     @if (billingLoading()) {
       <div class="space-y-3">
-        <div class="h-24 rounded-xl bg-gray-100 animate-pulse"></div>
-        <div class="h-24 rounded-xl bg-gray-100 animate-pulse"></div>
+        <bedge-skeleton height="6rem" rounded="xl" />
+        <bedge-skeleton height="6rem" rounded="xl" />
       </div>
     }
 
@@ -324,8 +324,8 @@
 
     @if (plansLoading()) {
       <div class="space-y-3">
-        <div class="h-32 rounded-xl bg-gray-100 animate-pulse"></div>
-        <div class="h-32 rounded-xl bg-gray-100 animate-pulse"></div>
+        <bedge-skeleton height="8rem" rounded="xl" />
+        <bedge-skeleton height="8rem" rounded="xl" />
       </div>
     }
 
@@ -629,8 +629,8 @@
 
     @if (billingLoading()) {
       <div class="space-y-3">
-        <div class="h-28 rounded-xl bg-gray-100 animate-pulse"></div>
-        <div class="h-28 rounded-xl bg-gray-100 animate-pulse"></div>
+        <bedge-skeleton height="7rem" rounded="xl" />
+        <bedge-skeleton height="7rem" rounded="xl" />
       </div>
     }
 
@@ -869,8 +869,8 @@
 
     @if (reportsLoading()) {
       <div class="space-y-3">
-        <div class="h-28 rounded-xl bg-gray-100 animate-pulse"></div>
-        <div class="h-28 rounded-xl bg-gray-100 animate-pulse"></div>
+        <bedge-skeleton height="7rem" rounded="xl" />
+        <bedge-skeleton height="7rem" rounded="xl" />
       </div>
     } @else if (reports().length === 0) {
       <div class="py-16 text-center">
