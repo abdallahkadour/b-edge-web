@@ -32,7 +32,7 @@ import type { PublicPaymentMethod } from '@bedge/shared';
     @if (isPayable()) {
       <div class="w-full rounded-lg border border-gray-200 bg-white overflow-hidden text-left">
         <div class="px-5 py-4 border-b border-gray-100">
-          <p class="text-[12px] font-bold tracking-[0.05em] uppercase text-gray-500">
+          <p class="text-xs font-bold tracking-[0.05em] uppercase text-gray-500">
             Deposit to pay
           </p>
           <p class="text-[22px] font-bold text-ink mt-1">\${{ depositAmount() }}</p>
@@ -45,7 +45,7 @@ import type { PublicPaymentMethod } from '@bedge/shared';
         } @else if (methods().length > 0) {
           @for (m of methods(); track m.method) {
             <div class="px-5 py-4 border-b border-gray-100">
-              <p class="text-[12px] font-bold tracking-[0.05em] uppercase text-gray-500">
+              <p class="text-xs font-bold tracking-[0.05em] uppercase text-gray-500">
                 {{ m.method_label }}
               </p>
               <p class="text-[15px] font-semibold text-ink mt-1">{{ m.account_ref }}</p>
@@ -56,7 +56,7 @@ import type { PublicPaymentMethod } from '@bedge/shared';
                client can apply, not as a reassurance about B-Edge. -->
           <div class="px-5 py-4 bg-gray-50">
             <p class="text-[13px] text-ink font-medium">Only send to the details shown here.</p>
-            <p class="text-[12px] text-gray-500 mt-1 leading-[18px]">
+            <p class="text-xs text-gray-500 mt-1 leading-[18px]">
               Check the name above matches what your app shows before you confirm. If anyone
               sends you a different number, do not use it. Keep your transfer reference.
             </p>

@@ -7,7 +7,7 @@
     >
       <lucide-icon name="arrow-left" [size]="20" [strokeWidth]="2" />
     </button>
-    <span class="text-[16px] font-semibold leading-[24px] tracking-[-0.01em]">Your details</span>
+    <span class="text-base font-semibold leading-[24px] tracking-[-0.01em]">Your details</span>
     <div class="w-6"></div>
   </div>
 
@@ -15,11 +15,11 @@
     <!-- Summary card -->
     <div class="bg-ink text-white rounded-lg p-5 flex flex-col gap-3 shadow-[0_4px_12px_rgba(0,0,0,0.15)]">
       <div class="flex justify-between items-start">
-        <span class="text-[16px] font-semibold leading-[24px]">{{ service().name }}</span>
-        <span class="text-[16px] font-bold leading-[24px]">${{ service().price }}</span>
+        <span class="text-base font-semibold leading-[24px]">{{ service().name }}</span>
+        <span class="text-base font-bold leading-[24px]">${{ service().price }}</span>
       </div>
-      <div class="text-[14px] text-white/60 leading-[20px]">{{ summaryLine() }}</div>
-      <div class="flex items-center gap-1.5 text-[14px] text-white/60 leading-[20px] pt-2.5 border-t border-white/10 mt-1">
+      <div class="text-sm text-white/60 leading-[20px]">{{ summaryLine() }}</div>
+      <div class="flex items-center gap-1.5 text-sm text-white/60 leading-[20px] pt-2.5 border-t border-white/10 mt-1">
         <lucide-icon name="map-pin" [size]="16" [strokeWidth]="2" class="text-white shrink-0" />
         <span>{{ storeName() }}</span>
       </div>
@@ -39,7 +39,7 @@
     @if (isExpired()) {
       <div class="rounded-lg border border-gray-200 bg-white p-5 flex flex-col items-center text-center gap-3">
         <p class="text-[15px] font-semibold text-ink">Your hold has expired</p>
-        <p class="text-[14px] text-gray-500 leading-[20px]">
+        <p class="text-sm text-gray-500 leading-[20px]">
           This time slot is no longer reserved for you. Please choose another time — your details below are still saved.
         </p>
       </div>
@@ -47,13 +47,13 @@
 
     <!-- Contact info -->
     <div class="flex flex-col gap-4">
-      <h2 class="text-[12px] font-bold leading-[16px] tracking-[0.05em] uppercase text-gray-500">
+      <h2 class="text-xs font-bold leading-[16px] tracking-[0.05em] uppercase text-gray-500">
         Contact info
       </h2>
 
       <div class="flex flex-col gap-4">
         <div class="flex flex-col gap-1.5">
-          <label for="customer-name" class="text-[14px] font-medium leading-[20px] text-ink">Your name</label>
+          <label for="customer-name" class="text-sm font-medium leading-[20px] text-ink">Your name</label>
           <input
             id="customer-name"
             type="text"
@@ -61,23 +61,23 @@
             (input)="onNameInput($any($event.target).value)"
             placeholder="Enter your full name"
             [disabled]="isExpired()"
-            class="w-full h-11 px-3.5 bg-white border rounded text-[15px] placeholder-gray-400 outline-none transition-all focus:border-ink disabled:bg-gray-100 disabled:text-gray-400"
+            class="w-full h-11 px-3.5 bg-white border rounded text-[15px] placeholder-gray-400 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink transition-all focus:border-ink disabled:bg-gray-100 disabled:text-gray-400"
             [class]="touched() && !isNameValid() ? 'border-danger' : 'border-gray-200'"
           />
           @if (touched() && !isNameValid()) {
-            <span class="text-[12px] text-danger">Please enter your name</span>
+            <span class="text-xs text-danger">Please enter your name</span>
           }
         </div>
 
         <div class="flex flex-col gap-1.5">
-          <label for="customer-phone" class="text-[14px] font-medium leading-[20px] text-ink">Phone number</label>
+          <label for="customer-phone" class="text-sm font-medium leading-[20px] text-ink">Phone number</label>
           <div
             class="flex items-center bg-white border rounded h-11 overflow-hidden transition-all focus-within:border-ink"
             [class]="touched() && !isPhoneValid() ? 'border-danger' : 'border-gray-200'"
           >
             <div class="flex items-center gap-1.5 px-3.5 bg-gray-50 border-r border-gray-200 h-full shrink-0">
-              <span class="text-[16px]">🇱🇧</span>
-              <span class="text-[14px] font-medium text-ink">+961</span>
+              <span class="text-base">🇱🇧</span>
+              <span class="text-sm font-medium text-ink">+961</span>
             </div>
             <input
               id="customer-phone"
@@ -87,16 +87,16 @@
               (input)="onPhoneInput($any($event.target).value)"
               placeholder="70 000 000"
               [disabled]="isExpired()"
-              class="w-full h-full px-3.5 bg-white text-[15px] placeholder-gray-400 outline-none disabled:bg-gray-100 disabled:text-gray-400"
+              class="w-full h-full px-3.5 bg-white text-[15px] placeholder-gray-400 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:bg-gray-100 disabled:text-gray-400"
             />
           </div>
           @if (touched() && !isPhoneValid()) {
-            <span class="text-[12px] text-danger">Enter a valid 7–8 digit phone number</span>
+            <span class="text-xs text-danger">Enter a valid 7–8 digit phone number</span>
           }
         </div>
 
         <div class="flex flex-col gap-1.5">
-          <label for="special-requests" class="text-[14px] font-medium leading-[20px] text-ink">
+          <label for="special-requests" class="text-sm font-medium leading-[20px] text-ink">
             Special requests (optional)
           </label>
           <textarea
@@ -106,7 +106,7 @@
             (input)="onNotesInput($any($event.target).value)"
             placeholder="Add any specific requirements, skin details, or preferences"
             [disabled]="isExpired()"
-            class="w-full p-3 bg-white border border-gray-200 rounded text-[15px] placeholder-gray-400 outline-none transition-all resize-none focus:border-ink disabled:bg-gray-100 disabled:text-gray-400"
+            class="w-full p-3 bg-white border border-gray-200 rounded text-[15px] placeholder-gray-400 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink transition-all resize-none focus:border-ink disabled:bg-gray-100 disabled:text-gray-400"
           ></textarea>
         </div>
 
@@ -117,7 +117,7 @@
              editing it silently un-applied the discount - clearing is
              deliberate. -->
         <div class="flex flex-col gap-1.5">
-          <label for="promo-code" class="text-[14px] font-medium leading-[20px] text-ink">
+          <label for="promo-code" class="text-sm font-medium leading-[20px] text-ink">
             Promo code (optional)
           </label>
 
@@ -125,7 +125,7 @@
             <div class="flex items-center justify-between gap-3 p-3 bg-success-light border border-success/30 rounded">
               <div class="flex items-center gap-2 min-w-0">
                 <lucide-icon name="check" [size]="16" [strokeWidth]="2.5" class="text-success-dark shrink-0" />
-                <span class="text-[14px] font-semibold text-success-dark truncate">
+                <span class="text-sm font-semibold text-success-dark truncate">
                   {{ discountPreview()!.code }} applied
                 </span>
               </div>
@@ -149,13 +149,13 @@
                 [disabled]="isExpired() || checkingDiscount()"
                 [attr.aria-invalid]="promoError() ? 'true' : null"
                 [attr.aria-describedby]="promoError() ? 'promo-error' : null"
-                class="flex-1 min-w-0 p-3 bg-white border border-gray-200 rounded text-[15px] uppercase placeholder-gray-400 placeholder:normal-case outline-none transition-all focus:border-ink disabled:bg-gray-100 disabled:text-gray-400"
+                class="flex-1 min-w-0 p-3 bg-white border border-gray-200 rounded text-[15px] uppercase placeholder-gray-400 placeholder:normal-case outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink transition-all focus:border-ink disabled:bg-gray-100 disabled:text-gray-400"
               />
               <button
                 type="button"
                 (click)="onApplyPromo()"
                 [disabled]="!promo().trim() || checkingDiscount() || isExpired()"
-                class="px-4 h-[46px] shrink-0 bg-ink text-white text-[14px] font-semibold rounded disabled:bg-gray-200 disabled:text-gray-400 transition-colors"
+                class="px-4 h-[46px] shrink-0 bg-ink text-white text-sm font-semibold rounded disabled:bg-gray-200 disabled:text-gray-400 transition-colors"
               >{{ checkingDiscount() ? 'Checking…' : 'Apply' }}</button>
             </div>
 
@@ -170,7 +170,7 @@
              what makes people abandon a checkout. -->
         @if (discountPreview(); as p) {
           @if (p.valid) {
-            <div class="flex flex-col gap-1.5 p-3 bg-gray-50 border border-gray-200 rounded text-[14px]">
+            <div class="flex flex-col gap-1.5 p-3 bg-gray-50 border border-gray-200 rounded text-sm">
               <div class="flex justify-between text-gray-500">
                 <span>Subtotal</span><span>${{ p.subtotal }}</span>
               </div>
@@ -191,7 +191,7 @@
         }
       </div>
 
-      <p class="text-[14px] text-gray-400 leading-[20px] mt-1">
+      <p class="text-sm text-gray-400 leading-[20px] mt-1">
         No account needed. We'll send booking updates to your WhatsApp.
       </p>
 
@@ -206,7 +206,7 @@
   <!-- Fixed bottom CTA -->
   <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-50 flex flex-col items-center gap-3">
     @if (hasDeposit() && !isExpired()) {
-      <span class="text-[12px] font-bold leading-[16px] tracking-[0.05em] uppercase text-gray-500">
+      <span class="text-xs font-bold leading-[16px] tracking-[0.05em] uppercase text-gray-500">
         A ${{ service().deposit_amount }} deposit will be requested after approval
       </span>
     }

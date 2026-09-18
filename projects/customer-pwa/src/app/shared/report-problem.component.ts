@@ -32,7 +32,7 @@ import type { ReportCategory, ReportCategoryOption } from '@bedge/shared';
       >Report a problem</button>
     } @else if (submitted()) {
       <div class="rounded-lg border border-gray-200 bg-white p-4">
-        <p class="text-[14px] font-semibold text-ink">Thanks — we have this.</p>
+        <p class="text-sm font-semibold text-ink">Thanks — we have this.</p>
         <p class="text-[13px] text-gray-500 mt-1 leading-[18px]">
           Someone from B-Edge will look into it. You can see the status of anything you
           have reported from this screen.
@@ -40,16 +40,16 @@ import type { ReportCategory, ReportCategoryOption } from '@bedge/shared';
       </div>
     } @else {
       <div class="rounded-lg border border-gray-200 bg-white p-4">
-        <p class="text-[14px] font-semibold text-ink mb-1">Report a problem</p>
-        <p class="text-[12px] text-gray-500 mb-3 leading-[18px]">
+        <p class="text-sm font-semibold text-ink mb-1">Report a problem</p>
+        <p class="text-xs text-gray-500 mb-3 leading-[18px]">
           Tell us what happened. If money is involved, include the reference from your
           transfer.
         </p>
 
-        <label class="block text-[12px] text-gray-400 mb-1" for="report-reason">Reason</label>
+        <label class="block text-xs text-gray-400 mb-1" for="report-reason">Reason</label>
         <select
           id="report-reason"
-          class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-[14px] text-ink mb-3"
+          class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-ink mb-3"
           [value]="category() ?? ''"
           (change)="category.set($any($event.target).value)"
         >
@@ -59,18 +59,18 @@ import type { ReportCategory, ReportCategoryOption } from '@bedge/shared';
           }
         </select>
 
-        <label class="block text-[12px] text-gray-400 mb-1" for="report-detail">
+        <label class="block text-xs text-gray-400 mb-1" for="report-detail">
           What happened?
         </label>
         <textarea
           id="report-detail"
           rows="4"
-          class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-[14px] text-ink mb-1"
+          class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-ink mb-1"
           placeholder="Include dates, amounts and any reference numbers."
           [value]="description()"
           (input)="description.set($any($event.target).value)"
         ></textarea>
-        <p class="text-[12px] text-gray-400 mb-3">At least a sentence, so we can act on it.</p>
+        <p class="text-xs text-gray-400 mb-3">At least a sentence, so we can act on it.</p>
 
         @if (error(); as e) {
           <p class="text-[13px] text-danger-dark mb-3">{{ e }}</p>
@@ -79,13 +79,13 @@ import type { ReportCategory, ReportCategoryOption } from '@bedge/shared';
         <div class="flex gap-2">
           <button
             type="button"
-            class="flex-1 h-11 rounded-lg bg-ink text-white text-[14px] font-bold disabled:opacity-40"
+            class="flex-1 h-11 rounded-lg bg-ink text-white text-sm font-bold disabled:opacity-40"
             [disabled]="!canSubmit() || submitting()"
             (click)="submit()"
           >{{ submitting() ? 'Sending…' : 'Send report' }}</button>
           <button
             type="button"
-            class="h-11 px-4 rounded-lg border border-gray-200 text-[14px] text-ink"
+            class="h-11 px-4 rounded-lg border border-gray-200 text-sm text-ink"
             (click)="cancel()"
           >Cancel</button>
         </div>

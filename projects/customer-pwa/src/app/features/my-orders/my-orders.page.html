@@ -135,7 +135,7 @@
                       <p class="text-xs text-gray-500 mt-0.5">{{ o.cancellation_reason }}</p>
                     }
                     @if (o.cancelled_at) {
-                      <p class="text-[11px] text-gray-400 mt-1">{{ formatDate(o.cancelled_at) }}</p>
+                      <p class="text-2xs text-gray-400 mt-1">{{ formatDate(o.cancelled_at) }}</p>
                     }
                   </div>
                 } @else {
@@ -162,11 +162,11 @@
                         <div class="flex flex-col" [class.items-end]="i === steps.length - 1">
                           <span
                             [class]="i <= stepIndex(o)
-                              ? 'text-[10px] uppercase tracking-wider font-bold text-ink'
-                              : 'text-[10px] uppercase tracking-wider text-gray-400'"
+                              ? 'text-2xs uppercase tracking-wider font-bold text-ink'
+                              : 'text-2xs uppercase tracking-wider text-gray-400'"
                           >{{ step }}</span>
                           @if (stepDate(o, step); as d) {
-                            <span class="text-[10px] text-gray-400 mt-0.5">{{ formatDate(d) }}</span>
+                            <span class="text-2xs text-gray-400 mt-0.5">{{ formatDate(d) }}</span>
                           }
                         </div>
                       }

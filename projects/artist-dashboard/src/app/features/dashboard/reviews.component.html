@@ -58,18 +58,18 @@
             <div class="space-y-1">
               <div class="flex items-center gap-1.5">
                 <bedge-star-rating [value]="review.rating" [size]="15" label="Your rating" />
-                <span class="text-[10px] uppercase tracking-wider font-semibold text-gray-400">You</span>
+                <span class="text-2xs uppercase tracking-wider font-semibold text-gray-400">You</span>
               </div>
 
               @if (review.salon_rating) {
                 <div class="flex items-center gap-1.5">
                   <bedge-star-rating [value]="review.salon_rating!" [size]="13" tone="muted" label="Salon rating" />
-                  <span class="text-[10px] uppercase tracking-wider font-semibold text-gray-400">Salon</span>
+                  <span class="text-2xs uppercase tracking-wider font-semibold text-gray-400">Salon</span>
                 </div>
               }
             </div>
             @if (!review.is_visible) {
-              <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-500">
+              <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-2xs font-medium uppercase tracking-wide text-gray-500">
                 Hidden
               </span>
             }

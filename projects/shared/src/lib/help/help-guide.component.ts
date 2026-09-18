@@ -40,7 +40,7 @@ interface MatchedSection extends Omit<GuideSection, 'topics'> {
           (input)="query.set($any($event.target).value)"
           placeholder="Search — e.g. deposit, hours, promo code"
           class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-ink
-                 placeholder-gray-400 outline-none transition-colors focus:border-gray-400"
+                 placeholder-gray-400 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink transition-colors focus:border-gray-400"
         />
       </label>
 

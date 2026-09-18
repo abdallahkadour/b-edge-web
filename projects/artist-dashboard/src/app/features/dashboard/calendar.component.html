@@ -96,7 +96,7 @@
           <div>
             <div class="flex justify-between items-center gap-2">
               <span class="font-bold text-xs tracking-tight truncate">{{ item.booking.service_name }}</span>
-              <span class="text-[9px] font-semibold text-gray-300 bg-white/10 px-1.5 py-0.5 rounded shrink-0">
+              <span class="text-2xs font-semibold text-gray-300 bg-white/10 px-1.5 py-0.5 rounded shrink-0">
                 {{ statusLabel(item.booking.status) }}
               </span>
             </div>
@@ -115,7 +115,7 @@
           class="absolute left-0 right-0 h-0.5 bg-danger z-10 pointer-events-none flex items-center"
         >
           <div class="w-2.5 h-2.5 rounded-full bg-danger -ml-1.5"></div>
-          <span class="bg-danger text-white font-semibold text-[8px] px-1 py-0.5 rounded ml-2 tracking-wide font-mono">
+          <span class="bg-danger text-white font-semibold text-2xs px-1 py-0.5 rounded ml-2 tracking-wide font-mono">
             {{ currentTimeLabel }} (now)
           </span>
         </div>

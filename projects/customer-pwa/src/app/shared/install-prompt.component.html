@@ -12,27 +12,27 @@
     <div class="flex-1 min-w-0">
       @if (mode() === 'ios') {
         <p class="text-[13px] font-semibold leading-tight">Add B-Edge to your home screen</p>
-        <p class="text-[11px] text-white/60 mt-0.5">
+        <p class="text-2xs text-white/60 mt-0.5">
           Tap <lucide-icon name="share" [size]="11" [strokeWidth]="2.5" class="inline -translate-y-px" />
           then "Add to Home Screen"
         </p>
       } @else {
         <p class="text-[13px] font-semibold leading-tight">Add B-Edge to your home screen</p>
-        <p class="text-[11px] text-white/60 mt-0.5">Book faster, no browser tabs</p>
+        <p class="text-2xs text-white/60 mt-0.5">Book faster, no browser tabs</p>
       }
     </div>
 
     <button
       type="button"
       (click)="dismiss()"
-      class="text-[11px] text-white/60 font-medium px-2 py-1.5 shrink-0"
+      class="text-2xs text-white/60 font-medium px-2 py-1.5 shrink-0"
     >{{ mode() === 'ios' ? 'Got it' : 'Not now' }}</button>
 
     @if (mode() === 'chromium') {
       <button
         type="button"
         (click)="install()"
-        class="text-[12px] font-bold bg-white text-ink px-3.5 py-1.5 rounded-lg shrink-0"
+        class="text-xs font-bold bg-white text-ink px-3.5 py-1.5 rounded-lg shrink-0"
       >Install</button>
     }
   </div>

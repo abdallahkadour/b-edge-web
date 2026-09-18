@@ -23,7 +23,7 @@
       <lucide-icon name="shopping-bag" [size]="20" [strokeWidth]="2" />
       @if (cart.itemCount() > 0) {
         <span
-          class="absolute -top-0.5 -right-0.5 bg-ink text-white text-[10px] font-bold min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1 border-2 border-white"
+          class="absolute -top-0.5 -right-0.5 bg-ink text-white text-2xs font-bold min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1 border-2 border-white"
         >{{ cart.itemCount() }}</span>
       }
     </button>
@@ -73,7 +73,7 @@
       }
 
       @if (isSoldOut(p)) {
-        <span class="absolute top-3 left-3 bg-ink text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full">
+        <span class="absolute top-3 left-3 bg-ink text-white text-2xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full">
           Sold out
         </span>
       }
@@ -95,8 +95,8 @@
       @if (p.category) {
         <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">{{ label(p.category) }}</span>
       }
-      <h2 class="text-[20px] font-bold text-ink leading-snug mt-0.5">{{ p.name }}</h2>
-      <p class="text-[18px] font-bold text-ink mt-1.5">${{ p.price }}</p>
+      <h2 class="text-xl font-bold text-ink leading-snug mt-0.5">{{ p.name }}</h2>
+      <p class="text-lg font-bold text-ink mt-1.5">${{ p.price }}</p>
 
       @if (p.description) {
         <div class="mt-5 pt-5 border-t border-gray-100">

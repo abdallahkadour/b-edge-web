@@ -22,7 +22,7 @@
 
     <!-- Payment instructions: the focus of this screen -->
     <div class="mt-7 bg-white border border-gray-200 rounded-2xl p-5">
-      <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Next step</span>
+      <span class="text-2xs font-bold uppercase tracking-wider text-gray-400">Next step</span>
 
       @if (order(); as o) {
         <h2 class="text-base font-bold text-ink mt-1.5">
@@ -90,8 +90,8 @@
         @for (step of steps; track step; let i = $index) {
           <span
             [class]="i === 0
-              ? 'text-[10px] uppercase tracking-wider font-bold text-ink'
-              : 'text-[10px] uppercase tracking-wider text-gray-400'"
+              ? 'text-2xs uppercase tracking-wider font-bold text-ink'
+              : 'text-2xs uppercase tracking-wider text-gray-400'"
           >{{ step }}</span>
         }
       </div>

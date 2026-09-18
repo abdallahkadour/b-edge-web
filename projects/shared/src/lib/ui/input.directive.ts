@@ -23,8 +23,24 @@ export class InputDirective {
 
   protected readonly classes = computed(() =>
     [
-      'w-full px-3.5 rounded-lg border text-[15px] outline-none transition-colors',
+      'w-full px-3.5 rounded-lg border text-base transition-colors',
       'placeholder:text-gray-400 disabled:bg-gray-50 disabled:text-gray-400',
+      // KEYBOARD FOCUS — WCAG 2.2 SC 2.4.11 Focus Appearance.
+      //
+      // This previously carried `outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink` with no replacement, so the
+      // only focus indicator anywhere in the app was the 1px border colour
+      // change below. SC 2.4.11 requires an indicator at least as large as a
+      // 2px perimeter with 3:1 contrast against what is adjacent; a 1px border
+      // does not meet it, and 28 controls across the workspace inherited that.
+      //
+      // `focus-visible`, not `focus`: the ring should appear for keyboard
+      // users and not on every mouse click. Styling `focus` is why people
+      // reach for `outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink` in the first place.
+      //
+      // `outline`, not `ring`: a ring is a box-shadow and is clipped by
+      // `overflow-hidden` on a parent, which is exactly what surrounds most of
+      // these inputs. An outline is not.
+      'outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink',
       // Chrome autofill paints its own background over the design system;
       // the shared stylesheet already neutralises this globally.
       this.invalid() ? 'border-danger' : 'border-gray-200 focus:border-ink',

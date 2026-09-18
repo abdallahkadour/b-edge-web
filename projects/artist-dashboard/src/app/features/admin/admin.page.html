@@ -44,7 +44,7 @@
       >
         Billing
         @if (confirmationQueue().length > 0) {
-          <span class="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-warning text-white text-[10px]">
+          <span class="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-warning text-white text-2xs">
             {{ confirmationQueue().length }}
           </span>
         }
@@ -348,7 +348,7 @@
                 (input)="planCode.set($any($event.target).value)"
                 placeholder="e.g. growth"
               />
-              <p class="text-[11px] text-gray-400 mt-1">Lowercase, no spaces. Cannot be changed after creation.</p>
+              <p class="text-2xs text-gray-400 mt-1">Lowercase, no spaces. Cannot be changed after creation.</p>
             </div>
 
             <div>
@@ -528,7 +528,7 @@
                     />
                   </div>
                 </div>
-                <p class="text-[11px] text-gray-400 -mt-1">
+                <p class="text-2xs text-gray-400 -mt-1">
                   Affects new signups only - existing subscribers keep their current price.
                 </p>
 
@@ -815,7 +815,7 @@
                       />
                     </div>
                   </div>
-                  <p class="text-[11px] text-gray-400 -mt-1">
+                  <p class="text-2xs text-gray-400 -mt-1">
                     Leave a date blank to leave it unchanged. Extending "Period ends" past today
                     is how to bring a suspended or past-due artist back to active.
                   </p>

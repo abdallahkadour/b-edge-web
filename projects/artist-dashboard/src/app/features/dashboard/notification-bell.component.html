@@ -22,7 +22,7 @@
       <span
         aria-hidden="true"
         class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full
-               bg-danger text-white text-[10px] font-bold leading-[18px] text-center
+               bg-danger text-white text-2xs font-bold leading-[18px] text-center
                tabular-nums"
       >{{ badgeLabel() }}</span>
     }
@@ -44,7 +44,7 @@
       role="dialog"
       aria-modal="false"
       aria-label="Notifications"
-      class="absolute z-50 mt-2 right-0 md:right-auto md:left-0 outline-none
+      class="absolute z-50 mt-2 right-0 md:right-auto md:left-0 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink
              w-[min(20rem,calc(100vw-2rem))]
              max-h-[70vh] flex flex-col
              bg-white rounded-xl border border-gray-200 shadow-xl overflow-hidden"
@@ -59,7 +59,7 @@
               type="button"
               (click)="markAllRead()"
               class="flex items-center gap-1 text-xs font-medium text-gray-500
-                     hover:text-ink px-2 py-1 rounded-md hover:bg-gray-50 transition-colors"
+                     hover:text-ink px-2 py-1 rounded hover:bg-gray-50 transition-colors"
             >
               <lucide-icon name="check" [size]="14" [strokeWidth]="2" />
               Mark all read
@@ -155,7 +155,7 @@
                            be noise carrying no information. -->
                       @if (n.item_count > 1) {
                         <span
-                          class="shrink-0 text-[10px] font-bold text-gray-500 bg-gray-100
+                          class="shrink-0 text-2xs font-bold text-gray-500 bg-gray-100
                                  rounded-full px-1.5 py-0.5 tabular-nums"
                           [attr.aria-label]="n.item_count + ' occurrences'"
                         >{{ n.item_count }}</span>
@@ -171,11 +171,11 @@
                     <span class="flex items-center gap-2 mt-1">
                       <time
                         [attr.datetime]="n.created_at"
-                        class="text-[11px] text-gray-400 tabular-nums"
+                        class="text-2xs text-gray-400 tabular-nums"
                       >{{ relativeTime(n.created_at) }}</time>
                       @if (hasLink(n)) {
-                        <span class="text-[11px] text-gray-400">·</span>
-                        <span class="text-[11px] font-medium text-ink">View</span>
+                        <span class="text-2xs text-gray-400">·</span>
+                        <span class="text-2xs font-medium text-ink">View</span>
                       }
                     </span>
                   </span>
@@ -188,7 +188,7 @@
                   type="button"
                   (click)="archive(n.id)"
                   [attr.aria-label]="'Dismiss: ' + n.title"
-                  class="shrink-0 self-start mt-3 mr-2 p-1.5 rounded-md text-gray-300
+                  class="shrink-0 self-start mt-3 mr-2 p-1.5 rounded text-gray-300
                          hover:text-ink hover:bg-gray-100 transition-colors"
                 >
                   <lucide-icon name="x" [size]="14" [strokeWidth]="2" />
@@ -201,7 +201,7 @@
 
       @if (items().length > 0) {
         <div class="border-t border-gray-100 px-4 py-2">
-          <p class="text-[11px] text-gray-400 text-center">
+          <p class="text-2xs text-gray-400 text-center">
             Showing your most recent notifications
           </p>
         </div>

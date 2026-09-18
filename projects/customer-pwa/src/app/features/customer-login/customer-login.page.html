@@ -39,7 +39,7 @@
             (input)="onPhoneInput($any($event.target).value)"
             (keydown.enter)="requestCode()"
             placeholder="70 000 000"
-            class="w-full h-full px-3.5 bg-white text-[15px] placeholder-gray-400 outline-none"
+            class="w-full h-full px-3.5 bg-white text-[15px] placeholder-gray-400 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           />
         </div>
         <!-- Fixed-height slot so the button below doesn't jump down the
@@ -94,7 +94,7 @@
           (keydown.enter)="verifyCode()"
           placeholder="000000"
           maxlength="6"
-          class="w-full h-14 px-4 text-center text-2xl font-mono tracking-[0.5em] bg-white border rounded-lg outline-none transition-all focus:border-ink"
+          class="w-full h-14 px-4 text-center text-2xl font-mono tracking-[0.5em] bg-white border rounded-lg outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink transition-all focus:border-ink"
           [class]="touched() && !isCodeValid() ? 'border-danger/60' : 'border-gray-200'"
         />
         <div class="h-4 mt-1">

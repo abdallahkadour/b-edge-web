@@ -22,8 +22,20 @@
 @import 'maplibre-gl/dist/maplibre-gl.css';
 
 @layer components {
+  // Kept in step with InputDirective (@bedge/shared) DELIBERATELY, not
+  // duplicated by accident. The two had drifted: px-3 vs px-3.5, text-sm vs
+  // text-[15px], focus:border-gray-400 vs focus:border-ink, and two different
+  // placeholder shades - so which input you got depended on which app you
+  // were in.
+  //
+  // This class exists because a few dashboard screens style native inputs
+  // without the directive. New code should use `bedgeInput`; this is the
+  // compatibility surface, and it must not diverge again.
   .bedge-input {
-    @apply w-full rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-ink placeholder-gray-300 outline-none transition-colors focus:border-gray-400 disabled:opacity-40 disabled:cursor-not-allowed;
+    @apply w-full rounded-lg border border-gray-200 bg-white px-3.5 py-1.5 text-base text-ink transition-colors;
+    @apply placeholder:text-gray-400 focus:border-ink disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed;
+    // WCAG 2.2 SC 2.4.11 — see InputDirective for the full reasoning.
+    @apply outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink;
   }
 
   .bedge-select {

@@ -69,7 +69,7 @@
                 [value]="handle()"
                 (input)="onHandleInput($any($event.target).value); clearFieldError('Handle')"
                 placeholder="your-name"
-                class="w-full h-full px-3 text-sm outline-none"
+                class="w-full h-full px-3 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
               />
             </div>
             @if (fieldErrors()['Handle']; as err) {
@@ -84,7 +84,7 @@
             <select
               [value]="category()"
               (change)="category.set($any($event.target).value); clearFieldError('Category')"
-              class="w-full h-11 px-3 border rounded-lg text-sm outline-none focus:border-ink bg-white"
+              class="w-full h-11 px-3 border rounded-lg text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink focus:border-ink bg-white"
               [class]="fieldErrors()['Category'] ? 'border-danger' : 'border-gray-200'"
             >
               @for (cat of categories; track cat) {
@@ -213,7 +213,7 @@
                   [value]="servicePrice()"
                   (input)="servicePrice.set($any($event.target).value)"
                   placeholder="50.00"
-                  class="w-full h-full px-2.5 text-sm outline-none"
+                  class="w-full h-full px-2.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
                 />
               </div>
             </div>

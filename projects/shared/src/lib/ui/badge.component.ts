@@ -27,7 +27,7 @@ export class BadgeComponent {
 
   protected readonly classes = computed(() => {
     const base =
-      'inline-block text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full';
+      'inline-block text-2xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full';
 
     const tones: Record<BadgeTone, string> = {
       neutral: 'bg-gray-100 text-gray-600',

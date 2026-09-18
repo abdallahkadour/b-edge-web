@@ -7,19 +7,19 @@
     >
       <lucide-icon name="arrow-left" [size]="20" [strokeWidth]="2" />
     </button>
-    <span class="text-[16px] font-semibold leading-[24px] tracking-[-0.01em]">Choose a date &amp; time</span>
+    <span class="text-base font-semibold leading-[24px] tracking-[-0.01em]">Choose a date &amp; time</span>
     <div class="w-6"></div>
   </div>
 
   <div class="px-6 pt-6 flex flex-col gap-6">
     @if (stores().length > 1) {
       <div class="flex flex-col gap-3">
-        <h2 class="text-[12px] font-bold leading-[16px] tracking-[0.05em] uppercase text-gray-500">Select location</h2>
+        <h2 class="text-xs font-bold leading-[16px] tracking-[0.05em] uppercase text-gray-500">Select location</h2>
         <div class="flex bg-gray-100 p-1 rounded-full border border-gray-200">
           @for (store of stores(); track store.id) {
             <button
               (click)="onStoreSelect(store.id)"
-              class="flex-1 h-9 rounded-full text-[14px] font-medium leading-[20px] transition-all cursor-pointer"
+              class="flex-1 h-9 rounded-full text-sm font-medium leading-[20px] transition-all cursor-pointer"
               [class]="selectedStoreId() === store.id ? 'bg-ink text-white shadow-sm' : 'text-gray-500 hover:text-ink'"
             >
               {{ store.name }}
@@ -31,8 +31,8 @@
 
     <div class="flex flex-col gap-3">
       <div class="flex justify-between items-center">
-        <h2 class="text-[12px] font-bold leading-[16px] tracking-[0.05em] uppercase text-gray-500">Select date</h2>
-        <span class="text-[14px] font-medium text-gray-500">{{ activeMonthLabel() }}</span>
+        <h2 class="text-xs font-bold leading-[16px] tracking-[0.05em] uppercase text-gray-500">Select date</h2>
+        <span class="text-sm font-medium text-gray-500">{{ activeMonthLabel() }}</span>
       </div>
       <div class="flex gap-2 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         @for (cell of dateCells(); track cell.iso) {
@@ -43,10 +43,10 @@
             [class]="isSelected ? 'bg-ink border-ink text-white shadow' : 'bg-white border-gray-200 hover:border-gray-400 text-ink'"
           >
             <span
-              class="text-[11px] font-bold tracking-[0.05em] leading-[16px]"
+              class="text-2xs font-bold tracking-[0.05em] leading-[16px]"
               [class]="isSelected ? 'text-white/80' : 'text-gray-500'"
             >{{ cell.weekday }}</span>
-            <span class="text-[18px] font-semibold leading-[24px] mt-1">{{ cell.dayNum }}</span>
+            <span class="text-lg font-semibold leading-[24px] mt-1">{{ cell.dayNum }}</span>
           </button>
         }
       </div>
@@ -54,22 +54,22 @@
 
     <div class="flex flex-col gap-6 pt-2 border-t border-gray-200">
       @if (slotsLoading()) {
-        <p class="text-[14px] text-gray-400 leading-[20px] pt-4">Checking availability…</p>
+        <p class="text-sm text-gray-400 leading-[20px] pt-4">Checking availability…</p>
       } @else if (slotsError()) {
-        <p class="text-[14px] text-gray-400 leading-[20px] pt-4">Couldn't load times. Try another date.</p>
+        <p class="text-sm text-gray-400 leading-[20px] pt-4">Couldn't load times. Try another date.</p>
       } @else if (slots().length === 0) {
         @if (waitlistJoined()) {
-          <div class="flex items-center gap-2 pt-4 text-[14px] text-success">
+          <div class="flex items-center gap-2 pt-4 text-sm text-success">
             <lucide-icon name="check" [size]="16" [strokeWidth]="2" />
             You're on the waitlist. We'll message you on WhatsApp if a spot opens up.
           </div>
         } @else {
           <div class="pt-4 flex flex-col gap-3">
-            <p class="text-[14px] text-gray-400 leading-[20px]">No availability on this date.</p>
+            <p class="text-sm text-gray-400 leading-[20px]">No availability on this date.</p>
             <button
               type="button"
               (click)="openWaitlistForm()"
-              class="h-11 px-4 border border-ink rounded text-[14px] font-medium text-ink self-start"
+              class="h-11 px-4 border border-ink rounded text-sm font-medium text-ink self-start"
             >
               Notify me if a spot opens up
             </button>
@@ -78,13 +78,13 @@
       } @else {
         @if (morningSlots().length > 0) {
           <div class="flex flex-col gap-3">
-            <h3 class="text-[12px] font-bold leading-[16px] tracking-[0.05em] uppercase text-gray-500">Morning</h3>
+            <h3 class="text-xs font-bold leading-[16px] tracking-[0.05em] uppercase text-gray-500">Morning</h3>
             <div class="grid grid-cols-3 gap-2">
               @for (slot of morningSlots(); track slot.start_time) {
                 @let isSelected = selectedSlot() === slot.start_time;
                 <button
                   (click)="selectedSlot.set(slot.start_time)"
-                  class="h-[44px] rounded border text-[14px] font-medium leading-[20px] flex items-center justify-center gap-1 transition-all cursor-pointer"
+                  class="h-[44px] rounded border text-sm font-medium leading-[20px] flex items-center justify-center gap-1 transition-all cursor-pointer"
                   [class]="isSelected
                     ? 'bg-ink border-ink text-white'
                     : slot.is_early_bird && (slot.early_bird_fee ?? '0') !== '0'
@@ -103,13 +103,13 @@
 
         @if (afternoonSlots().length > 0) {
           <div class="flex flex-col gap-3">
-            <h3 class="text-[12px] font-bold leading-[16px] tracking-[0.05em] uppercase text-gray-500">Afternoon</h3>
+            <h3 class="text-xs font-bold leading-[16px] tracking-[0.05em] uppercase text-gray-500">Afternoon</h3>
             <div class="grid grid-cols-3 gap-2">
               @for (slot of afternoonSlots(); track slot.start_time) {
                 @let isSelected = selectedSlot() === slot.start_time;
                 <button
                   (click)="selectedSlot.set(slot.start_time)"
-                  class="h-[44px] rounded border text-[14px] font-medium leading-[20px] flex items-center justify-center transition-all cursor-pointer"
+                  class="h-[44px] rounded border text-sm font-medium leading-[20px] flex items-center justify-center transition-all cursor-pointer"
                   [class]="isSelected ? 'bg-ink border-ink text-white' : 'bg-white border-gray-200 text-ink hover:border-gray-400'"
                 >
                   {{ formatTime(slot.start_time) }}
@@ -188,7 +188,7 @@
                 [value]="waitlistPhoneDigits()"
                 (input)="onWaitlistPhoneInput($any($event.target).value)"
                 placeholder="70 000 000"
-                class="w-full h-full px-3.5 outline-none text-[15px]"
+                class="w-full h-full px-3.5 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink text-[15px]"
               />
             </div>
           </div>

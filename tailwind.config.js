@@ -92,6 +92,19 @@ module.exports = {
           dark:    'rgb(var(--c-warning-dark) / <alpha-value>)',
         },
       },
+      fontSize: {
+        // The FLOOR of the type scale, at 11px.
+        //
+        // Added because an audit found text rendering at 8px and 9px on the
+        // discover card and across the dashboard - below the size at which
+        // uppercase letterforms stay legible on a phone at arm's length, and
+        // the clearest "unfinished" tell in the customer app.
+        //
+        // Named rather than left as text-[11px] so there is one obvious thing
+        // to reach for when something must be smaller than text-xs, and one
+        // place to change it if 11px still proves too small.
+        '2xs': ['0.6875rem', { lineHeight: '1rem' }], // 11px / 16px
+      },
       fontFamily: {
         // Inter for everything. Clean, modern, excellent at all sizes.
         // Falls back to the system stack if Inter is not loaded.

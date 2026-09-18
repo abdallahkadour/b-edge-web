@@ -17,7 +17,7 @@
 
   @if (pendingOversizedFile(); as file) {
     <div class="rounded-lg bg-warning-light border border-warning px-3 py-2 mb-2">
-      <p class="text-[11px] text-warning-dark leading-relaxed">
+      <p class="text-2xs text-warning-dark leading-relaxed">
         This photo is {{ pendingOversizedSizeMB().toFixed(1) }}MB, over the 15MB limit.
         We can resize it to fit and upload it for you.
       </p>
@@ -25,12 +25,12 @@
         <button
           type="button"
           (click)="confirmResize()"
-          class="text-[11px] font-semibold text-white bg-ink rounded-lg px-2.5 py-1 hover:opacity-90 transition-opacity"
+          class="text-2xs font-semibold text-white bg-ink rounded-lg px-2.5 py-1 hover:opacity-90 transition-opacity"
         >Resize &amp; upload</button>
         <button
           type="button"
           (click)="dismissOversized()"
-          class="text-[11px] font-semibold text-gray-600 rounded-lg px-2.5 py-1 hover:bg-gray-100 transition-colors"
+          class="text-2xs font-semibold text-gray-600 rounded-lg px-2.5 py-1 hover:bg-gray-100 transition-colors"
         >Never mind</button>
       </div>
     </div>
@@ -52,17 +52,17 @@
 
             @if (confirmingDeleteId() === photo.id) {
               <div class="absolute inset-0 z-10 bg-ink/85 flex flex-col items-center justify-center gap-1.5 px-1">
-                <p class="text-white text-[10px] font-semibold text-center leading-tight">Delete?</p>
+                <p class="text-white text-2xs font-semibold text-center leading-tight">Delete?</p>
                 <div class="flex gap-1">
                   <button
                     type="button"
                     (click)="deletePhoto(photo)"
-                    class="px-2 py-0.5 rounded bg-white text-danger-dark text-[10px] font-bold hover:bg-gray-100"
+                    class="px-2 py-0.5 rounded bg-white text-danger-dark text-2xs font-bold hover:bg-gray-100"
                   >Delete</button>
                   <button
                     type="button"
                     (click)="cancelDelete()"
-                    class="px-2 py-0.5 rounded border border-white/40 text-white text-[10px] font-medium hover:bg-white/10"
+                    class="px-2 py-0.5 rounded border border-white/40 text-white text-2xs font-medium hover:bg-white/10"
                   >Keep</button>
                 </div>
               </div>

@@ -76,12 +76,12 @@
                   <div class="flex items-center gap-1.5">
                     <span class="text-sm font-bold text-ink">{{ item.customer_name }}</span>
                     @if (isUrgent(item)) {
-                      <span class="bg-ink text-white text-[8px] font-bold uppercase px-1.5 py-0.5 rounded tracking-wide">
+                      <span class="bg-ink text-white text-2xs font-bold uppercase px-1.5 py-0.5 rounded tracking-wide">
                         Urgent
                       </span>
                     }
                     @if (item.status === 'deposit_paid') {
-                      <span class="bg-warning-light text-warning-dark text-[8px] font-bold uppercase px-1.5 py-0.5 rounded tracking-wide">
+                      <span class="bg-warning-light text-warning-dark text-2xs font-bold uppercase px-1.5 py-0.5 rounded tracking-wide">
                         Deposit received
                       </span>
                     }
@@ -91,7 +91,7 @@
               </div>
               <div class="text-right">
                 <span class="block text-xs font-bold text-ink">${{ item.deposit_amount }}</span>
-                <span class="block text-[9px] text-gray-400 font-bold uppercase tracking-wider">Deposit</span>
+                <span class="block text-2xs text-gray-400 font-bold uppercase tracking-wider">Deposit</span>
               </div>
             </div>
 
@@ -151,7 +151,7 @@
               </div>
               <div class="text-right">
                 <span class="block text-xs font-bold text-ink">${{ item.deposit_amount }}</span>
-                <span class="block text-[9px] text-gray-400 font-bold uppercase tracking-wider">Deposit</span>
+                <span class="block text-2xs text-gray-400 font-bold uppercase tracking-wider">Deposit</span>
               </div>
             </div>
 
@@ -214,7 +214,7 @@
             [value]="verificationNotes()"
             (input)="verificationNotes.set($any($event.target).value)"
             placeholder="e.g. Whish Code #94821"
-            class="w-full h-10 px-3 border border-gray-200 rounded-lg text-xs text-ink focus:outline-none focus:border-ink"
+            class="w-full h-10 px-3 border border-gray-200 rounded-lg text-xs text-ink outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink focus:border-ink"
           />
         </div>
 
@@ -251,7 +251,7 @@
             type="button"
             (click)="markPartial()"
             [disabled]="verifying()"
-            class="text-[11px] text-gray-400 underline decoration-gray-300 hover:text-gray-600 disabled:opacity-50"
+            class="text-2xs text-gray-400 underline decoration-gray-300 hover:text-gray-600 disabled:opacity-50"
           >
             Only part of it arrived? Mark as partially received
           </button>

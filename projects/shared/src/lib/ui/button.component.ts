@@ -73,7 +73,14 @@ export class ButtonComponent {
     const base =
       'inline-flex items-center justify-center gap-2 font-bold rounded-lg ' +
       'transition-opacity disabled:bg-gray-100 disabled:text-gray-500 ' +
-      'disabled:border-transparent disabled:cursor-not-allowed';
+      'disabled:border-transparent disabled:cursor-not-allowed ' +
+      // WCAG 2.2 SC 2.4.11. A 2px outline offset from the control, so it
+      // reads against both the button's own fill and the surface behind it.
+      // `outline` rather than `ring` because a ring is a box-shadow and gets
+      // clipped by `overflow-hidden` on a parent card; an outline does not.
+      // `focus-visible` so it is keyboard-only and nobody is tempted to
+      // remove it.
+      'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink';
 
     const sizes: Record<ButtonSize, string> = {
       sm: 'h-9 px-4 text-xs',

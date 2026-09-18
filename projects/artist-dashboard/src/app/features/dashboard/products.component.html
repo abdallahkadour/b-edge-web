@@ -134,7 +134,7 @@
                   <button
                     type="button"
                     (click)="openEdit(p)"
-                    class="p-1.5 text-gray-400 hover:text-ink hover:bg-gray-200 rounded-md transition-colors"
+                    class="p-1.5 text-gray-400 hover:text-ink hover:bg-gray-200 rounded transition-colors"
                     aria-label="Edit product"
                   >
                     <lucide-icon name="pencil" [size]="15" [strokeWidth]="2" />
@@ -180,7 +180,7 @@
               [value]="form().name"
               (input)="patchForm('name', $any($event.target).value)"
               placeholder="Velvet Matte Lip Liner"
-              class="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm outline-none focus:border-ink"
+              class="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink focus:border-ink"
             />
           </div>
 
@@ -190,7 +190,7 @@
               <select
                 [value]="form().category"
                 (change)="patchForm('category', $any($event.target).value)"
-                class="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm outline-none focus:border-ink bg-white"
+                class="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink focus:border-ink bg-white"
               >
                 @for (cat of categories; track cat) {
                   <option [value]="cat">{{ label(cat) }}</option>
@@ -207,7 +207,7 @@
                   [value]="form().price"
                   (input)="patchForm('price', $any($event.target).value)"
                   placeholder="12.50"
-                  class="w-full h-full px-2.5 text-sm outline-none"
+                  class="w-full h-full px-2.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
                 />
               </div>
             </div>
@@ -221,7 +221,7 @@
               [value]="form().stockQuantity"
               (input)="patchForm('stockQuantity', $any($event.target).value)"
               placeholder="Leave blank for unlimited"
-              class="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm outline-none focus:border-ink"
+              class="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink focus:border-ink"
             />
             <p class="text-xs text-gray-400 mt-1">
               Customers will see "Sold out" once this many have been ordered.
@@ -286,7 +286,7 @@
               [value]="form().description"
               (input)="patchForm('description', $any($event.target).value)"
               placeholder="What is it, and who is it for?"
-              class="w-full p-3 border border-gray-200 rounded-lg text-sm outline-none focus:border-ink resize-none"
+              class="w-full p-3 border border-gray-200 rounded-lg text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink focus:border-ink resize-none"
             ></textarea>
           </div>
 
