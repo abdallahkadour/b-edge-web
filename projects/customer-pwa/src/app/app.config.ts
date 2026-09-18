@@ -107,14 +107,23 @@ export const appConfig: ApplicationConfig = {
       }),
     ),
 
-    // On startup, try to restore a customer session by exchanging the
-    // httpOnly refresh cookie for a fresh access token - same pattern as
-    // the artist dashboard. For the large majority of visitors (guests
-    // with no account) this simply fails with no cookie present, which is
-    // caught and treated as "not logged in," not an error.
+    // Start restoring the customer session, but do NOT block bootstrap on it.
+    //
+    // This used to return the observable, which made Angular wait for the
+    // network before rendering anything. The overwhelming majority of
+    // visitors are guests with no refresh cookie, so that was every one of
+    // them staring at a blank page waiting for a request that was always
+    // going to fail.
+    //
+    // customerAuthGuard was the only thing that depended on the wait, and it
+    // now awaits CustomerAuthStore.whenRestored() itself - so the cost falls
+    // on the two guarded routes instead of on Discover, the artist profile
+    // and the entire booking funnel.
+    //
+    // Returning void rather than the promise is the whole point: fire it,
+    // let the guard await it, render now.
     provideAppInitializer(() => {
-      const auth = inject(CustomerAuthStore);
-      return auth.refresh().pipe(catchError(() => of(null)));
+      void inject(CustomerAuthStore).whenRestored();
     }),
   ],
 };

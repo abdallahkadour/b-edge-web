@@ -36,6 +36,46 @@ export class CustomerAuthStore {
   readonly isAuthenticated = computed(() => this._customer() !== null);
 
   /**
+   * Resolves once the startup session restore has finished, either way.
+   *
+   * WHY THIS EXISTS
+   *
+   * The restore used to be awaited by provideAppInitializer, which meant
+   * Angular would not bootstrap until the network call came back. On a slow
+   * connection the first thing a visitor saw was a blank white page - and the
+   * overwhelming majority of visitors are guests with no cookie, who were
+   * being made to wait for a request that was always going to fail.
+   *
+   * Only ONE thing actually needed the wait: customerAuthGuard, which would
+   * otherwise bounce a signed-in customer to /login because the store had not
+   * been populated yet. So the wait moved from "every route" to "the guarded
+   * routes", which is the only place it buys anything.
+   */
+  readonly sessionRestored = signal(false);
+
+  /** Set by whoever performs the startup restore, exactly once. */
+  private restorePromise: Promise<void> | null = null;
+
+  /**
+   * Starts the restore if it has not started, and returns a promise that
+   * settles when it is done. Safe to call repeatedly - the guard may run on
+   * several routes and must not trigger several refreshes.
+   */
+  whenRestored(): Promise<void> {
+    if (this.sessionRestored()) return Promise.resolve();
+    this.restorePromise ??= new Promise<void>((resolve) => {
+      this.refresh().subscribe({
+        next: () => { this.sessionRestored.set(true); resolve(); },
+        // A failed restore is the NORMAL case for a guest. It means "not
+        // signed in", not "something went wrong", so it resolves rather
+        // than rejecting.
+        error: () => { this.sessionRestored.set(true); resolve(); },
+      });
+    });
+    return this.restorePromise;
+  }
+
+  /**
    * Request a WhatsApp login code. Deliberately does not touch session
    * state - nothing is "logged in" until verifyOtp succeeds.
    */
