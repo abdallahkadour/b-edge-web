@@ -64,3 +64,30 @@ textarea:-webkit-autofill:focus {
   caret-color: rgb(var(--c-ink));
   transition: background-color 5000s ease-in-out 0s;
 }
+
+/**
+ * A horizontally scrolling chip strip that says it scrolls.
+ *
+ * At 390px the category filter sliced its last chip clean against the
+ * viewport edge - "LASHE" - which reads as a layout bug rather than as
+ * "there is more this way". Fading the final 24px makes a partly visible
+ * chip look deliberate.
+ *
+ * Written here rather than as a Tailwind arbitrary value because the first
+ * attempt was, and it silently did nothing: `calc(100%-24px)` is invalid CSS
+ * (calc needs spaces around the minus) and Tailwind's underscore-for-space
+ * escaping makes that mistake very easy to make and very hard to see. A real
+ * declaration is checked by the browser.
+ */
+.scroll-strip {
+  // Safari still wants the prefix; without it the strip simply does not fade
+  // there, which is a graceful degradation rather than a break.
+  -webkit-mask-image: linear-gradient(to right, black calc(100% - 24px), transparent);
+  mask-image: linear-gradient(to right, black calc(100% - 24px), transparent);
+
+  // A scrollbar under seven pills is noise on desktop and absent on touch.
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

@@ -20,6 +20,9 @@ export interface ArtistCard {
   readonly review_count: number;
   readonly city: string;
   readonly is_verified: boolean;
+  /** The artist's photo. Absent for most, and note that legacy rows can
+   *  carry an EMPTY STRING rather than null - treat both as "no photo". */
+  readonly avatar_url?: string;
   readonly is_new: boolean; // created within the last 30 days
 }
 

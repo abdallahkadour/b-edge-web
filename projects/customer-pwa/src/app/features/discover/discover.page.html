@@ -37,13 +37,26 @@
     </div>
 
     <!-- Category chips -->
-    <div class="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5">
+    <!-- The strip scrolls, but nothing said so: at 390px the last chip was
+         sliced mid-word against the viewport edge, which reads as a layout
+         bug rather than as "there is more this way".
+
+         `mask-image` fades the final 24px instead of cutting it, so a partly
+         visible chip looks deliberate. Paired with scroll-snap so a flick
+         lands on a chip boundary rather than halfway through one, and
+         `scrollbar-none` because a desktop scrollbar under seven pills is
+         noise. -->
+    <div
+      class="scroll-strip flex gap-2 overflow-x-auto pb-1 -mx-5 px-5 snap-x snap-mandatory"
+      role="tablist"
+      aria-label="Filter by category"
+    >
       <button
         type="button"
         (click)="selectCategory('all')"
         [class]="selectedCategory() === 'all'
-          ? 'shrink-0 py-1.5 px-4 font-bold text-xs uppercase tracking-wider rounded-full bg-ink text-white'
-          : 'shrink-0 py-1.5 px-4 font-bold text-xs uppercase tracking-wider rounded-full bg-gray-100 text-gray-500'"
+          ? 'shrink-0 snap-start py-1.5 px-4 font-bold text-xs uppercase tracking-wider rounded-full bg-ink text-white'
+          : 'shrink-0 snap-start py-1.5 px-4 font-bold text-xs uppercase tracking-wider rounded-full bg-gray-100 text-gray-500'"
       >
         All
       </button>
@@ -52,8 +65,8 @@
           type="button"
           (click)="selectCategory(cat)"
           [class]="selectedCategory() === cat
-            ? 'shrink-0 py-1.5 px-4 font-bold text-xs uppercase tracking-wider rounded-full bg-ink text-white'
-            : 'shrink-0 py-1.5 px-4 font-bold text-xs uppercase tracking-wider rounded-full bg-gray-100 text-gray-500'"
+            ? 'shrink-0 snap-start py-1.5 px-4 font-bold text-xs uppercase tracking-wider rounded-full bg-ink text-white'
+            : 'shrink-0 snap-start py-1.5 px-4 font-bold text-xs uppercase tracking-wider rounded-full bg-gray-100 text-gray-500'"
         >
           {{ cat }}
         </button>
@@ -94,8 +107,27 @@
                 class="text-left bg-white rounded-xl border border-gray-100 p-2 hover:border-gray-300 transition-all relative"
               >
                 <!-- Avatar / photo placeholder -->
-                <div [class]="'w-full aspect-square rounded-lg flex items-center justify-center font-bold text-lg uppercase relative ' + avatarClass(artist.id)">
-                  <span>{{ initials(artist.name) }}</span>
+                <div [class]="'w-full aspect-square rounded-lg flex items-center justify-center font-bold text-lg uppercase relative overflow-hidden ' + avatarClass(artist.id)">
+                  <!-- The work IS the product. Until now this card could not
+                       render a photo at all - avatar_url was neither selected
+                       by the API nor present in the model - so a beauty
+                       marketplace showed initials on a coloured square.
+
+                       ngSrc routes through the Cloudinary loader already
+                       registered in app.config, which appends
+                       f_auto,q_auto,c_limit,w_N - so the phone gets a
+                       correctly-sized WebP rather than the original upload. -->
+                  @if (hasPhoto(artist.avatar_url)) {
+                    <img
+                      [ngSrc]="artist.avatar_url!"
+                      [alt]="artist.name"
+                      width="200"
+                      height="200"
+                      class="absolute inset-0 w-full h-full object-cover"
+                    />
+                  } @else {
+                    <span>{{ initials(artist.name) }}</span>
+                  }
 
                   <!-- Rating badge -->
                   <span class="absolute bottom-2 left-2 bg-white/95 text-ink text-2xs font-bold uppercase py-0.5 px-2 rounded tracking-wider flex items-center gap-1 shadow-sm">

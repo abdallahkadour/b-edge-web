@@ -7,6 +7,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { NgOptimizedImage } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
@@ -51,6 +52,7 @@ interface CitySection {
   imports: [LucideAngularModule,
     SkeletonComponent,
     EmptyStateComponent,
+    NgOptimizedImage,
   ],
   templateUrl: './discover.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -138,6 +140,18 @@ export class DiscoverPage implements OnInit, OnDestroy {
    * hardcoded per-artist values) without hardcoding to specific names.
    * Every option stays inside the brand palette - no blue, no gold.
    */
+  /**
+   * Whether this card has a real photo to show.
+   *
+   * Checks for a non-blank string, not just presence. Legacy rows carry an
+   * empty string where a cleared avatar should have become null, and
+   * `@if (artist.avatar_url)` would happily pass `''` straight to an <img>
+   * and render a broken-image icon over the card.
+   */
+  protected hasPhoto(url: string | undefined): boolean {
+    return !!url && url.trim().length > 0;
+  }
+
   protected avatarClass(artistId: string): string {
     const palette = [
       'bg-ink text-white',
