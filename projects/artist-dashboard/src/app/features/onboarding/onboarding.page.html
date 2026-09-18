@@ -65,6 +65,7 @@
             >
               <span class="px-3 text-sm text-gray-400 bg-gray-50 h-full flex items-center border-r border-gray-200">b-edge.com/book/</span>
               <input
+                aria-label="Your public handle"
                 type="text"
                 [value]="handle()"
                 (input)="onHandleInput($any($event.target).value); clearFieldError('Handle')"
@@ -80,8 +81,9 @@
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-ink mb-1">Category</label>
+            <label for="ob-category" class="block text-xs font-semibold text-ink mb-1">Category</label>
             <select
+              id="ob-category"
               [value]="category()"
               (change)="category.set($any($event.target).value); clearFieldError('Category')"
               class="w-full h-11 px-3 border rounded-lg text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink focus:border-ink bg-white"
@@ -204,10 +206,11 @@
               />
             </div>
             <div class="flex-1">
-              <label class="block text-xs font-semibold text-ink mb-1">Price</label>
+              <label for="ob-price" class="block text-xs font-semibold text-ink mb-1">Price</label>
               <div class="flex items-center border border-gray-200 rounded-lg h-11 overflow-hidden focus-within:border-ink">
                 <span class="px-2.5 text-sm text-gray-400 bg-gray-50 h-full flex items-center border-r border-gray-200">$</span>
                 <input
+                  id="ob-price"
                   type="text"
                   inputmode="decimal"
                   [value]="servicePrice()"

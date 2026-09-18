@@ -213,6 +213,7 @@
           + Add photo
         }
         <input
+          aria-label="Upload a portfolio photo"
           type="file"
           accept="image/*"
           class="hidden"
@@ -254,6 +255,7 @@
         @for (service of services(); track service.id) {
           <label class="flex items-center gap-3 py-2.5 cursor-pointer">
             <input
+              aria-label="Set as cover photo"
               type="checkbox"
               class="w-4 h-4 rounded border-gray-300 text-ink focus:ring-ink"
               [checked]="isTagSelected(service.id)"

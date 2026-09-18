@@ -204,10 +204,11 @@
         </div>
 
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-ink mb-1">
+          <label for="dq-reference" class="block text-xs font-bold uppercase tracking-wider text-ink mb-1">
             Transaction ref or notes (optional)
           </label>
           <input
+            id="dq-reference"
             type="text"
             [value]="verificationNotes()"
             (input)="verificationNotes.set($any($event.target).value)"

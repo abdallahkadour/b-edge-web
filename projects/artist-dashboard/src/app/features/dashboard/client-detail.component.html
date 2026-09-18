@@ -96,6 +96,7 @@
 
       @if (editingNote()) {
         <textarea
+          aria-label="Private note about this client"
           [(ngModel)]="noteContent"
           rows="4"
           placeholder="Add private notes about this client…"

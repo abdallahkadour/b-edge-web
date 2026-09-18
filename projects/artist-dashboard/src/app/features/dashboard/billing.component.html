@@ -174,10 +174,11 @@
       </div>
 
       <div>
-        <label class="block text-xs font-bold uppercase tracking-wider text-ink mb-1">
+        <label for="bill-reference" class="block text-xs font-bold uppercase tracking-wider text-ink mb-1">
           Transaction ref or notes (optional)
         </label>
         <input
+          id="bill-reference"
           type="text"
           [value]="paymentReference()"
           (input)="paymentReference.set($any($event.target).value)"

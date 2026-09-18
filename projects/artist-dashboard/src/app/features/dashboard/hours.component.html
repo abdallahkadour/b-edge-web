@@ -124,6 +124,7 @@
                 <!-- Open / Closed toggle -->
                 <select
                   class="w-full h-9 px-2.5 border border-gray-200 rounded-lg text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink focus:border-ink bg-white cursor-pointer"
+                  [attr.aria-label]="row.label + ': open or closed'"
                   [value]="row.isOpen ? 'open' : 'closed'"
                   (change)="setIsOpen(row, $any($event.target).value === 'open')"
                 >
@@ -168,6 +169,7 @@
                   <span class="text-sm font-medium text-ink">{{ row.label }}</span>
                   <select
                     class="h-9 px-2.5 border border-gray-200 rounded-lg text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink focus:border-ink bg-white cursor-pointer"
+                    [attr.aria-label]="row.label + ': open or closed'"
                     [value]="row.isOpen ? 'open' : 'closed'"
                     (change)="setIsOpen(row, $any($event.target).value === 'open')"
                   >
@@ -303,6 +305,7 @@
             />
             <select
               class="h-9 px-2.5 border border-gray-200 rounded-lg text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink focus:border-ink bg-white cursor-pointer"
+              aria-label="Closed all day, or custom hours"
               [value]="newExceptionIsClosed() ? 'closed' : 'custom'"
               (change)="onIsClosedChange($any($event.target).value)"
             >
@@ -359,6 +362,7 @@
             />
             <select
               class="h-9 px-2.5 border border-gray-200 rounded-lg text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink focus:border-ink bg-white cursor-pointer"
+              aria-label="Closed all day, or custom hours"
               [value]="newExceptionIsClosed() ? 'closed' : 'custom'"
               (change)="onIsClosedChange($any($event.target).value)"
             >

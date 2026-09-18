@@ -174,8 +174,9 @@
 
         <div class="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
           <div>
-            <label class="block text-xs font-semibold text-ink mb-1">Product name</label>
+            <label for="prod-name" class="block text-xs font-semibold text-ink mb-1">Product name</label>
             <input
+              id="prod-name"
               type="text"
               [value]="form().name"
               (input)="patchForm('name', $any($event.target).value)"
@@ -186,8 +187,9 @@
 
           <div class="flex gap-3">
             <div class="flex-1">
-              <label class="block text-xs font-semibold text-ink mb-1">Category</label>
+              <label for="prod-category" class="block text-xs font-semibold text-ink mb-1">Category</label>
               <select
+                id="prod-category"
                 [value]="form().category"
                 (change)="patchForm('category', $any($event.target).value)"
                 class="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink focus:border-ink bg-white"
@@ -198,10 +200,11 @@
               </select>
             </div>
             <div class="w-32">
-              <label class="block text-xs font-semibold text-ink mb-1">Price</label>
+              <label for="prod-price" class="block text-xs font-semibold text-ink mb-1">Price</label>
               <div class="flex items-center border border-gray-200 rounded-lg h-10 overflow-hidden focus-within:border-ink">
                 <span class="px-2.5 text-sm text-gray-400 bg-gray-50 h-full flex items-center border-r border-gray-200">$</span>
                 <input
+                  id="prod-price"
                   type="text"
                   inputmode="decimal"
                   [value]="form().price"
@@ -214,8 +217,9 @@
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-ink mb-1">Stock quantity (optional)</label>
+            <label for="prod-stock" class="block text-xs font-semibold text-ink mb-1">Stock quantity (optional)</label>
             <input
+              id="prod-stock"
               type="text"
               inputmode="numeric"
               [value]="form().stockQuantity"
@@ -253,6 +257,7 @@
                 class="w-full h-32 rounded-lg border-2 border-dashed border-gray-200 hover:border-ink flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-colors text-gray-400 hover:text-ink"
               >
                 <input
+                  aria-label="Upload a product photo"
                   type="file"
                   accept="image/*"
                   (change)="onImageSelected($event)"
@@ -280,8 +285,9 @@
           }
 
           <div>
-            <label class="block text-xs font-semibold text-ink mb-1">Description (optional)</label>
+            <label for="prod-description" class="block text-xs font-semibold text-ink mb-1">Description (optional)</label>
             <textarea
+              id="prod-description"
               rows="3"
               [value]="form().description"
               (input)="patchForm('description', $any($event.target).value)"

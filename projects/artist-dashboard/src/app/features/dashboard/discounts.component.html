@@ -109,6 +109,7 @@
 
       <label class="flex items-center gap-2 text-sm text-ink">
         <input
+          aria-label="Limit this code to first-time clients"
           type="checkbox" class="w-4 h-4 accent-ink"
           [checked]="draft().firstTimeOnly"
           (change)="patchDraft({ firstTimeOnly: $any($event.target).checked })"

@@ -427,6 +427,7 @@
 
             <label class="flex items-center gap-2 text-sm text-ink">
               <input
+                aria-label="Hide this plan from new subscribers"
                 type="checkbox"
                 [checked]="planIsPublic()"
                 (change)="planIsPublic.set($any($event.target).checked)"
@@ -576,6 +577,7 @@
 
                 <label class="flex items-center gap-2 text-sm text-ink">
                   <input
+                    aria-label="Hide this plan from new subscribers"
                     type="checkbox"
                     [checked]="planIsPublic()"
                     (change)="planIsPublic.set($any($event.target).checked)"
