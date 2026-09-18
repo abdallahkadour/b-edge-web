@@ -90,4 +90,6 @@ export interface SubscriptionOverviewRow {
   readonly current_period_end: string | null;
   readonly cancelled_at: string | null;
   readonly outstanding_amount: string;
+  /** Whether this artist carries the verified badge. */
+  readonly is_verified: boolean;
 }

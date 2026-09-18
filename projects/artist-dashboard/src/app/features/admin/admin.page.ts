@@ -137,6 +137,55 @@ export class AdminPage implements OnInit {
   readonly artistBusyId = signal<string | null>(null);
   readonly artistsError = signal<string | null>(null);
 
+  // ── Verification ───────────────────────────────────────────────────────────
+  //
+  // artists.is_verified renders a badge on discovery cards and artist profiles
+  // and orders discovery results, and until recently nothing in the codebase
+  // could set it. The note is required by the API and audited: it records what
+  // the decision was based on, which is what someone asking "why is this one
+  // verified?" in six months actually needs.
+  readonly verifyingArtistId = signal<string | null>(null);
+  readonly verifyNote = signal('');
+  readonly verifyTarget = signal(false);
+  readonly verifySaving = signal(false);
+
+  readonly canSaveVerification = computed(() => this.verifyNote().trim().length >= 4);
+
+  openVerify(artistId: string, makeVerified: boolean): void {
+    this.verifyingArtistId.set(artistId);
+    this.verifyTarget.set(makeVerified);
+    this.verifyNote.set('');
+    this.artistsError.set(null);
+  }
+
+  cancelVerify(): void {
+    this.verifyingArtistId.set(null);
+    this.verifyNote.set('');
+  }
+
+  saveVerification(): void {
+    const artistId = this.verifyingArtistId();
+    if (!artistId || !this.canSaveVerification() || this.verifySaving()) return;
+
+    this.verifySaving.set(true);
+    this.adminSvc
+      .setArtistVerification(artistId, this.verifyTarget(), this.verifyNote().trim())
+      .subscribe({
+        next: () => {
+          this.verifySaving.set(false);
+          this.verifyingArtistId.set(null);
+          // Reload rather than patching the row locally: the badge also
+          // affects discovery ordering, so a stale local flag would misreport
+          // what actually changed.
+          this.loadBilling();
+        },
+        error: (err: HttpErrorResponse) => {
+          this.verifySaving.set(false);
+          this.artistsError.set(extractApiErrorMessage(err, 'Could not update verification.'));
+        },
+      });
+  }
+
   readonly editingSubscriptionId = signal<string | null>(null);
   readonly artistPlanCode = signal('');
   readonly artistSeats = signal('1');

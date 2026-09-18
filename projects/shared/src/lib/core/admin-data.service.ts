@@ -26,6 +26,20 @@ export class AdminDataService {
     return this.api.command(`/admin/artists/${artistId}/approve`, 'POST');
   }
 
+  /**
+   * PATCH /admin/artists/:id/verification - grant or remove the verified badge.
+   *
+   * The note is required by the API and is audited. It records what the
+   * decision was based on, which is the part worth keeping for a signal that
+   * ranks artists in discovery and influences a client's payment decision.
+   */
+  setArtistVerification(artistId: string, isVerified: boolean, note: string): Observable<void> {
+    return this.api.command(`/admin/artists/${artistId}/verification`, 'PATCH', {
+      is_verified: isVerified,
+      note,
+    });
+  }
+
   rejectArtist(artistId: string, req: DecisionRequest = {}): Observable<void> {
     return this.api.command(`/admin/artists/${artistId}/reject`, 'POST', req);
   }

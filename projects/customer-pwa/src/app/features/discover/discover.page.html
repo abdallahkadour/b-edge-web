@@ -110,9 +110,16 @@
                     </span>
                   }
 
-                  <!-- Verified badge -->
+                  <!-- Verified badge. Labelled, not bare: an unexplained mark
+                       on a page where someone is choosing who to send money to
+                       invites them to read their own meaning into it. -->
                   @if (artist.is_verified) {
-                    <span class="absolute top-2 right-2 bg-white/95 rounded-full p-1 shadow-sm">
+                    <span
+                      class="absolute top-2 right-2 bg-white/95 rounded-full p-1 shadow-sm"
+                      role="img"
+                      aria-label="Verified — B-Edge has checked this artist's identity"
+                      title="Verified — B-Edge has checked this artist's identity"
+                    >
                       <lucide-icon name="badge-check" [size]="12" [strokeWidth]="2" class="text-ink" />
                     </span>
                   }

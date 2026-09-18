@@ -171,11 +171,13 @@ export const CUSTOMER_GUIDE: Guide = {
           summary: 'What the app checks, and what you should check yourself.',
           steps: [
             'Every artist is reviewed by the B-Edge team before they can take a single booking.',
+            'Look for the **Verified** badge. It means B-Edge has seen documents confirming that artist\'s identity and that their business is real.',
             'Read the reviews. They can only be left by someone who actually had an appointment, through a private link sent afterwards - so they cannot be bought or faked.',
             'Look at the portfolio. A real one has variety: different clients, angles and lighting, built up over time.',
             'Check the location and the hours are ones a real business would keep.',
           ],
           notes: [
+            'The **Verified** badge is about identity, not quality. It says we know who they are - it does not say their work is good. The reviews tell you that, and they can only be left by people who actually attended.',
             'Be wary of anyone pressing you to decide immediately, or offering a price far below everyone else. Urgency and an unbeatable price are the two oldest tools there are.',
           ],
         },

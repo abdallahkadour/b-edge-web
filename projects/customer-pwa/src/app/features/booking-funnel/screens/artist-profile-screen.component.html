@@ -44,7 +44,10 @@
       <div class="flex items-center gap-2">
         <h1 class="text-[24px] font-bold leading-[32px] tracking-[-0.02em]">{{ artist().name }}</h1>
         @if (artist().is_verified) {
-          <span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-ink text-white text-[10px] font-bold tracking-wider uppercase">
+          <span
+            class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-ink text-white text-[10px] font-bold tracking-wider uppercase"
+            title="B-Edge has checked this artist's identity and that the business is real. It is not a rating of their work — the reviews below are."
+          >
             <lucide-icon name="check" [size]="10" [strokeWidth]="3" />
             Verified
           </span>
