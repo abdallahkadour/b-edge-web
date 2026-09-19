@@ -58,7 +58,7 @@
     }
 
     @if (loading()) {
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         <bedge-skeleton height="13rem" rounded="xl" />
         <bedge-skeleton height="13rem" rounded="xl" />
         <bedge-skeleton height="13rem" rounded="xl" />
@@ -78,7 +78,7 @@
           </p>
         </div>
       } @else {
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           @for (p of displayed(); track p.id) {
             <div
               (click)="openProduct(p)"

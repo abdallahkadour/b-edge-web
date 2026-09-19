@@ -178,3 +178,83 @@ body {
    * is heavily in favour. */
   font-variant-numeric: tabular-nums;
 }
+
+/* iOS zoom-on-focus floor for text-entry controls.
+ *
+ * Mobile Safari zooms the viewport when a focused input/select/textarea
+ * computes below 16px, then does NOT zoom back out. The user lands
+ * mid-form on a page that is suddenly wider than the screen and has to
+ * pinch out to carry on. It is one of the most reliably irritating
+ * defects on a mobile web form, and it is invisible on every desktop
+ * browser and in Chrome device emulation - confirmed here only by
+ * running the page under a real WebKit build.
+ *
+ * 52 controls across both apps declare text-sm or text-xs, which is a
+ * reasonable density choice on a desktop dashboard and a bug on touch.
+ * Rather than rewrite 52 call sites and lose that density everywhere,
+ * this raises them to 16px only where a touch keyboard can appear.
+ *
+ * WHY `pointer: coarse` AND NOT A WIDTH QUERY. The first version of this
+ * rule was `@media (max-width: 767px)`, on the assumption that the zoom is
+ * a phone problem. It is not - iPadOS Safari zooms on focus by exactly the
+ * same rule, and an iPad Air reports 820px. Measured on 2026-09-19 with
+ * the width query in place: 0 offending controls on every phone profile
+ * and 2 on every tablet profile, because the rule had stopped applying at
+ * 768px. The condition that actually matters is whether a touch keyboard
+ * can appear, which is what `pointer: coarse` asks. A mouse-driven desktop
+ * keeps its density at any window size, which is the intent.
+ *
+ * WHY THIS SELECTOR SHAPE, and not `input { font-size: 16px !important }`:
+ *
+ *   - element+class (0,1,1) already outranks Tailwind's bare .text-sm
+ *     (0,1,0), so no !important is needed and nothing downstream has to
+ *     fight this rule to override it deliberately.
+ *   - it raises ONLY the two small classes. A blanket floor would also
+ *     catch the one control that is intentionally larger - the OTP input
+ *     at text-2xl in customer-login - and shrink it, turning an
+ *     accessibility fix into a visual regression.
+ *
+ * Checkbox and radio are excluded by construction: neither takes text
+ * input, so neither triggers the zoom, and both are sized by width and
+ * height rather than font-size.
+ */
+@media (pointer: coarse) {
+  input.text-sm,
+  input.text-xs,
+  select.text-sm,
+  select.text-xs,
+  textarea.text-sm,
+  textarea.text-xs {
+    font-size: 1rem;
+  }
+}
+
+/* Suppress the browser's pull-to-refresh gesture.
+ *
+ * WHY. The booking funnel keeps its entire state in in-memory signals on a
+ * single route - step, chosen slot, live 10-minute hold, and the name,
+ * phone and notes the customer just typed. That is deliberate: see the
+ * header of booking-funnel.page.ts, which explains that a live hold must
+ * not be addressable by URL or browser back/forward lands the customer on
+ * a stale step holding an expired booking ID.
+ *
+ * The consequence is that ANY reload mid-funnel discards the lot and drops
+ * the customer back at the artist profile. And at the top of the page a
+ * downward drag is not a scroll - it is the browser's pull-to-refresh,
+ * which reloads. On a phone, during a form, that gesture is one careless
+ * thumb away, and it costs the customer their whole booking.
+ *
+ * `contain` stops the overscroll from reaching the browser while leaving
+ * ordinary scrolling untouched. Nothing is lost by it: B-Edge implements
+ * no pull-to-refresh of its own, so the gesture had no meaning here except
+ * as a way to destroy work in progress.
+ *
+ * This removes the accidental TRIGGER. It does not make the funnel durable
+ * against a deliberate reload, an iOS tab eviction under memory pressure,
+ * or a crash - that needs the typed details persisted to sessionStorage,
+ * which is a change to booking-state semantics and is recorded as a
+ * recommendation rather than made here.
+ */
+body {
+  overscroll-behavior-y: contain;
+}

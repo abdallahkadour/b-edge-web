@@ -5,7 +5,7 @@
     <button
       type="button"
       (click)="goBack()"
-      class="p-1 -ml-1 text-gray-600"
+      class="min-h-11 min-w-11 -ml-2 flex items-center justify-center text-gray-600"
       aria-label="Back"
     >
       <lucide-icon name="arrow-left" [size]="20" [strokeWidth]="2" />
@@ -72,6 +72,7 @@
           id="login-code"
           type="tel"
           inputmode="numeric"
+          autocomplete="one-time-code"
           [value]="code()"
           (input)="onCodeInput($any($event.target).value)"
           (keydown.enter)="verifyCode()"

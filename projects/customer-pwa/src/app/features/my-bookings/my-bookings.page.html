@@ -10,8 +10,12 @@
         }
       </div>
       <div class="flex items-center gap-3">
-        <!-- Compact, because this header already carries two actions and the
-             frame is 480px at its widest. The customer app has no settings
+        <!-- Compact, because this header already carries three actions and
+             on a phone - where nearly every visit happens - the frame is
+             full-width but narrow. (The frame widens to 720/960px on
+             tablets; the compact toggle is still the right call there,
+             since the constraint is the number of actions in this row, not
+             the pixels available.) The customer app has no settings
              screen; this is its only account surface, so the control lives
              here rather than nowhere. -->
         <bedge-theme-toggle [compact]="true" />

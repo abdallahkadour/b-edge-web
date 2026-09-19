@@ -25,14 +25,14 @@
     <button
       type="button"
       (click)="dismiss()"
-      class="text-2xs text-white/60 font-medium px-2 py-1.5 shrink-0"
+      class="text-2xs text-white/60 font-medium px-2 min-h-11 inline-flex items-center justify-center shrink-0"
     >{{ mode() === 'ios' ? 'Got it' : 'Not now' }}</button>
 
     @if (mode() === 'chromium') {
       <button
         type="button"
         (click)="install()"
-        class="text-xs font-bold bg-white text-ink px-3.5 py-1.5 rounded-lg shrink-0"
+        class="text-xs font-bold bg-white text-ink px-3.5 min-h-11 inline-flex items-center justify-center rounded-lg shrink-0"
       >Install</button>
     }
   </div>

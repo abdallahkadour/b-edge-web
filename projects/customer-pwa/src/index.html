@@ -37,8 +37,74 @@
       /* private mode: fall through to prefers-color-scheme */
     }
   </script>
-</head>
+
+    <style>
+      /*
+       * First-paint splash.
+       *
+       * WHY THIS EXISTS. Measured on 2026-09-19 under Fast 3G (1.6 Mbps,
+       * 150 ms RTT) against the production bundle: /discover showed a
+       * COMPLETELY BLANK WHITE PAGE for 2.5-3.0 s. Not a slow API - the
+       * same 2.5-3.0 s with the API stubbed to answer instantly. It is
+       * bundle download plus bootstrap, and `<app-root>
+      <div class="bedge-splash" role="status" aria-label="Loading B-Edge"><span>B-Edge</span></div>
+    </app-root>` was
+       * empty, so the browser had nothing to paint until Angular booted.
+       *
+       * No Angular skeleton component can fix that, because the framework
+       * that would render it is the thing still downloading. The only code
+       * that can paint in that window is code already in the HTML.
+       *
+       * Angular clears the host element's children when the root component
+       * renders, so this disappears on bootstrap with nothing to clean up.
+       *
+       * Costs ~0.6 KB inline, no request, no bundle impact.
+       *
+       * Grounds are copied from _theme.scss (--c-gray-50 / --c-ink) rather
+       * than read from it: the stylesheet is a separate file, and the whole
+       * point is to paint before anything else has arrived. If the palette
+       * moves, the symptom is a one-frame colour mismatch on boot.
+       */
+      .bedge-splash {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgb(250 250 250);
+        color: rgb(10 10 10);
+      }
+      .bedge-splash span {
+        font: 600 0.8125rem/1 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        opacity: 0.55;
+        animation: bedge-splash-pulse 1.4s ease-in-out infinite;
+      }
+      @keyframes bedge-splash-pulse {
+        0%, 100% { opacity: 0.28; }
+        50%      { opacity: 0.68; }
+      }
+      /* Unstamped document following a dark OS - see the theme script above. */
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) .bedge-splash {
+          background: rgb(18 18 20);
+          color: rgb(250 250 250);
+        }
+      }
+      /* Explicit choice wins in both directions. */
+      :root[data-theme="dark"] .bedge-splash {
+        background: rgb(18 18 20);
+        color: rgb(250 250 250);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .bedge-splash span { animation: none; opacity: 0.5; }
+      }
+    </style>
+  </head>
   <body>
-    <app-root></app-root>
+    <app-root>
+      <div class="bedge-splash" role="status" aria-label="Loading B-Edge"><span>B-Edge</span></div>
+    </app-root>
   </body>
 </html>

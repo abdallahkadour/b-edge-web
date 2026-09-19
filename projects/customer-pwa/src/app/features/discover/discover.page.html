@@ -93,7 +93,7 @@
 
     <!-- Loading skeleton -->
     @if (loading()) {
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         <bedge-skeleton [square]="true" />
         <bedge-skeleton [square]="true" />
         <bedge-skeleton [square]="true" />
@@ -110,7 +110,7 @@
             <span class="text-2xs font-bold text-gray-400 uppercase">{{ section.artists.length }} artist{{ section.artists.length === 1 ? '' : 's' }}</span>
           </div>
 
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             @for (artist of section.artists; track artist.id + artist.city) {
               <button
                 type="button"

@@ -1,17 +1,38 @@
 <!--
   On a phone-width viewport this wrapper is invisible (full width, no
   border/shadow) - nothing changes for the vast majority of real visitors.
-  Above md: it becomes a centered, phone-width "card" instead of the app's
-  content pinning to the left edge with most of a desktop screen left
-  empty. `contain: layout` is load-bearing, not decorative: it makes this
-  element the containing block for every `position: fixed` descendant in
-  the whole app (back buttons, sticky bottom CTAs, bottom nav, the two
-  banners below) per the CSS Containment spec, so those anchor to the
-  frame's edges instead of escaping to the true (much wider) viewport -
-  without it, a fixed bottom bar would still stretch edge-to-edge across
-  the full desktop window while the content above it stayed narrow.
+  Above md: it becomes a centered "card" instead of the app's content
+  pinning to the left edge with most of a desktop screen left empty.
+
+  `contain: layout` is load-bearing, not decorative: it makes this element
+  the containing block for every `position: fixed` descendant in the whole
+  app (back buttons, sticky bottom CTAs, bottom nav, the two banners below)
+  per the CSS Containment spec, so those anchor to the frame's edges
+  instead of escaping to the true (much wider) viewport - without it, a
+  fixed bottom bar would still stretch edge-to-edge across the full desktop
+  window while the content above it stayed narrow. It is also why the frame
+  WIDENS rather than being removed on large screens: the fixed elements
+  follow the frame, so the ladder below moves them as one.
+
+  THE WIDTH LADDER. This was a flat `md:max-w-[480px]` - one phone-width
+  column at every size above 768px. Measured on 2026-09-19 against the
+  plan's device matrix, that meant a 1024x1366 iPad Pro and an 820x1180
+  iPad Air both rendered a 480px strip with 2-column grids and roughly
+  half the screen empty, which is what the UI test plan flagged.
+
+  Three steps, chosen so the CARD SIZE stays near-constant (~220px) rather
+  than the cards ballooning with the viewport - the grids below add a
+  column at the same two breakpoints:
+
+    < 768px   full width          2 cols   (phone - unchanged)
+    >= 768px  720px   3 cols  (iPad portrait, Fold open)
+    >= 1024px 960px   4 cols  (iPad Pro portrait, iPad Air landscape)
+
+  It deliberately stops at 960px. Past that the app is not trying to fill a
+  desktop monitor - a beauty booking flow sprawled across 1600px reads as
+  an admin console, not a storefront. Desktop gets the 960px frame centred.
 -->
-<div class="md:max-w-[480px] md:mx-auto md:min-h-screen md:shadow-2xl md:[contain:layout] bg-white">
+<div class="md:max-w-[720px] lg:max-w-[960px] md:mx-auto md:min-h-screen md:shadow-2xl md:[contain:layout] bg-white">
   <bedge-rate-limit-banner />
   <router-outlet />
   <app-install-prompt />

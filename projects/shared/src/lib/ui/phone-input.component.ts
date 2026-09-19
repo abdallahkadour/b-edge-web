@@ -45,7 +45,7 @@ import {
       <label class="sr-only" [attr.for]="selectId">Country</label>
       <select
         [id]="selectId"
-        class="min-h-11 pl-3 pr-1 text-sm font-medium text-ink bg-transparent border-0
+        class="min-h-11 pl-3 pr-1 text-base font-medium text-ink bg-transparent border-0
                outline-none focus-visible:outline-2 focus-visible:outline-offset-[-2px]
                focus-visible:outline-ink"
         [value]="iso()"
