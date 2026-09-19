@@ -125,6 +125,36 @@ export const ARTIST_GUIDE: Guide = {
           ],
         },
         {
+          id: 'same-hours-every-day',
+          title: 'Set the same hours for every day at once',
+          summary: 'One opening time and one closing time, applied to the whole week.',
+          steps: [
+            'Go to **Hours** and pick the location.',
+            'At the top, under **Set the same hours for every day**, set **Open** and **Close**.',
+            'Choose **Apply to all days**.',
+          ],
+          notes: [
+            'This changes the times on every day. It does **not** open or close any day - a day you have set to **Closed** stays closed.',
+            'Set the week this way first, then go down the list and switch your days off to **Closed**. It is much faster than typing seven pairs of times.',
+          ],
+        },
+        {
+          id: 'early-bird',
+          title: 'Charge extra for early appointments',
+          summary: 'An added fee for anything starting before a time you choose.',
+          steps: [
+            'Go to **Hours** and choose **Edit store**.',
+            'Under **Early-bird surcharge**, set **Before** to the time the surcharge stops applying.',
+            'Set **Extra charge ($)**.',
+            'Choose **Save changes**.',
+          ],
+          notes: [
+            'This adds money to early appointments - it is not a discount for booking ahead, despite the name.',
+            'Clients see the extra amount on the time picker before they book, so it is never a surprise on the day.',
+            'Leave **Before** empty to switch the surcharge off. The amount is remembered if you turn it back on.',
+          ],
+        },
+        {
           id: 'special-hours',
           title: 'Close for a day, or work unusual hours',
           summary: 'Holidays, weddings, a late night - without touching your normal week.',
@@ -203,6 +233,39 @@ export const ARTIST_GUIDE: Guide = {
           ],
           notes: [
             'Marking a booking refunded records that you sent the money back. It does not move any money by itself.',
+            'Use the **Refund due** filter at the top of **Bookings** to see everything you still owe.',
+          ],
+        },
+        {
+          id: 'payer-number',
+          title: 'When a deposit comes from a different number',
+          summary: 'Write down who actually sent it, so the refund can find them.',
+          steps: [
+            'Go to **Deposits** and choose the deposit you are checking.',
+            'If the money came from a number that is not the client\'s, type it into **Sent from a different number? (optional)**.',
+            'Confirm the deposit as usual.',
+          ],
+          notes: [
+            'Leave it empty when the client paid from their own number. That is the normal case.',
+            'This matters at refund time, not now. OMT and Whish send money back to the number it came from, and OMT has to be collected in person at the agent.',
+            'It happens more than you would expect - a husband pays, a mother pays, or the client hands cash over at an OMT counter.',
+          ],
+        },
+        {
+          id: 'refund-different-number',
+          title: 'Refunding a deposit that came from someone else',
+          summary: 'Call the client first. The money cannot be pulled back.',
+          steps: [
+            'Open the booking and choose **Mark refunded**.',
+            'If you see **This deposit came from a different number**, read the two numbers shown.',
+            'Call the client and tell them which number the money is going back to, and which OMT or Whish point to collect it from.',
+            'Tick **I have contacted the customer and told them where to collect it**.',
+            'Confirm with **Yes, refunded**.',
+          ],
+          notes: [
+            'The warning only appears when the deposit was recorded as coming from a different number.',
+            'You cannot confirm the refund until you tick the box. That is on purpose - once the transfer is sent there is no way to get it back.',
+            'Send the money to the number that sent it, not the number on the booking. Sending it to the wrong one is your loss, not the client\'s.',
           ],
         },
         {
