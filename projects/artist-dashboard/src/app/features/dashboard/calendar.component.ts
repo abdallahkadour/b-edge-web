@@ -28,6 +28,10 @@ const GRID_START_HOUR = 6;
 const GRID_END_HOUR = 22;
 const HOUR_ROW_PX = 56;
 
+/** Below this height a block cannot show four lines without clipping, so it
+ *  renders the compact two-line form instead. 72px ≈ 75 minutes. */
+const FULL_BLOCK_MIN_PX = 72;
+
 interface WeekDay {
   dateStr: string; // YYYY-MM-DD, Beirut-local
   weekdayLabel: string; // "Mon"
@@ -40,6 +44,8 @@ interface PositionedBooking {
   booking: EnrichedBooking;
   topPx: number;
   heightPx: number;
+  /** True when the block is too short to show the full four-line layout. */
+  compact: boolean;
   startLabel: string;
   endLabel: string;
 }
@@ -121,10 +127,22 @@ export class CalendarComponent implements OnInit {
         const endHour = beirutHourDecimal(b.end_time);
         const clampedStart = Math.max(startHour, GRID_START_HOUR);
         const clampedEnd = Math.min(endHour, GRID_END_HOUR + 1);
+        const heightPx = Math.max((clampedEnd - clampedStart) * HOUR_ROW_PX, 28);
         return {
           booking: b,
           topPx: (clampedStart - GRID_START_HOUR) * HOUR_ROW_PX,
-          heightPx: Math.max((clampedEnd - clampedStart) * HOUR_ROW_PX, 28),
+          heightPx,
+          // A block is exactly as tall as its duration, so a one-hour
+          // appointment gets HOUR_ROW_PX = 56px. Service name, customer,
+          // status and the time range need about 48px of text plus padding,
+          // which does not fit - the card clipped its own time range
+          // mid-line, and one hour is the most common booking there is.
+          //
+          // Rather than let it clip, short blocks drop to service name and
+          // time only. Those are the two things you scan a day for; the
+          // customer and status are one tap away in the detail sheet, and
+          // the block's POSITION already says when it is.
+          compact: heightPx < FULL_BLOCK_MIN_PX,
           startLabel: formatBeirutTime(b.start_time),
           endLabel: formatBeirutTime(b.end_time),
         };

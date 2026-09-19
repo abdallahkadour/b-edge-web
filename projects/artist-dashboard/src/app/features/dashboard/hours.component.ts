@@ -68,6 +68,11 @@ const DAY_NAMES = [
   'Saturday',
 ] as const;
 
+/** The order the week is DISPLAYED in: Monday first, matching the Calendar
+ *  screen and the way a working week is actually read here - Sunday is the
+ *  day off, not the start. Values are API day_of_week numbers (0 = Sunday). */
+const WEEK_DISPLAY_ORDER = [1, 2, 3, 4, 5, 6, 0] as const;
+
 /**
  * The editable, per-row state for a single day of the week.
  * Mutable counterpart to the read-only BusinessHours API type.
@@ -118,11 +123,20 @@ function buildDayRows(apiHours: BusinessHours[]): DayRow[] {
     apiHours.map((h) => [h.day_of_week, h]),
   );
 
-  return DAY_NAMES.map((label, i) => {
-    const h = byDay.get(i);
+  // Rendered MONDAY FIRST, while dayOfWeek keeps the API's own numbering
+  // (0 = Sunday, per day_of_week).
+  //
+  // Those are two different things and conflating them is what made this
+  // wrong: the grid listed Sunday first purely because the database counts
+  // from Sunday, so an artist set her week starting on her day off - and the
+  // Calendar screen next door renders Monday-first, so the same week had two
+  // different shapes on adjacent screens. Only the ORDER changes here; every
+  // row still carries the day number the API expects, so saving is untouched.
+  return WEEK_DISPLAY_ORDER.map((dow) => {
+    const h = byDay.get(dow);
     return {
-      dayOfWeek: i,
-      label,
+      dayOfWeek: dow,
+      label: DAY_NAMES[dow],
       isOpen: h?.is_open ?? false,
       openTime: h ? toTimeInput(h.open_time) : '09:00',
       closeTime: h ? toTimeInput(h.close_time) : '18:00',

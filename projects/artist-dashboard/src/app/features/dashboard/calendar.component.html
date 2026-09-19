@@ -74,8 +74,15 @@
       Daily agenda · {{ selectedDayLabel() }}
     </p>
 
-    <!-- Hourly grid -->
-    <div class="relative border-l border-gray-200 rounded-lg" style="min-height: 200px;">
+    <!-- Hourly grid.
+         ml-12 reserves the gutter the hour labels live in. Each label is
+         positioned OUTSIDE this box (`absolute -left-1 -translate-x-full`),
+         so it needs space to the left that belongs to nothing else. Without
+         the margin it only had whatever the page happened to leave: fine on
+         desktop, where the sidebar pushes the agenda to x=257, and broken on
+         a phone, where the agenda starts at x=17 and every label landed at
+         x=-23 - clipped by the viewport down to a single "M". -->
+    <div class="relative border-l border-gray-200 rounded-lg ml-12" style="min-height: 200px;">
       @for (hour of hours; track hour) {
         <div class="h-14 border-b border-gray-100 relative flex items-start pl-2">
           <span class="absolute -left-1 -translate-x-full text-xs font-mono font-medium text-gray-400 pr-1.5">
@@ -91,20 +98,32 @@
           (click)="openDetail(item.booking)"
           [style.top.px]="item.topPx"
           [style.height.px]="item.heightPx"
-          class="absolute left-6 right-2 bg-ink text-white hover:opacity-90 rounded-lg p-3 text-left shadow-sm border-l-4 border-success flex flex-col justify-between overflow-hidden transition-opacity"
+          [class]="item.compact
+            ? 'absolute left-6 right-2 bg-ink text-white hover:opacity-90 rounded-lg px-2.5 py-1.5 text-left shadow-sm border-l-4 border-success flex items-center justify-between gap-2 overflow-hidden transition-opacity'
+            : 'absolute left-6 right-2 bg-ink text-white hover:opacity-90 rounded-lg p-3 text-left shadow-sm border-l-4 border-success flex flex-col justify-between overflow-hidden transition-opacity'"
         >
-          <div>
-            <div class="flex justify-between items-center gap-2">
-              <span class="font-bold text-xs tracking-tight truncate">{{ item.booking.service_name }}</span>
-              <span class="text-2xs font-semibold text-gray-300 bg-white/10 px-1.5 py-0.5 rounded shrink-0">
-                {{ statusLabel(item.booking.status) }}
-              </span>
+          @if (item.compact) {
+            <!-- Two lines, because anything more clips. Service and time are
+                 what a day is scanned for; customer and status are one tap
+                 away and the block's position already says when it is. -->
+            <span class="font-bold text-xs tracking-tight truncate">{{ item.booking.service_name }}</span>
+            <span class="text-2xs font-mono text-gray-400 font-medium shrink-0">
+              {{ item.startLabel }}
+            </span>
+          } @else {
+            <div>
+              <div class="flex justify-between items-center gap-2">
+                <span class="font-bold text-xs tracking-tight truncate">{{ item.booking.service_name }}</span>
+                <span class="text-2xs font-semibold text-gray-300 bg-white/10 px-1.5 py-0.5 rounded shrink-0">
+                  {{ statusLabel(item.booking.status) }}
+                </span>
+              </div>
+              <p class="text-xs text-gray-300 font-medium mt-0.5 truncate">{{ item.booking.customer_name }}</p>
             </div>
-            <p class="text-xs text-gray-300 font-medium mt-0.5 truncate">{{ item.booking.customer_name }}</p>
-          </div>
-          <span class="text-xs font-mono text-gray-400 font-medium">
-            {{ item.startLabel }} – {{ item.endLabel }}
-          </span>
+            <span class="text-xs font-mono text-gray-400 font-medium">
+              {{ item.startLabel }} – {{ item.endLabel }}
+            </span>
+          }
         </button>
       }
 
