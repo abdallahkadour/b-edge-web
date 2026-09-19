@@ -91,6 +91,12 @@ export interface Booking {
   readonly deposit_deadline?: string;  // ISO 8601, present once approved
   readonly deposit_paid_at?: string;   // ISO 8601, present once deposit paid
   readonly deposit_reference?: string; // optional artist-entered note, e.g. a transaction code
+  /** E.164 number the deposit actually arrived from, when recorded.
+   *  Never message this - it may be an OMT counter, not a person. */
+  readonly deposit_payer_phone?: string;
+  /** True only when a payer number was recorded AND differs from the
+   *  customer's own. Derived server-side; absent payer means false. */
+  readonly deposit_payer_mismatch?: boolean;
   readonly channel: BookingChannel;
   readonly special_requests?: string;
   readonly cancellation_reason?: string;

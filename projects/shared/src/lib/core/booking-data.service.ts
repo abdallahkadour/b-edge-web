@@ -146,9 +146,17 @@ export class BookingDataService {
    * `reference` is her own note (an OMT or Whish code) and is never shown
    * to the customer.
    */
-  markRefunded(id: string, reference?: string): Observable<Booking> {
-    return this.api.patch<Booking>(`/bookings/${id}/refunded`,
-      reference ? { reference } : {});
+  markRefunded(id: string, reference?: string, customerContacted = false): Observable<Booking> {
+    // customer_contacted is required by the API only when the deposit was
+    // recorded as arriving from a number other than the customer's own -
+    // otherwise it refuses with REFUND_PAYER_MISMATCH. See the refund gate in
+    // internal/booking/service.go: on OMT the money is collected in person at
+    // an agent counter and on Whish it returns to the SENDING wallet, so the
+    // customer has to be told where to go before the transfer, not after.
+    return this.api.patch<Booking>(`/bookings/${id}/refunded`, {
+      ...(reference ? { reference } : {}),
+      customer_contacted: customerContacted,
+    });
   }
 
   /** PATCH /bookings/:id/confirm-deposit - deposit_paid → confirmed (artist action). */
@@ -167,8 +175,16 @@ export class BookingDataService {
    * reference is an optional note for the artist's own reconciliation
    * (e.g. "Whish Code #94821") - never shown to the customer.
    */
-  confirmPayment(id: string, reference?: string): Observable<Booking> {
-    return this.api.patch<Booking>(`/bookings/${id}/confirm-payment`, { reference });
+  confirmPayment(id: string, reference?: string, payerPhone?: string): Observable<Booking> {
+    // payer_phone records WHICH number the transfer came from, when it is
+    // not the customer's own. It is what makes the refund gate work later:
+    // a refund goes back to the sending number, so a deposit paid from a
+    // spouse's wallet or an OMT counter cannot simply be pushed back to the
+    // booking's number. Omitted means "not recorded", not "same number".
+    return this.api.patch<Booking>(`/bookings/${id}/confirm-payment`, {
+      reference,
+      ...(payerPhone ? { payer_phone: payerPhone } : {}),
+    });
   }
 
   /** PATCH /bookings/:id/complete - confirmed → completed (artist action). */

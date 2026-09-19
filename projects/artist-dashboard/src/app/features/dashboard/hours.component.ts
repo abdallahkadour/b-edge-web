@@ -47,6 +47,10 @@ const EMPTY_NEW_STORE: NewStoreForm = {
 interface EditStoreForm {
   name: string;
   isActive: boolean;
+  /** "HH:MM" as an <input type="time"> produces it, or '' for "no surcharge". */
+  earlyBirdCutoff: string;
+  /** Decimal as a string, matching how money crosses the wire everywhere. */
+  earlyBirdFee: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -186,7 +190,12 @@ export class HoursComponent implements OnInit {
    *  the backend with no UI trigger anywhere - once added, a store could
    *  never be renamed or deactivated again. */
   readonly editStoreOpen = signal(false);
-  readonly editStoreForm = signal<EditStoreForm>({ name: '', isActive: true });
+  readonly editStoreForm = signal<EditStoreForm>({
+    name: '',
+    isActive: true,
+    earlyBirdCutoff: '',
+    earlyBirdFee: '',
+  });
   readonly savingStoreEdit = signal(false);
   readonly editStoreError = signal<string | null>(null);
 
@@ -197,6 +206,24 @@ export class HoursComponent implements OnInit {
 
   /** True while hours are loading for the selected store. */
   readonly hoursLoading = signal(false);
+
+  // ── Apply-to-all-days ─────────────────────────────────────────────────────
+  //
+  // Rania's words: she "should not go day by day". A salon almost always
+  // keeps one set of hours across the week and varies only WHICH days it
+  // opens, so editing seven identical pairs of times by hand is the wrong
+  // default. These two fields set the times once.
+  //
+  // It deliberately does NOT touch each day's open/closed flag. Opening
+  // every day would silently make Sunday bookable for a salon that has
+  // never opened on a Sunday, and an accidental open day takes real
+  // bookings from real customers. Times are safe to overwrite in bulk;
+  // availability is not.
+  readonly bulkOpenTime = signal('09:00');
+  readonly bulkCloseTime = signal('18:00');
+  readonly bulkApplying = signal(false);
+  readonly bulkError = signal<string | null>(null);
+  readonly bulkSavedAt = signal<number | null>(null);
 
   /** Per-save inline error keyed by day_of_week. */
   readonly saveErrors = signal<Record<number, string>>({});
@@ -343,7 +370,17 @@ export class HoursComponent implements OnInit {
   openEditStore(): void {
     const store = this.selectedStore();
     if (!store) return;
-    this.editStoreForm.set({ name: store.name, isActive: store.is_active });
+    this.editStoreForm.set({
+      name: store.name,
+      isActive: store.is_active,
+      // The API returns TIME as "HH:MM:SS"; <input type="time"> wants "HH:MM"
+      // and silently renders nothing at all if given the seconds.
+      earlyBirdCutoff: (store.early_bird_cutoff ?? '').slice(0, 5),
+      // A zero fee is the same as no surcharge to an artist reading this
+      // form, so it shows as empty rather than as a meaningless "0.00".
+      earlyBirdFee:
+        store.early_bird_fee && Number(store.early_bird_fee) > 0 ? store.early_bird_fee : '',
+    });
     this.editStoreError.set(null);
     this.editStoreOpen.set(true);
   }
@@ -366,10 +403,23 @@ export class HoursComponent implements OnInit {
     if (!store || !this.canSubmitEditStore() || this.savingStoreEdit()) return;
 
     const f = this.editStoreForm();
+    const cutoff = f.earlyBirdCutoff.trim();
+    const fee = f.earlyBirdFee.trim();
+
     const req: UpdateStoreRequest = {
       name: f.name.trim(),
       is_active: f.isActive,
+      // Empty string is the documented "switch it off" value - the API
+      // turns '' into NULL. Sending undefined would mean "leave unchanged",
+      // so clearing the field in the UI has to survive as '' all the way
+      // down or the surcharge could be turned on and never off again.
+      early_bird_cutoff: cutoff ? `${cutoff}:00` : '',
     };
+
+    // Only sent when there is something to send. With no cutoff the fee is
+    // inert, and omitting it keeps the previous amount so switching the
+    // surcharge back on does not mean re-typing it.
+    if (fee) req.early_bird_fee = fee;
 
     this.savingStoreEdit.set(true);
     this.editStoreError.set(null);
@@ -386,6 +436,86 @@ export class HoursComponent implements OnInit {
         this.editStoreError.set(extractApiErrorMessage(err, 'Could not save these changes. Please try again.'));
       },
     });
+  }
+
+  /** Days that would actually change if the bulk hours were applied. */
+  private bulkTargets(): DayRow[] {
+    const o = this.bulkOpenTime();
+    const c = this.bulkCloseTime();
+    return this.dayRows().filter((r) => r.openTime !== o || r.closeTime !== c);
+  }
+
+  canApplyToAll(): boolean {
+    return (
+      !this.bulkApplying() &&
+      this.bulkCloseTime() > this.bulkOpenTime() &&
+      this.bulkTargets().length > 0
+    );
+  }
+
+  /**
+   * Writes the bulk times onto every day, then saves each changed day.
+   *
+   * Saves are issued one per day because the API is per-day
+   * (`setBusinessHours` takes a single day_of_week) — there is no bulk
+   * endpoint, and inventing one for seven rows would be more backend than
+   * the problem deserves.
+   *
+   * Partial failure is reported rather than hidden. If three days save and
+   * one 400s, saying "saved" would leave the artist believing a week is set
+   * when it is not — and the day that failed is the one that will take a
+   * booking at the wrong time.
+   */
+  applyToAllDays(): void {
+    const store = this.selectedStore();
+    if (!store || !this.canApplyToAll()) return;
+
+    const openTime = this.bulkOpenTime();
+    const closeTime = this.bulkCloseTime();
+    const targets = this.bulkTargets();
+
+    this.bulkError.set(null);
+    this.bulkSavedAt.set(null);
+    this.bulkApplying.set(true);
+
+    let done = 0;
+    let failed = 0;
+
+    for (const row of targets) {
+      this.updateRow(row.dayOfWeek, { openTime, closeTime, dirty: true, saving: true });
+      this.clearSaveError(row.dayOfWeek);
+
+      this.artistService
+        .setBusinessHours(store.id, {
+          day_of_week: row.dayOfWeek,
+          open_time: toApiTime(openTime),
+          close_time: toApiTime(closeTime),
+          // Preserved, never forced - see the note on bulkOpenTime.
+          is_open: row.isOpen,
+        })
+        .subscribe({
+          next: () => {
+            this.updateRow(row.dayOfWeek, { dirty: false, saving: false });
+            if (++done + failed === targets.length) this.finishBulk(failed, targets.length);
+          },
+          error: (err: HttpErrorResponse) => {
+            this.updateRow(row.dayOfWeek, { saving: false });
+            this.setSaveError(row.dayOfWeek, extractApiErrorMessage(err, 'Save failed.'));
+            if (done + ++failed === targets.length) this.finishBulk(failed, targets.length);
+          },
+        });
+    }
+  }
+
+  private finishBulk(failed: number, total: number): void {
+    this.bulkApplying.set(false);
+    if (failed > 0) {
+      this.bulkError.set(
+        `${total - failed} of ${total} days saved. The rest are marked below — fix and save them individually.`,
+      );
+    } else {
+      this.bulkSavedAt.set(Date.now());
+    }
   }
 
   // ─────────────────────────────────────────────────────────────────────────

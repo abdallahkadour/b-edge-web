@@ -97,6 +97,14 @@ export class DepositQueueComponent implements OnInit {
 
   readonly verifyingItem = signal<EnrichedBooking | null>(null);
   readonly verificationNotes = signal('');
+
+  /** The number the transfer actually arrived FROM, when the artist can see
+   *  it on the receipt and it is not the customer's own.
+   *
+   *  Captured here because this is the one moment someone is already looking
+   *  at the OMT/Whish slip. Leaving it blank is fine and normal - most
+   *  deposits come from the customer's own number. */
+  readonly payerPhone = signal('');
   readonly verifying = signal(false);
 
   ngOnInit(): void {
@@ -124,10 +132,11 @@ export class DepositQueueComponent implements OnInit {
     this.verifying.set(true);
     const notes = this.verificationNotes().trim();
 
-    this.bookingSvc.confirmPayment(item.id, notes || undefined).subscribe({
+    this.bookingSvc.confirmPayment(item.id, notes || undefined, this.payerPhone().trim() || undefined).subscribe({
       next: () => {
         this.verifying.set(false);
         this.verifyingItem.set(null);
+        this.payerPhone.set('');
         this.load(); // re-fetch - item moves from pending to received
       },
       error: () => {

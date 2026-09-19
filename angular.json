@@ -86,6 +86,15 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "share": {
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "projects/artist-dashboard/src/environments/environment.ts",
+                  "with": "projects/artist-dashboard/src/environments/environment.share.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -160,6 +169,15 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "share": {
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "projects/customer-pwa/src/environments/environment.ts",
+                  "with": "projects/customer-pwa/src/environments/environment.share.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"

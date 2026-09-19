@@ -78,6 +78,10 @@ export class BookingsComponent implements OnInit {
   readonly errorMessage = signal<string | null>(null);
   readonly confirmingRefundId = signal<string | null>(null);
   readonly refundReference = signal('');
+  /** The artist's attestation that they told the customer where to collect a
+   *  mismatched refund. Reset every time the confirm row is armed - an
+   *  acknowledgement carried over from a previous booking is not one. */
+  readonly refundCustomerContacted = signal(false);
 
   /** The resolved artist UUID, fetched on init. */
   private readonly artistId = signal<string | null>(null);
@@ -113,14 +117,43 @@ export class BookingsComponent implements OnInit {
   // ── Status tabs ───────────────────────────────────────────────────────────
 
   /** Tabs shown at the top of the bookings list. */
+  /**
+   * Status filter tabs.
+   *
+   * COMPLETE by design: one tab per value the `bookings.status` CHECK
+   * constraint allows. The previous list covered 6 of the 11, which meant
+   * five states were reachable only by scrolling "All" - and the omissions
+   * were not harmless. `refund_due` is an ACTION QUEUE: it means money is
+   * owed back to a customer and a human has to send it. Rania had one
+   * sitting in that state with no way to filter for it. `expired` was
+   * likewise invisible, and 17 of her bookings are in it.
+   *
+   * Ordered by what the artist has to DO rather than by the lifecycle:
+   * the two states that demand action today come first, the active
+   * pipeline next, and the terminal states last. The strip already
+   * scrolls (overflow-x-auto), so length costs nothing on a phone.
+   *
+   * Labels come from statusLabel() in this file and tones from the shared
+   * bookingStatusTone() - both already handled all 11 values, which is why
+   * a refund_due booking rendered with a correct "Refund due" badge while
+   * being unfilterable. Only this list was behind.
+   */
   readonly tabs: StatusTab[] = [
     { label: 'All', value: '' },
-    { label: 'Held', value: 'held' },
+    // Needs the artist to act.
     { label: 'Pending', value: 'pending' },
+    { label: 'Refund due', value: 'refund_due' },
+    // Active pipeline.
+    { label: 'Held', value: 'held' },
+    { label: 'Approved', value: 'approved' },
+    { label: 'Deposit paid', value: 'deposit_paid' },
     { label: 'Confirmed', value: 'confirmed' },
+    // Done, one way or another.
     { label: 'Completed', value: 'completed' },
     { label: 'No show', value: 'no_show' },
     { label: 'Cancelled', value: 'cancelled' },
+    { label: 'Refunded', value: 'refunded' },
+    { label: 'Expired', value: 'expired' },
   ];
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
@@ -184,20 +217,37 @@ export class BookingsComponent implements OnInit {
    */
   markRefunded(bookingId: string): void {
     const ref = this.refundReference().trim();
-    this.bookingSvc.markRefunded(bookingId, ref || undefined).subscribe({
-      next: () => {
-        this.confirmingRefundId.set(null);
-        this.refundReference.set('');
-        this.loadBookings();
-      },
-      error: () => this.errorMessage.set('Could not record the refund. Please try again.'),
-    });
+    this.bookingSvc
+      .markRefunded(bookingId, ref || undefined, this.refundCustomerContacted())
+      .subscribe({
+        next: () => {
+          this.confirmingRefundId.set(null);
+          this.refundReference.set('');
+          this.refundCustomerContacted.set(false);
+          this.loadBookings();
+        },
+        error: () =>
+          this.errorMessage.set('Could not record the refund. Please try again.'),
+      });
+  }
+
+  /**
+   * Whether the refund button is allowed yet.
+   *
+   * A mismatched payer needs the artist to confirm they have told the
+   * customer where to collect the money. The API enforces this too and will
+   * refuse with REFUND_PAYER_MISMATCH - this only stops the artist making a
+   * request that was always going to fail.
+   */
+  canRecordRefund(booking: EnrichedBooking): boolean {
+    return !booking.deposit_payer_mismatch || this.refundCustomerContacted();
   }
 
   /** First tap arms an inline row asking for the transfer reference -
    *  same two-step shape as cancel, because both are irreversible. */
   askToMarkRefunded(bookingId: string): void {
     this.refundReference.set('');
+    this.refundCustomerContacted.set(false);
     this.confirmingRefundId.set(bookingId);
   }
 

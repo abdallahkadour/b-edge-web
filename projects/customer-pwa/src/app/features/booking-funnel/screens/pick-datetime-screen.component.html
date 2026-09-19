@@ -34,10 +34,30 @@
         <h2 class="text-xs font-bold leading-[16px] tracking-[0.05em] uppercase text-gray-500">Select date</h2>
         <span class="text-sm font-medium text-gray-500">{{ activeMonthLabel() }}</span>
       </div>
-      <div class="flex gap-2 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <!-- Month jumps. The strip covers 90 days; swiping to the far end of
+           that is not a realistic way to pick a date, so each month the
+           range touches gets a chip. Tapping one SCROLLS, it does not
+           select — "show me November" is not "book the 1st". -->
+      @if (monthJumps().length > 1) {
+        <div class="flex gap-1.5 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          @for (m of monthJumps(); track m.key) {
+            <button
+              type="button"
+              (click)="jumpToMonth(m.iso)"
+              class="shrink-0 min-h-11 px-3 rounded-full text-xs font-semibold border transition-colors"
+              [class]="isActiveMonth(m.key)
+                ? 'bg-ink border-ink text-on-scrim'
+                : 'bg-white border-gray-200 text-gray-500 hover:border-gray-400'"
+            >{{ m.label }}</button>
+          }
+        </div>
+      }
+
+      <div #strip class="flex gap-2 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         @for (cell of dateCells(); track cell.iso) {
           @let isSelected = selectedDate() === cell.iso;
           <button
+            [attr.data-date]="cell.iso"
             (click)="onDateSelect(cell.iso)"
             class="w-[60px] h-[72px] rounded-lg flex flex-col items-center justify-center shrink-0 border transition-all cursor-pointer"
             [class]="isSelected ? 'bg-ink border-ink text-white shadow' : 'bg-white border-gray-200 hover:border-gray-400 text-ink'"

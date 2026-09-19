@@ -217,6 +217,32 @@
           />
         </div>
 
+        <!-- Payer number.
+             A refund goes back to the number that SENT the money, and on OMT
+             it has to be collected in person at the same agent. If the
+             deposit came from someone else's wallet or a counter, recording
+             it here is the only thing that lets the app warn before a refund
+             is pushed somewhere the customer cannot reach. Optional, because
+             most deposits do come from the customer's own number. -->
+        <div>
+          <label for="dq-payer" class="block text-xs font-bold uppercase tracking-wider text-ink mb-1">
+            Sent from a different number? (optional)
+          </label>
+          <input
+            id="dq-payer"
+            type="tel"
+            inputmode="tel"
+            [value]="payerPhone()"
+            (input)="payerPhone.set($any($event.target).value)"
+            placeholder="e.g. 71 999 888"
+            class="w-full h-10 px-3 border border-gray-200 rounded-lg text-xs text-ink outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink focus:border-ink"
+          />
+          <p class="text-2xs text-gray-400 mt-1">
+            Only if the money came from a number other than
+            {{ item.customer_name }}'s. A refund has to go back to whoever sent it.
+          </p>
+        </div>
+
         <div class="flex gap-2 pt-1">
           <button
             type="button"

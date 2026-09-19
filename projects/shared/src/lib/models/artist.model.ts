@@ -98,6 +98,28 @@ export interface UpdateStoreRequest {
   longitude?: number;
   /** Removes the store's pin. Cannot be combined with latitude/longitude. */
   clear_location?: boolean;
+  /**
+   * Early-bird surcharge. Slots starting BEFORE `early_bird_cutoff` cost
+   * `early_bird_fee` extra — it is a surcharge for unsociable hours, not a
+   * discount for booking ahead, despite the name.
+   *
+   * The cutoff is a wall-clock LOCAL time in the store's own timezone
+   * ("09:00" means 9am where the salon physically is), so it needs no
+   * offset and must not be sent as UTC.
+   *
+   * Send the EMPTY STRING to switch the surcharge off. This is the one
+   * field that can express "clear" without a companion flag: the API's
+   * UPDATE reads `CASE WHEN $7 = '' THEN NULL ELSE COALESCE(...) END`,
+   * specifically because an omitted field and an explicit null both arrive
+   * as a nil pointer in Go and COALESCE cannot tell "unchanged" from
+   * "remove". Omitting the field leaves the current cutoff alone.
+   *
+   * With the cutoff cleared the fee is inert but retained, so switching the
+   * surcharge back on does not require re-entering the amount.
+   */
+  early_bird_cutoff?: string;
+  /** Decimal as a string, e.g. "10.00". Rejected above 10000. */
+  early_bird_fee?: string;
 }
 
 /** A salon service (Go artist.ServiceResponse). */

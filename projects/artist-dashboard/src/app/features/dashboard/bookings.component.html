@@ -113,6 +113,47 @@
                note - an OMT or Whish code - never shown to the customer. -->
           @if (confirmingRefundId() === booking.id) {
             <div class="pt-3 border-t border-gray-100">
+              <!-- Payer mismatch warning.
+                   The deposit arrived from a number that is not the
+                   customer's. On OMT the refund is collected in person at an
+                   agent counter; on Whish it goes back to the SENDING wallet.
+                   Either way the money lands somewhere the customer may not
+                   be able to reach, and neither rail has a chargeback to undo
+                   it. So the artist must make contact BEFORE transferring -
+                   sending first and explaining afterwards is how a refund
+                   turns into a dispute. The API refuses this refund with
+                   REFUND_PAYER_MISMATCH until the box below is ticked. -->
+              @if (booking.deposit_payer_mismatch) {
+                <div class="rounded-lg border border-warning-dark/30 bg-warning-light p-3 mb-3">
+                  <p class="text-xs font-semibold text-ink">
+                    This deposit came from a different number
+                  </p>
+                  <p class="text-2xs text-gray-600 mt-1">
+                    Paid from
+                    <span class="font-semibold text-ink">{{ booking.deposit_payer_phone }}</span>,
+                    but {{ booking.customer_name }} is registered as
+                    <span class="font-semibold text-ink">{{ booking.customer_phone }}</span>.
+                  </p>
+                  <p class="text-2xs text-gray-600 mt-2">
+                    The refund goes back to the number that sent it, and it has
+                    to be collected from the same OMT or Whish point. Call the
+                    customer first and tell them where to go — once the money is
+                    sent it cannot be pulled back.
+                  </p>
+                  <label class="flex items-start gap-2 mt-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      class="mt-0.5 w-4 h-4 shrink-0 accent-ink"
+                      [checked]="refundCustomerContacted()"
+                      (change)="refundCustomerContacted.set($any($event.target).checked)"
+                    />
+                    <span class="text-2xs font-medium text-ink">
+                      I have contacted the customer and told them where to collect it
+                    </span>
+                  </label>
+                </div>
+              }
+
               <p class="text-xs text-gray-600 mb-2">
                 Record that you sent this refund? This cannot be undone here.
               </p>
@@ -131,6 +172,7 @@
                   size="sm"
                   class="flex-1"
                   [fullWidth]="true"
+                  [disabled]="!canRecordRefund(booking)"
                   (click)="markRefunded(booking.id)"
                 >Yes, refunded</bedge-button>
                 <bedge-button

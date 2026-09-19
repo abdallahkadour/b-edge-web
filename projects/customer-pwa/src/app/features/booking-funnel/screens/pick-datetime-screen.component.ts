@@ -3,10 +3,12 @@ import {
   Component,
   computed,
   effect,
+  ElementRef,
   inject,
   input,
   output,
   signal,
+  viewChild,
 } from '@angular/core';
 import { LucideAngularModule } from 'lucide-angular';
 import { A11yModule } from '@angular/cdk/a11y';
@@ -34,8 +36,20 @@ interface DateCell {
 const WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-/** How many days ahead the date strip runs. */
-const STRIP_DAYS = 28;
+/**
+ * How many days ahead the date strip runs.
+ *
+ * Was 28, which meant the strip stopped dead four weeks out and a customer
+ * could not book anything beyond it — reported as "booking is only available
+ * for this month". Nothing on the server imposed that limit; it was this
+ * constant alone.
+ *
+ * 90 days is a quarter, which covers the things people book far ahead —
+ * weddings, graduations, Eid — without offering a date so distant that an
+ * artist cannot reasonably honour it. A strip that long is too much to
+ * scroll cell by cell, which is why `monthJumps` exists below.
+ */
+const STRIP_DAYS = 90;
 
 /**
  * The timezone appointment times are displayed in.
@@ -204,6 +218,44 @@ export class PickDatetimeScreenComponent {
     }
     return cells;
   });
+
+  /** The scrollable strip, for jumping to a month. */
+  private readonly strip = viewChild<ElementRef<HTMLDivElement>>('strip');
+
+  /**
+   * One chip per month the strip covers, pointing at that month's first
+   * visible day. With 90 cells, scrolling to November by swiping is not a
+   * realistic way to pick a date; this makes the far end of the range
+   * reachable in one tap.
+   */
+  protected readonly monthJumps = computed(() => {
+    const seen = new Set<string>();
+    const out: { key: string; label: string; iso: string }[] = [];
+    for (const c of this.dateCells()) {
+      const key = c.iso.slice(0, 7);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push({ key, label: c.month, iso: c.iso });
+    }
+    return out;
+  });
+
+  /** True when the given month chip contains the selected date. */
+  protected isActiveMonth(key: string): boolean {
+    return (this.selectedDate() ?? '').slice(0, 7) === key;
+  }
+
+  /**
+   * Scrolls the strip to a month's first day without selecting it.
+   *
+   * Jumping and selecting are deliberately separate: tapping "Nov" means
+   * "show me November", not "book the 1st of November". Selecting on jump
+   * would fire a slot fetch for a date the customer never chose.
+   */
+  protected jumpToMonth(iso: string): void {
+    const el = this.strip()?.nativeElement.querySelector<HTMLElement>(`[data-date="${iso}"]`);
+    el?.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+  }
 
   protected readonly activeMonthLabel = computed(() => {
     const cell = this.dateCells().find((c) => c.iso === this.selectedDate());

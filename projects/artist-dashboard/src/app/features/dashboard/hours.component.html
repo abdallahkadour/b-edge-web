@@ -66,11 +66,15 @@
 
     <!-- Store tabs — only shown when there are 2+ stores -->
     @if (stores().length > 1) {
-      <div class="flex border-b border-gray-200 mb-6">
+      <!-- overflow-x-auto, not wrap: with four stores this strip was 66px
+           wider than a 320px phone and pushed the whole PAGE sideways, so
+           every row below it could be scrolled off. Scrolling the strip
+           keeps the overflow local to the thing that is actually too wide. -->
+      <div class="flex border-b border-gray-200 mb-6 overflow-x-auto">
         @for (store of stores(); track store.id) {
           <button
             type="button"
-            class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors"
+            class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors shrink-0 whitespace-nowrap"
             [class.border-ink]="isSelected(store)"
             [class.text-ink]="isSelected(store)"
             [class.border-transparent]="!isSelected(store)"
@@ -95,6 +99,50 @@
       }
 
       <!-- Hours grid (once loaded) -->
+      <!-- Set the week's hours once.
+           A salon keeps one set of hours across the week and varies which
+           DAYS it opens, so seven identical pairs of times typed by hand is
+           the wrong default. This writes the times to every day and leaves
+           each day's Open/Closed setting alone - opening a day in bulk would
+           silently make a never-open Sunday bookable. -->
+      @if (!hoursLoading() && dayRows().length > 0) {
+        <div class="rounded-xl border border-gray-200 p-4 mb-4">
+          <div class="flex items-baseline justify-between gap-3 mb-3">
+            <span class="text-xs font-semibold text-ink">Set the same hours for every day</span>
+            <span class="text-2xs text-gray-400">Open/Closed per day is not changed</span>
+          </div>
+          <div class="flex flex-wrap items-end gap-3">
+            <div class="min-w-0 flex-1 basis-32">
+              <label for="bulk-open" class="block text-2xs font-semibold text-gray-500 mb-1">Open</label>
+              <input id="bulk-open" type="time" bedgeInput class="h-10"
+                     [value]="bulkOpenTime()"
+                     (input)="bulkOpenTime.set($any($event.target).value)" />
+            </div>
+            <div class="min-w-0 flex-1 basis-32">
+              <label for="bulk-close" class="block text-2xs font-semibold text-gray-500 mb-1">Close</label>
+              <input id="bulk-close" type="time" bedgeInput class="h-10"
+                     [value]="bulkCloseTime()"
+                     (input)="bulkCloseTime.set($any($event.target).value)" />
+            </div>
+            <bedge-button
+              [loading]="bulkApplying()"
+              [disabled]="!canApplyToAll()"
+              (click)="applyToAllDays()"
+            >Apply to all days</bedge-button>
+          </div>
+
+          @if (bulkCloseTime() <= bulkOpenTime()) {
+            <p class="text-2xs text-danger-dark mt-2">Close time must be after open time.</p>
+          }
+          @if (bulkError()) {
+            <p class="text-xs text-danger-dark bg-danger-light rounded-lg px-3 py-2 mt-3">{{ bulkError() }}</p>
+          }
+          @if (bulkSavedAt()) {
+            <p class="text-2xs text-success-dark mt-2">Saved to every day.</p>
+          }
+        </div>
+      }
+
       @if (!hoursLoading() && dayRows().length > 0) {
 
         <!-- Column headers -->
@@ -182,7 +230,7 @@
                     <input
                       type="time"
                       bedgeInput
-                      class="h-9 text-sm flex-1"
+                      class="h-9 text-sm flex-1 min-w-0 !px-2"
                       [value]="row.openTime"
                       (input)="setOpenTime(row, $any($event.target).value)"
                     />
@@ -190,7 +238,7 @@
                     <input
                       type="time"
                       bedgeInput
-                      class="h-9 text-sm flex-1"
+                      class="h-9 text-sm flex-1 min-w-0 !px-2"
                       [value]="row.closeTime"
                       (input)="setCloseTime(row, $any($event.target).value)"
                     />
@@ -374,7 +422,7 @@
                 <input
                   type="time"
                   bedgeInput
-                  class="h-9 text-sm flex-1"
+                  class="h-9 text-sm flex-1 min-w-0 !px-2"
                   [value]="newExceptionOpenTime()"
                   (input)="newExceptionOpenTime.set($any($event.target).value)"
                 />
@@ -382,7 +430,7 @@
                 <input
                   type="time"
                   bedgeInput
-                  class="h-9 text-sm flex-1"
+                  class="h-9 text-sm flex-1 min-w-0 !px-2"
                   [value]="newExceptionCloseTime()"
                   (input)="newExceptionCloseTime.set($any($event.target).value)"
                 />
@@ -569,6 +617,64 @@
               ></span>
             </span>
           </button>
+
+          <!-- Early-bird surcharge.
+               Named "surcharge" on purpose. The column is early_bird_fee and
+               the obvious reading of "early bird" is a discount for booking
+               ahead; this is the opposite - it charges MORE for a slot before
+               the cutoff. Labelling it plainly here is the only thing standing
+               between an artist and accidentally pricing their mornings the
+               wrong way round. -->
+          <div class="rounded-lg border border-gray-200 p-3.5 space-y-3">
+            <div>
+              <span class="block text-xs font-semibold text-ink">Early-bird surcharge</span>
+              <span class="block text-2xs text-gray-400 mt-0.5">
+                Charge extra for appointments that start before a set time. Leave
+                the time empty for no surcharge.
+              </span>
+            </div>
+
+            <div class="flex gap-3">
+              <div class="flex-1">
+                <label for="eb-cutoff" class="block text-2xs font-semibold text-gray-500 mb-1">
+                  Before
+                </label>
+                <input
+                  id="eb-cutoff"
+                  type="time"
+                  bedgeInput
+                  [value]="editStoreForm().earlyBirdCutoff"
+                  (input)="patchEditStore('earlyBirdCutoff', $any($event.target).value)"
+                  class="h-10"
+                />
+              </div>
+              <div class="flex-1">
+                <label for="eb-fee" class="block text-2xs font-semibold text-gray-500 mb-1">
+                  Extra charge ($)
+                </label>
+                <input
+                  id="eb-fee"
+                  type="text"
+                  inputmode="decimal"
+                  placeholder="0.00"
+                  bedgeInput
+                  [value]="editStoreForm().earlyBirdFee"
+                  (input)="patchEditStore('earlyBirdFee', $any($event.target).value)"
+                  class="h-10"
+                />
+              </div>
+            </div>
+
+            @if (editStoreForm().earlyBirdCutoff) {
+              <p class="text-2xs text-gray-500">
+                Appointments starting before
+                <span class="font-semibold text-ink">{{ editStoreForm().earlyBirdCutoff }}</span>
+                cost
+                <span class="font-semibold text-ink">${{ editStoreForm().earlyBirdFee || '0.00' }}</span>
+                extra. Customers see this on the time picker before they book.
+              </p>
+            }
+          </div>
 
           @if (editStoreError()) {
             <p class="text-xs text-danger-dark bg-danger-light rounded-lg px-3 py-2">{{ editStoreError() }}</p>
