@@ -202,10 +202,57 @@ restore a session from the httpOnly refresh cookie on boot.
 
 ## Documentation
 
-`CLAUDE.md` in the repo root is the single source of truth for continuing
-work in a new session — current screen status, live test data, footguns,
-and open product decisions. Deeper specs (booking domain, PWA architecture,
-competitor analysis, infra plan) live alongside it as reference docs.
+The engineering context is **`../b-edge-api/project-docs/CLAUDE.md`**, and the
+index of everything is `../b-edge-api/project-docs/DOCUMENTATION.md` — it
+spans both repositories and says which documents are stale.
+
+> An earlier version of this section pointed at `CLAUDE.md` in *this* repo's
+> root. There is no such file, and there has not been one — exactly the kind
+> of claim the check below now catches.
+
+This repo's own documents are in `project-docs/`: the E2E test plan, the
+booking state-machine matrix, the enterprise UI test plan and its execution
+report, the style guide, and `agent-reviews/`.
+
+**The in-app help pages are code, not documents.** They are typed
+`GuideSection[]` data compiled into the apps:
+
+| Guide | Audience |
+|---|---|
+| `projects/customer-pwa/src/app/features/help/customer-guide.ts` | customers |
+| `projects/artist-dashboard/src/app/features/dashboard/help/artist-guide.ts` | artists |
+| `projects/artist-dashboard/src/app/features/dashboard/help/admin-guide.ts` | the admin account |
+
+### Keeping documentation true
+
+Documentation rots here because nothing fails when it does. A detector now
+does:
+
+```bash
+../b-edge-api/scripts/check-docs.sh
+```
+
+It recomputes the counted claims — help topics, Angular routes, spec files,
+and the backend's migrations, tables, domains and tests — from both
+repositories, and maps changed paths to the documents they implicate. A
+change under `customer-pwa/features/` raises `customer-guide.ts`; a change to
+a `.routes.ts` raises the E2E plan. Section 2 of its output **over-reports on
+purpose**: deciding a flagged document needs no change is a correct outcome,
+and a false positive costs ten seconds where a false negative leaves the help
+pages describing a product that no longer exists.
+
+Run `/sync-docs` in Claude Code to work through the findings — it does the
+judgement half, including writing help topics in the guides' established
+voice. Full procedure:
+`../b-edge-api/.claude/skills/sync-docs/SKILL.md`.
+
+**A guide edit is a code change.** The guides are compiled, so build after
+editing — and note that `@bedge/shared` resolves to `./dist/shared`, so
+`ng build shared` must run before the apps or the change is silently ignored:
+
+```bash
+npx ng build shared && npx ng build customer-pwa && npx ng build artist-dashboard
+```
 
 ---
 
