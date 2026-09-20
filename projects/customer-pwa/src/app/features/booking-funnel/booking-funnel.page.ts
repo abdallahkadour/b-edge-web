@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject, input, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { LucideAngularModule } from 'lucide-angular';
@@ -144,8 +144,78 @@ export class BookingFunnelPage implements OnInit {
    * input. ngOnInit is guaranteed to run after inputs are set.
    */
   ngOnInit(): void {
+    this.restoreTypedDetails();
     this.loadArtist();
   }
+
+  // ── Surviving a reload ────────────────────────────────────────────────────
+  //
+  // The funnel keeps everything in memory on a single route, deliberately:
+  // see the note at the top of this file on why a live 10-minute hold must
+  // not be addressable by URL. The cost is that ANY reload - a stray
+  // pull-to-refresh, iOS reclaiming the tab, a crash - discarded the step,
+  // the slot, the hold, and the name and phone the customer had just typed.
+  //
+  // `overscroll-behavior-y: contain` removed the most common accidental
+  // trigger. It did not make the funnel durable.
+  //
+  // ONLY THE TYPED DETAILS ARE PERSISTED. Never the slot, the hold id or
+  // the step. Restoring those would resurrect a reservation that has very
+  // likely expired and put the customer back on a screen describing a
+  // booking the server no longer has - which is precisely the staleness the
+  // no-URL-routing decision exists to prevent. Retyping a name is a small
+  // annoyance; being shown a slot you no longer hold is a broken promise.
+  //
+  // sessionStorage, not localStorage: this should survive a reload of THIS
+  // tab and nothing more. A name and phone number left in localStorage would
+  // outlive the booking, the session and the device being handed to someone
+  // else.
+
+  /** Scoped per artist, so details typed for one do not appear under another. */
+  private draftKey(): string {
+    return `bedge.funnel.draft.${this.artistId()}`;
+  }
+
+  private restoreTypedDetails(): void {
+    try {
+      const raw = sessionStorage.getItem(this.draftKey());
+      if (!raw) return;
+      const d = JSON.parse(raw) as { name?: string; phone?: string; notes?: string };
+      if (d.name) this.customerName.set(d.name);
+      if (d.phone) this.customerPhone.set(d.phone);
+      if (d.notes) this.customerNotes.set(d.notes);
+    } catch {
+      // Private mode, disabled storage, or a value another version wrote.
+      // A draft is a convenience; failing to read one must never stop
+      // someone booking.
+    }
+  }
+
+  private clearTypedDetails(): void {
+    try {
+      sessionStorage.removeItem(this.draftKey());
+    } catch {
+      /* see restoreTypedDetails */
+    }
+  }
+
+  /**
+   * Mirrors the typed details into sessionStorage as they change.
+   *
+   * An effect rather than a handler on each input, so a new field cannot be
+   * added to the form and silently left out of the draft.
+   */
+  private readonly persistDraft = effect(() => {
+    const name = this.customerName();
+    const phone = this.customerPhone();
+    const notes = this.customerNotes();
+    if (!name && !phone && !notes) return; // nothing worth storing
+    try {
+      sessionStorage.setItem(this.draftKey(), JSON.stringify({ name, phone, notes }));
+    } catch {
+      /* see restoreTypedDetails */
+    }
+  });
 
   /** Extracted from ngOnInit so the network-error state's "Try again"
    *  button can re-run the exact same load, rather than duplicating it. */
@@ -382,5 +452,9 @@ export class BookingFunnelPage implements OnInit {
     this.customerNotes.set('');
     this.submitError.set(null);
     this.confirmedBooking.set(null);
+    // The draft has served its purpose once the booking is placed or the
+    // funnel is abandoned. Leaving it would pre-fill the next customer's
+    // form on a shared phone.
+    this.clearTypedDetails();
   }
 }

@@ -1,14 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  DestroyRef,
-  computed,
-  effect,
-  inject,
-  input,
-  output,
-  signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, DestroyRef, computed, effect, inject, input, output, signal } from '@angular/core';
 import { LucideAngularModule } from 'lucide-angular';
 
 import { isValidLocalPhone,
@@ -40,7 +30,7 @@ const STORE_TIMEZONE = 'Asia/Beirut';
   templateUrl: './guest-details-screen.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class GuestDetailsScreenComponent {
+export class GuestDetailsScreenComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   // PublicService, not Service: this screen only ever shows a service the
@@ -94,12 +84,31 @@ export class GuestDetailsScreenComponent {
   private readonly nowMs = signal(Date.now());
   private expiredEmitted = false;
 
-  constructor() {
+  /**
+   * Seeds the editable fields from the container's values.
+   *
+   * ngOnInit, NOT the constructor. A signal `input()` is not bound until
+   * after construction, so reading it there returns the declared default -
+   * '' for all four of these. This ran in the constructor and therefore
+   * never carried anything across: initialName and its siblings were wired
+   * up end to end and silently inert.
+   *
+   * It went unnoticed because the container's own values were always empty
+   * too, so "" was indistinguishable from working. It surfaced the moment
+   * the funnel began restoring a typed draft after a reload and the
+   * restored name did not reach the form.
+   *
+   * The same pitfall is documented on the container's ngOnInit, for the
+   * router-bound artistId input.
+   */
+  ngOnInit(): void {
     this.name.set(this.initialName());
     this.phoneDigits.set(this.initialPhone());
     this.notes.set(this.initialNotes());
     this.promo.set(this.initialPromo());
+  }
 
+  constructor() {
     const intervalId = setInterval(() => this.nowMs.set(Date.now()), 1000);
     this.destroyRef.onDestroy(() => clearInterval(intervalId));
 
