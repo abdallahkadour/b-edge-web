@@ -13,5 +13,5 @@
 export const environment = {
   production: false,
   apiBaseUrl: '/api/v1',
-  customerPwaUrl: 'https://ones-fraser-making-surrounded.trycloudflare.com', // rewritten by scripts/share.sh
+  customerPwaUrl: 'https://perry-turbo-covering-palace.trycloudflare.com', // rewritten by scripts/share.sh
 };

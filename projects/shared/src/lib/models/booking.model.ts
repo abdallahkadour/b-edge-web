@@ -15,14 +15,22 @@
  * Every booking status. Maps to the CHECK constraint in the migration and the
  * Status* constants in internal/booking/model.go.
  *
- * Blocking statuses (occupy a slot): held, pending, approved, deposit_pending,
- * deposit_paid, confirmed. The rest free the slot.
+ * Blocking statuses (occupy a slot): held, pending, approved, deposit_paid,
+ * confirmed. The rest free the slot.
+ */
+/**
+ * The booking lifecycle, mirroring the `bookings.status` CHECK constraint.
+ *
+ * ELEVEN values, matching the database exactly. `deposit_pending` used to be
+ * listed here as a twelfth; it was dropped from the schema (decision D14 -
+ * it had no writer and no rows, ever) and the type was never updated. A
+ * phantom member is not harmless: an exhaustive switch handles a case that
+ * can never arrive, which reads as coverage while saying nothing.
  */
 export type BookingStatus =
   | 'held'
   | 'pending'
   | 'approved'
-  | 'deposit_pending'
   | 'deposit_paid'
   | 'confirmed'
   | 'completed'
@@ -65,7 +73,6 @@ export const BLOCKING_STATUSES: readonly BookingStatus[] = [
   'held',
   'pending',
   'approved',
-  'deposit_pending',
   'deposit_paid',
   'confirmed',
 ] as const;

@@ -1,3 +1,4 @@
+import type { BookingStatus } from '../models/booking.model';
 import type { BadgeTone } from '../ui';
 
 /**
@@ -62,4 +63,49 @@ export function bookingStatusTone(status: string): BadgeTone {
 export function formatStatusLabel(status: string): string {
   const spaced = status.replace(/_/g, ' ');
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
+
+/**
+ * The statuses a booking can still be cancelled FROM.
+ *
+ * Expressed as the complement of the terminal set, exactly as the database
+ * expresses it:
+ *
+ *     WHERE status NOT IN ('completed','cancelled','expired',
+ *                          'no_show','refund_due','refunded')
+ *
+ * (`internal/booking/repository.go`, CancelBooking.)
+ *
+ * WHY THE COMPLEMENT RATHER THAN A LIST OF FIVE
+ *
+ * Because a list of five is what drifted. This rule was written out by hand
+ * in two places and they disagreed: the artist dashboard had all five, the
+ * customer app had three - missing `deposit_paid` and `held`. A customer who
+ * had paid a deposit and wanted to cancel three days out, entitled to a full
+ * refund, was shown no cancel button at all, while the API would have
+ * allowed it.
+ *
+ * Derived from TERMINAL_BOOKING_STATUSES, a new status is cancellable by
+ * default. That is the safer direction to be wrong in: an action offered and
+ * refused by the server is a bad message, an action never offered is a
+ * feature nobody can reach.
+ */
+export const TERMINAL_BOOKING_STATUSES: readonly BookingStatus[] = [
+  'completed',
+  'cancelled',
+  'expired',
+  'no_show',
+  'refund_due',
+  'refunded',
+] as const;
+
+/**
+ * Whether a booking can still be cancelled.
+ *
+ * Use this everywhere rather than restating the rule. Both apps call it; the
+ * server enforces the same thing independently, so this only decides whether
+ * to OFFER the action.
+ */
+export function canCancelBooking(status: string): boolean {
+  return !TERMINAL_BOOKING_STATUSES.includes(status as BookingStatus);
 }

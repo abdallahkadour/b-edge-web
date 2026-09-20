@@ -15,6 +15,7 @@ import {
   BookingDataService,
   ButtonComponent,
   InputDirective,
+  canCancelBooking,
   extractApiErrorMessage,
   formatStatusLabel,
   SkeletonComponent,
@@ -28,7 +29,7 @@ import type { EnrichedBooking } from '@bedge/shared';
  *  completed/cancelled/expired/no_show/refund_due/refunded). Kept in sync
  *  deliberately, not guessed - a mismatch here would show a Cancel button
  *  that then fails server-side, or hide one that would have worked. */
-const CANCELLABLE_STATUSES = new Set(['pending', 'approved', 'confirmed']);
+
 
 /** Mirrors the server's own >24h refund rule (service.go) - for display
  *  only, so the customer knows what to expect BEFORE confirming. The
@@ -74,7 +75,7 @@ export class BookingDetailPage implements OnInit {
   }
 
   canCancel(b: EnrichedBooking): boolean {
-    return CANCELLABLE_STATUSES.has(b.status);
+    return canCancelBooking(b.status);
   }
 
   /** Best-effort preview of whether a refund would apply - see the const's

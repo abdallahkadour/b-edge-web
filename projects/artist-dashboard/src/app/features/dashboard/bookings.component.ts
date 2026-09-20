@@ -18,20 +18,11 @@ import {
   bookingStatusTone,
   extractApiErrorMessage,
   SkeletonComponent,
+  canCancelBooking,
   EmptyStateComponent,
 } from '@bedge/shared';
 import type { EnrichedBooking, BookingStatus } from '@bedge/shared';
 
-/** Statuses an artist can still cancel from - mirrors the backend's own
- *  CancelBooking check exactly (repository.go: everything except
- *  completed/cancelled/expired/no_show/refund_due/refunded). Kept in sync
- *  deliberately with customer-pwa's booking-detail.page.ts, which documents
- *  the same rule for the customer-facing side - a mismatch here would show
- *  a Cancel button that then fails server-side, or hide one that would
- *  have worked. Before this existed, there was no Cancel action anywhere
- *  in artist-dashboard at all - confirmed by checking both this list and
- *  Calendar's day-view popover, neither had one. */
-const CANCELLABLE_STATUSES = new Set(['held', 'pending', 'approved', 'deposit_paid', 'confirmed']);
 
 /** Status filter tab shown in the UI. '' means all statuses. */
 interface StatusTab {
@@ -291,7 +282,7 @@ export class BookingsComponent implements OnInit {
   }
 
   canCancel(booking: EnrichedBooking): boolean {
-    return CANCELLABLE_STATUSES.has(booking.status);
+    return canCancelBooking(booking.status);
   }
 
   // ── Private helpers ───────────────────────────────────────────────────────
