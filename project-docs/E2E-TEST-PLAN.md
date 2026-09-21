@@ -2210,9 +2210,42 @@ every artist on B-Edge today:
   confirm the slot count moves — or the comparison compares old code with
   old code and passes having tested nothing.
 
-**22.6 — The three new screens, in WebKit at 390px and 320px** ⚠️ **not executed**
+**22.6 — The three new screens, in WebKit at 390px and 320px** — **EXECUTED**
 
-Added Sep 21, 2026 with the feature; **never rendered**. Suites 20 and 21
+**Sep 22, 2026 — 14 pass, 0 fail**, automated as
+`node scripts/e2e-suite22-6.mjs` (WebKit, 390px and 320px, `isMobile`).
+**It found three defects, all invisible to every prior test because nothing
+had ever rendered these screens:**
+
+1. **Two nav entries rendered blank.** `Team` and `Store hours` appeared in
+   the mobile "More" sheet as links with no label at all. The app registers
+   lucide icons explicitly via `LucideAngularModule.pick({…})`, and the two
+   new entries referenced `users-round` and `calendar-clock`, which were
+   never added to that list. Both icons exist in the package; they simply
+   were not picked. Fixed by registering them.
+
+2. **The My hours day row overflowed the page** — 52px at 390px, 122px at
+   320px. Same shape suite 20 found when four store tabs added 66px. Fixed
+   by wrapping the row.
+
+3. **WebKit clipped the meridiem in every time input** — `09:00 AM` drew as
+   `09:00 AN`. This is the defect suite 20 recorded as `07:08 AM` →
+   `07:08 AI`, and **no numeric check catches it**: the element is not
+   overflowing, the glyphs are cut. `scrollWidth > clientWidth` reported
+   clean while the screenshot showed it plainly. Fixed with a 7.5rem floor
+   on the inputs, which then meant two of them could not share a line at
+   320px — measured at 9px past the card edge — so they stack below 360px.
+
+The harness now measures three things a passing page can still fail:
+element width against a legibility floor, spill past the containing card
+(page overflow stays 0 because the card clips it), and page overflow.
+
+**Not covered, and stated rather than skipped:** reload survival and
+"typing an owner-only URL redirects". Both need a real page load, and the
+refresh cookie is `Secure: true` unconditionally (`auth/handler.go:327`), so
+WebKit never stores it over plain HTTP and any reload bounces to `/login`.
+
+Original scope: Suites 20 and 21
 exist because every defect that reached the launch artist was a rendering or
 alternate-flow problem at phone width. A new screen tested only through
 `curl` has been tested in the one place defects have never been found.

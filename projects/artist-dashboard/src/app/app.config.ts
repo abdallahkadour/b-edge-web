@@ -13,7 +13,9 @@ import {
   LucideAngularModule,
   Calendar,
   CalendarDays,
+  CalendarClock,
   Users,
+  UsersRound,
   Banknote,
   Scissors,
   Tag,
@@ -93,8 +95,10 @@ export const appConfig: ApplicationConfig = {
     importProvidersFrom(
       LucideAngularModule.pick({
         Calendar,
+        CalendarClock,
         CalendarDays,
         Users,
+        UsersRound,
         Banknote,
         Scissors,
         Tag,

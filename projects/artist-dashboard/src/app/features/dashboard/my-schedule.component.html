@@ -50,7 +50,13 @@
 
     <div class="rounded-xl border border-gray-200 bg-white divide-y divide-gray-100">
       @for (d of week(); track d.dayOfWeek) {
-        <div class="flex items-center gap-3 px-4 py-3">
+        <!-- flex-wrap, and the times are basis-full until sm.
+             At 320px a 128px day label plus two 112px time inputs on one
+             line is 122px wider than the viewport - measured, not guessed
+             (E2E 22.6). Suite 20 found the same shape once already, where
+             four store tabs added 66px of page overflow. The times drop to
+             their own line on a phone and sit inline from sm up. -->
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
           <label class="flex items-center gap-2.5 w-32 shrink-0 cursor-pointer">
             <input
               type="checkbox" class="rounded border-gray-300"
@@ -62,19 +68,36 @@
           </label>
 
           @if (d.working) {
-            <div class="flex items-center gap-2">
+            <!-- min-w-[7.5rem] is not cosmetic. WebKit renders a time input
+                 in 12-hour form, and below about 118px it silently clips the
+                 meridiem: "09:00 AM" draws as "09:00 AN". Suite 20 found the
+                 same thing on the store-hours screen ("07:08 AM" -> "07:08
+                 AI"), and no overflow or scrollWidth check catches it -
+                 the element is not overflowing, the glyphs are cut. It was
+                 found here by looking at a screenshot.
+
+                 Two inputs at that floor plus a gap need 248px. A 320px
+                 phone leaves 240px of content inside the row, so they
+                 simply cannot sit side by side there - measured, 9px past
+                 the card edge. Below 360px they stack; above it they sit
+                 inline. The "to" separator is hidden below sm either way,
+                 since two adjacent time fields already read as a range. -->
+            <div class="flex flex-col min-[360px]:flex-row min-[360px]:items-center
+                        gap-2 basis-full sm:basis-auto min-w-0 w-full sm:w-auto">
               <input
-                type="time" bedgeInput class="h-8 text-sm w-28"
+                type="time" bedgeInput
+                class="h-8 text-sm min-w-[7.5rem] flex-1 sm:flex-none sm:w-28"
                 [value]="d.start"
                 (input)="setTime(d.dayOfWeek, 'start', $any($event.target).value)" />
-              <span class="text-gray-300 text-sm">to</span>
+              <span class="hidden sm:inline text-gray-300 text-sm shrink-0">to</span>
               <input
-                type="time" bedgeInput class="h-8 text-sm w-28"
+                type="time" bedgeInput
+                class="h-8 text-sm min-w-[7.5rem] flex-1 sm:flex-none sm:w-28"
                 [value]="d.end"
                 (input)="setTime(d.dayOfWeek, 'end', $any($event.target).value)" />
             </div>
             @if (d.start >= d.end) {
-              <span class="text-xs text-danger">End must be after start</span>
+              <span class="text-xs text-danger basis-full sm:basis-auto">End must be after start</span>
             }
           } @else {
             <span class="text-xs text-gray-300">Not working</span>
