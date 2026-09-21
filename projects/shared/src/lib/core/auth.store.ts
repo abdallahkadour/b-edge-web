@@ -2,6 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 
 import { ApiService } from './api.service';
+import { salonRoleFromToken, type SalonRole } from './salon-role.util';
 import type {
   LoginRequest,
   LoginResult,
@@ -42,6 +43,31 @@ export class AuthStore {
 
   /** The user's role, or null. */
   readonly role = computed(() => this._user()?.role ?? null);
+
+  /**
+   * The user's standing inside their salon: 'owner', 'member' or 'none'.
+   *
+   * Derived from the access token rather than stored, so it follows login,
+   * refresh and logout with no extra wiring - and so an ownership transfer
+   * takes effect the moment a fresh token arrives.
+   *
+   * This drives what the dashboard RENDERS. It is not the authorisation
+   * boundary: internal/pkg/salonrole on the server is, and a member who
+   * types an owner-only URL gets 403 SALON_ROLE_FORBIDDEN regardless of what
+   * this says.
+   */
+  readonly salonRole = computed<SalonRole>(() =>
+    salonRoleFromToken(this._accessToken()),
+  );
+
+  /**
+   * True when the signed-in artist owns their salon.
+   *
+   * Every artist on B-Edge today is the sole member of their own salon and
+   * therefore an owner, so this is true for all of them - which is what
+   * keeps the solo experience unchanged.
+   */
+  readonly isSalonOwner = computed(() => this.salonRole() === 'owner');
 
   /** Log in with email + password. Server sets the refresh cookie. */
   login(body: LoginRequest): Observable<LoginResult> {

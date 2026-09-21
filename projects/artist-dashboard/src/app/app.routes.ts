@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard } from '@bedge/shared';
+import { authGuard, salonOwnerGuard } from '@bedge/shared';
 
 /**
  * Application routes.
@@ -47,6 +47,14 @@ export const routes: Routes = [
     path: 'pricing',
     loadComponent: () =>
       import('./features/pricing/pricing.page').then((m) => m.PricingPage),
+  },
+  {
+    // Public: the invitee may have no account yet, and gating this behind
+    // auth would hide the salon's name behind a sign-in wall for someone
+    // who has not yet decided whether to accept.
+    path: 'join/:token',
+    loadComponent: () =>
+      import('./features/join/join-salon.page').then((m) => m.JoinSalonPage),
   },
   {
     path: 'login',
@@ -136,6 +144,10 @@ export const routes: Routes = [
       },
       {
         path: 'products',
+        // Owner only - the salon's product catalogue are shared by the whole
+        // salon. The server refuses a member's writes with 403
+        // SALON_ROLE_FORBIDDEN regardless; this stops the screen rendering.
+        canActivate: [salonOwnerGuard()],
         loadComponent: () =>
           import('./features/dashboard/products.component').then(
             (m) => m.ProductsComponent,
@@ -164,6 +176,10 @@ export const routes: Routes = [
       },
       {
         path: 'discounts',
+        // Owner only - the salon's discount codes are shared by the whole
+        // salon. The server refuses a member's writes with 403
+        // SALON_ROLE_FORBIDDEN regardless; this stops the screen rendering.
+        canActivate: [salonOwnerGuard()],
         loadComponent: () =>
           import('./features/dashboard/discounts.component').then(
             (m) => m.DiscountsComponent,
@@ -171,13 +187,41 @@ export const routes: Routes = [
       },
       {
         path: 'services',
+        // Owner only - the salon's menu and prices are shared by the whole
+        // salon. The server refuses a member's writes with 403
+        // SALON_ROLE_FORBIDDEN regardless; this stops the screen rendering.
+        canActivate: [salonOwnerGuard()],
         loadComponent: () =>
           import('./features/dashboard/services.component').then(
             (m) => m.ServicesComponent,
           ),
       },
       {
+        // The salon roster. Owner-only: a member has nobody to manage, and
+        // the API refuses every write on this screen for them anyway.
+        path: 'team',
+        canActivate: [salonOwnerGuard()],
+        loadComponent: () =>
+          import('./features/dashboard/team.component').then(
+            (m) => m.TeamComponent,
+          ),
+      },
+      {
+        // An artist's OWN working hours. Deliberately not owner-guarded -
+        // this is the screen a salon member needs most, and store hours
+        // (the owner's) live at /dashboard/hours.
+        path: 'my-hours',
+        loadComponent: () =>
+          import('./features/dashboard/my-schedule.component').then(
+            (m) => m.MyScheduleComponent,
+          ),
+      },
+      {
         path: 'hours',
+        // Owner only - the stores' opening hours are shared by the whole
+        // salon. The server refuses a member's writes with 403
+        // SALON_ROLE_FORBIDDEN regardless; this stops the screen rendering.
+        canActivate: [salonOwnerGuard()],
         loadComponent: () =>
           import('./features/dashboard/hours.component').then(
             (m) => m.HoursComponent,

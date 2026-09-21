@@ -13,6 +13,9 @@ export * from './lib/tokens/api-config.token';
 // ── Core: http client, auth ───────────────────────────────────────────────────
 export * from './lib/core/api.service';
 export * from './lib/core/auth.store';
+export * from './lib/core/salon-role.util';
+export * from './lib/core/salon-owner.guard';
+export * from './lib/core/membership-data.service';
 export * from './lib/core/auth.interceptor';
 export * from './lib/core/auth-error.interceptor';
 export * from './lib/core/customer-auth.store';

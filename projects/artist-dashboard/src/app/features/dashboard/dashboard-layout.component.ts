@@ -130,7 +130,9 @@ export class DashboardLayoutComponent {
     { path: '/dashboard/earnings', label: 'Earnings', icon: 'banknote' },
     { path: '/dashboard/services', label: 'Services', icon: 'scissors' },
     { path: '/dashboard/discounts', label: 'Promos', icon: 'tag' },
-    { path: '/dashboard/hours',    label: 'Hours',    icon: 'clock' },
+    { path: '/dashboard/my-hours', label: 'My hours', icon: 'clock' },
+    { path: '/dashboard/hours',    label: 'Store hours', icon: 'calendar-clock' },
+    { path: '/dashboard/team',     label: 'Team',     icon: 'users-round' },
     { path: '/dashboard/profile',  label: 'Profile',  icon: 'user' },
     { path: '/dashboard/help',     label: 'Help',     icon: 'circle-help' },
   ];
@@ -140,13 +142,38 @@ export class DashboardLayoutComponent {
    *  a screen whose data lookup assumes a fully-reviewed profile, and
    *  offering navigation into a screen that's guaranteed to look broken
    *  is worse than not offering it at all. */
-  readonly navItems = computed<NavItem[]>(() =>
-    this.isPending()
-      ? this.allNavItems.filter(
-          (item) => item.path === '/dashboard/profile' || item.path === '/dashboard/help',
-        )
-      : this.allNavItems,
-  );
+  /**
+   * Screens that manage something the whole salon shares, and so belong to
+   * the salon owner. A member sees no link to them and salonOwnerGuard turns
+   * them back if they type the URL; the server refuses the writes either way
+   * with 403 SALON_ROLE_FORBIDDEN.
+   *
+   * Billing is deliberately NOT here. Subscriptions are still keyed on
+   * artists.id, so /dashboard/billing shows the signed-in artist their own
+   * subscription. It moves to the salon in Phase 3 and joins this list then.
+   *
+   * Every artist on B-Edge today owns their own one-member salon, so this
+   * filter removes nothing from anyone currently using the product.
+   */
+  private static readonly OWNER_ONLY_PATHS = [
+    '/dashboard/team',
+    '/dashboard/services',
+    '/dashboard/hours',
+    '/dashboard/discounts',
+    '/dashboard/products',
+  ];
+
+  readonly navItems = computed<NavItem[]>(() => {
+    if (this.isPending()) {
+      return this.allNavItems.filter(
+        (item) => item.path === '/dashboard/profile' || item.path === '/dashboard/help',
+      );
+    }
+    if (this.auth.isSalonOwner()) return this.allNavItems;
+    return this.allNavItems.filter(
+      (item) => !DashboardLayoutComponent.OWNER_ONLY_PATHS.includes(item.path),
+    );
+  });
 
   /**
    * The bottom bar (mobile only) cannot fit all 11 items - it used to try,

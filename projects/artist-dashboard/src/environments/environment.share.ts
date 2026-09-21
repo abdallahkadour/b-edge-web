@@ -13,5 +13,5 @@
 export const environment = {
   production: false,
   apiBaseUrl: '/api/v1',
-  customerPwaUrl: 'https://ozone-implementing-theology-agree.trycloudflare.com', // rewritten by scripts/share.sh
+  customerPwaUrl: 'https://qld-len-temperatures-dvd.trycloudflare.com', // rewritten by scripts/share.sh
 };

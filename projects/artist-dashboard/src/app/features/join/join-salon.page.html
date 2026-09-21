@@ -1,0 +1,111 @@
+<div class="min-h-screen bg-gray-50 flex items-start justify-center px-4 py-10">
+  <div class="w-full max-w-md">
+
+    @if (loading()) {
+      <bedge-skeleton class="h-48" />
+    } @else if (invalid()) {
+      <!-- Deliberately vague. The API cannot distinguish an unknown token
+           from an expired or revoked one without telling a stranger which
+           tokens once existed, so neither can this. -->
+      <div class="rounded-xl border border-gray-200 bg-white p-6 text-center">
+        <h1 class="text-lg font-bold text-ink">This link is not valid</h1>
+        <p class="text-sm text-gray-400 mt-2">
+          It may have already been used, or it may have expired. Ask the salon
+          to send you a new invitation.
+        </p>
+        <a routerLink="/login" class="inline-block mt-4 text-sm text-ink underline">
+          Go to sign in
+        </a>
+      </div>
+
+    } @else if (joined()) {
+      <div class="rounded-xl border border-gray-200 bg-white p-6 text-center">
+        <h1 class="text-lg font-bold text-ink">You've joined {{ preview()?.salon_name }}</h1>
+        <!-- Said plainly rather than left to be discovered: an invitation
+             does not bypass platform review. -->
+        <p class="text-sm text-gray-400 mt-2">
+          Your profile is with our team for review. You'll be able to take
+          bookings once it's approved — we'll let you know.
+        </p>
+        <a routerLink="/dashboard" class="inline-block mt-4">
+          <bedge-button size="sm">Go to your dashboard</bedge-button>
+        </a>
+      </div>
+
+    } @else if (preview(); as p) {
+      <div class="rounded-xl border border-gray-200 bg-white p-6">
+        <h1 class="text-lg font-bold text-ink">Join {{ p.salon_name }}</h1>
+        <p class="text-sm text-gray-400 mt-1">
+          {{ p.invited_by }} invited you to work at {{ p.salon_name }} on B-Edge.
+        </p>
+
+        @if (!isAuthenticated()) {
+          <p class="text-sm text-gray-500 mt-4">
+            Sign in to your B-Edge account to accept, or create one first.
+          </p>
+          <div class="flex gap-2 mt-4">
+            <bedge-button size="sm" (click)="signIn()">Sign in to accept</bedge-button>
+            <bedge-button size="sm" variant="ghost" (click)="decline()">Decline</bedge-button>
+          </div>
+
+        } @else {
+          <div class="mt-5 space-y-3">
+            <div>
+              <label for="j-handle" class="block text-xs font-medium text-gray-500 mb-1">
+                Your public handle
+              </label>
+              <input
+                id="j-handle" type="text" bedgeInput class="h-9 text-sm w-full"
+                placeholder="sarah-beauty" autocapitalize="off" autocorrect="off"
+                [value]="handle()"
+                (input)="handle.set($any($event.target).value.toLowerCase())" />
+              <p class="text-xs text-gray-400 mt-1">
+                Clients will find you at b-edge.com/book/{{ handle() || 'your-handle' }}
+              </p>
+              @if (handle() && !handleValid()) {
+                <p class="text-xs text-danger mt-1">
+                  Lowercase letters, numbers and hyphens only, at least 3 characters.
+                </p>
+              }
+            </div>
+
+            <div>
+              <label for="j-category" class="block text-xs font-medium text-gray-500 mb-1">
+                What you do
+              </label>
+              <select
+                id="j-category" bedgeInput class="h-9 text-sm w-full"
+                [value]="category()"
+                (change)="category.set($any($event.target).value)">
+                @for (c of categories; track c) {
+                  <option [value]="c">{{ c }}</option>
+                }
+              </select>
+            </div>
+
+            <div>
+              <label for="j-instagram" class="block text-xs font-medium text-gray-500 mb-1">
+                Instagram <span class="text-gray-300">(optional)</span>
+              </label>
+              <input
+                id="j-instagram" type="text" bedgeInput class="h-9 text-sm w-full"
+                placeholder="@yourhandle" [value]="instagram()"
+                (input)="instagram.set($any($event.target).value)" />
+            </div>
+          </div>
+
+          @if (error(); as e) {
+            <p class="text-sm text-danger mt-3">{{ e }}</p>
+          }
+
+          <div class="flex gap-2 mt-5">
+            <bedge-button size="sm" [disabled]="!canSubmit()" (click)="accept()">
+              {{ submitting() ? 'Joining…' : 'Join ' + p.salon_name }}
+            </bedge-button>
+            <bedge-button size="sm" variant="ghost" (click)="decline()">Decline</bedge-button>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,157 @@
+<div class="p-4 sm:p-6 max-w-3xl">
+
+  <div class="flex items-start justify-between gap-4 mb-5">
+    <div>
+      <h1 class="text-lg font-bold text-ink tracking-tight">Team</h1>
+      <p class="text-sm text-gray-400 mt-0.5">
+        The artists who work at your salon.
+      </p>
+    </div>
+    @if (isOwner() && !showInviteForm()) {
+      <bedge-button size="sm" (click)="openInviteForm()">Invite artist</bedge-button>
+    }
+  </div>
+
+  @if (error(); as err) {
+    <div class="rounded-lg bg-danger-light border border-danger/20 px-4 py-3 text-sm text-danger-dark mb-4">
+      {{ err }}
+    </div>
+  }
+
+  <!-- ── Invite ─────────────────────────────────────────────────────── -->
+  @if (showInviteForm()) {
+    <div class="rounded-xl border border-gray-200 bg-white p-4 mb-5">
+      <h2 class="text-sm font-semibold text-ink mb-3">Invite an artist</h2>
+
+      @if (lastInviteLink(); as link) {
+        <!-- The link is the point, not a fallback. WhatsApp delivery is
+             blocked on Meta verification, so this is how an invitation
+             actually reaches someone today. -->
+        <div class="rounded-lg bg-success-light border border-success/20 px-3 py-3 mb-3">
+          <p class="text-sm text-success-dark font-medium mb-2">
+            Invitation created. Send them this link:
+          </p>
+          <div class="flex items-center gap-2">
+            <code class="flex-1 text-xs bg-white border border-gray-200 rounded px-2 py-1.5 break-all select-all">{{ link }}</code>
+            <bedge-button size="sm" variant="secondary" (click)="copyLink()">
+              {{ linkCopied() ? 'Copied' : 'Copy' }}
+            </bedge-button>
+          </div>
+          <p class="text-xs text-gray-400 mt-2">
+            They will also get a WhatsApp message once our business number is verified.
+          </p>
+        </div>
+      } @else {
+        <label for="invite-phone" class="block text-xs font-medium text-gray-500 mb-1">
+          Mobile number
+        </label>
+        <input
+          id="invite-phone" type="tel" inputmode="tel" bedgeInput
+          class="h-9 text-sm w-full" placeholder="70 555 123"
+          [value]="invitePhone()"
+          (input)="invitePhone.set($any($event.target).value)" />
+        <p class="text-xs text-gray-400 mt-1">
+          Lebanese numbers can be typed without the country code.
+        </p>
+
+        @if (inviteError(); as ie) {
+          <p class="text-sm text-danger mt-2">{{ ie }}</p>
+        }
+      }
+
+      <div class="flex gap-2 mt-4">
+        @if (!lastInviteLink()) {
+          <bedge-button size="sm" [disabled]="!canInvite() || inviting()" (click)="submitInvite()">
+            {{ inviting() ? 'Sending…' : 'Send invitation' }}
+          </bedge-button>
+        }
+        <bedge-button size="sm" variant="ghost" (click)="closeInviteForm()">
+          {{ lastInviteLink() ? 'Done' : 'Cancel' }}
+        </bedge-button>
+      </div>
+    </div>
+  }
+
+  <!-- ── Roster ─────────────────────────────────────────────────────── -->
+  @if (loading()) {
+    <div class="space-y-2">
+      <bedge-skeleton class="h-16" />
+      <bedge-skeleton class="h-16" />
+    </div>
+  } @else if (members().length === 0) {
+    <bedge-empty-state
+      icon="users"
+      title="No one here yet"
+      hint="Invite an artist and they'll show up once they accept." />
+  } @else {
+    <ul class="space-y-2">
+      @for (m of members(); track m.artist_id) {
+        <li class="rounded-xl border border-gray-200 bg-white p-4">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-medium text-ink truncate">{{ m.display_name }}</span>
+                <bedge-badge [tone]="m.is_owner ? 'success' : m.status === 'active' ? 'neutral' : 'warning'">
+                  {{ statusLabel(m) }}
+                </bedge-badge>
+              </div>
+              @if (m.handle) {
+                <p class="text-xs text-gray-400 mt-0.5">&#64;{{ m.handle }}</p>
+              }
+              @if (m.future_bookings > 0) {
+                <!-- Shown for everyone, not just when Remove is hidden: an
+                     owner deciding who to let go needs to see the commitment
+                     before they act, not after the API refuses them. -->
+                <p class="text-xs text-gray-500 mt-1.5">
+                  {{ m.future_bookings }} upcoming
+                  {{ m.future_bookings === 1 ? 'booking' : 'bookings' }}
+                </p>
+              }
+            </div>
+
+            @if (canRemove(m)) {
+              <bedge-button
+                size="sm" variant="ghost"
+                [disabled]="busyId() === m.artist_id"
+                (click)="removeMember(m)">
+                Remove
+              </bedge-button>
+            }
+          </div>
+
+          @if (rowError(m.artist_id); as re) {
+            <p class="text-sm text-danger mt-2">{{ re }}</p>
+          }
+        </li>
+      }
+    </ul>
+  }
+
+  <!-- ── Pending invitations ────────────────────────────────────────── -->
+  @if (isOwner() && pendingInvitations().length > 0) {
+    <h2 class="text-sm font-semibold text-ink mt-6 mb-2">Waiting to accept</h2>
+    <ul class="space-y-2">
+      @for (i of pendingInvitations(); track i.id) {
+        <li class="rounded-xl border border-gray-200 bg-white px-4 py-3">
+          <div class="flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <p class="text-sm text-ink truncate">{{ i.phone || i.email }}</p>
+              <p class="text-xs text-gray-400 mt-0.5">
+                Expires {{ i.expires_at | date: 'MMM d' }}
+              </p>
+            </div>
+            <bedge-button
+              size="sm" variant="ghost"
+              [disabled]="busyId() === i.id"
+              (click)="revoke(i)">
+              Revoke
+            </bedge-button>
+          </div>
+          @if (rowError(i.id); as re) {
+            <p class="text-sm text-danger mt-2">{{ re }}</p>
+          }
+        </li>
+      }
+    </ul>
+  }
+</div>

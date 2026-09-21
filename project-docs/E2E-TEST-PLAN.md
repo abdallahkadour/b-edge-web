@@ -2101,3 +2101,177 @@ These are regression cases for defects found in front of the artist, and
   convenience and must never block a booking.
 
 ---
+
+### Suite 22 — Multi-artist salons
+
+**Added Sep 21, 2026. EXECUTED Sep 21, 2026 — 14 pass, 0 fail.**
+Automated as `make e2e-suite22` (`scripts/e2e-suite22.py`), so it is a
+regression gate rather than a one-off. Three harness bugs were found and
+fixed during the first runs, none of them product defects: a direct booking
+insert omitted `blocked_until` (NOT NULL, and the upper bound of the
+tstzrange the GIST exclusion constraint guards); cleanup tried to hard-delete
+a user that `audit_events.actor_id` legitimately references; and `psql -tA`
+appends an `INSERT 0 1` status line after `RETURNING id`, which produced a
+baffling "invalid input syntax for type uuid" naming the correct uuid.
+ Covers salon membership, the owner/member
+authorisation boundary, and per-artist working hours.
+
+**Read 22.5 first.** It is the only case in this suite that applies to
+anyone using B-Edge today, and it is the one most likely to be quietly
+broken by everything else here.
+
+**22.1 — Invite and accept**
+
+- Owner opens Team, invites a mobile number. The invitation appears under
+  "Waiting to accept" and **the link is shown with a Copy button**.
+  Delivery is blocked on Meta business verification, so a run that only
+  checks for a queued notification proves nothing — check for the link.
+- Open the link in a clean session: the salon's name and the inviter's name
+  render, and **nothing else**. No roster, no other invitees, no numbers.
+- Accept with a handle: the joiner lands on a confirmation that says their
+  profile is **awaiting approval**, and Team now lists them as
+  "Awaiting approval". An invitation does not bypass platform review.
+- The same link opened a second time shows "This link is not valid".
+- A revoked link, an expired link and a fabricated one must be
+  **indistinguishable** — same wording, same status, no timing tell.
+  This route is public, so a difference tells a stranger which tokens
+  once existed.
+
+**What the automated run covers, and what it does not**
+
+`make e2e-suite22` drives the **API**: invite, preview, accept, the role
+boundary, the rota reaching slot generation, removal, and 22.5. It renders
+nothing. Every assertion below about what a screen *shows* is still manual
+and still unexecuted — and this project's defect history is almost entirely
+things that were invisible in desktop Chrome and obvious in WebKit at 390px.
+Three new screens shipped with this feature and **none has been opened in a
+browser**.
+
+**22.2 — The boundary, seen from the dashboard**
+
+Sign in as the member:
+
+- Nav shows **no** Services, Store hours, Promos, Products or Team.
+- Nav **does** show My hours, Bookings, Calendar, Clients, Earnings.
+- Typing `/dashboard/services` redirects to Bookings rather than rendering
+  a screen whose every control would fail.
+- Hiding is not the boundary. Call `PATCH /artists/salon/services/:id`
+  directly with the member's token and confirm **403
+  SALON_ROLE_FORBIDDEN**, then re-read the row and confirm it is unchanged.
+  A 403 that still wrote is worse than no guard.
+
+**22.3 — Per-artist hours reach the customer**
+
+- My hours opens saying **"You are bookable whenever <store> is open"**.
+  That is the correct state for an artist who has set nothing, not an
+  empty form. A run that reports "no hours configured" has misread it.
+- Set Tue–Thu 12:00–17:00, save. The customer funnel for that artist now
+  offers **no morning slots** on those days and **nothing at all** on
+  Monday.
+- The store's own hours are unchanged for the owner — narrowing one
+  artist must not narrow the salon.
+- Add a day off; that date offers nothing for this artist and is
+  unaffected for the owner.
+- "Use store hours instead" clears the rota and restores the full window.
+
+**22.4 — Removal refuses to strand a customer**
+
+- A member holding an upcoming booking shows the count on their row and
+  **no Remove control**. Force the call anyway: 409 `HAS_FUTURE_BOOKINGS`.
+- Cancel the booking, then remove: the member goes, and their past
+  bookings, reviews and earnings are **still there**.
+- The owner cannot be removed and cannot leave without transferring.
+- Transfer ownership, then confirm **both** parties are signed out. The
+  role is baked into the access token at issue, so a session that survives
+  keeps the old permissions.
+
+**22.5 — A solo artist notices nothing** ⚠️ **the acceptance criterion**
+
+Sign in as an artist who is the only member of their own salon — which is
+every artist on B-Edge today:
+
+- Nav is **exactly** as before: no Team, no member language, no seats.
+- Every screen that worked before still works, with the same controls.
+- My hours says they are bookable whenever their store is open.
+- **Their customer-facing booking availability is byte-identical.** Verified
+  mechanically, not by eye:
+
+  ```bash
+  # before the change ships
+  python3 scripts/capture-slot-baseline.py > project-docs/slot-baseline-pre-046.json
+  # after
+  python3 scripts/capture-slot-baseline.py --compare project-docs/slot-baseline-pre-046.json
+  ```
+
+  Run the comparison against a **snapshot binary on its own port**, not the
+  `air`-managed dev server: air rebuilds and restarts on every Go file save,
+  and a restart mid-run turns in-flight requests into errors. Prove the
+  snapshot actually contains the change first — insert one rota row and
+  confirm the slot count moves — or the comparison compares old code with
+  old code and passes having tested nothing.
+
+**22.6 — The three new screens, in WebKit at 390px and 320px** ⚠️ **not executed**
+
+Added Sep 21, 2026 with the feature; **never rendered**. Suites 20 and 21
+exist because every defect that reached the launch artist was a rendering or
+alternate-flow problem at phone width. A new screen tested only through
+`curl` has been tested in the one place defects have never been found.
+
+*Team* (`/dashboard/team`, owner only):
+
+- Roster rows do not overflow at 320px with a long display name and a
+  handle. Names wrap or truncate; the page does not scroll sideways.
+- The status chip reads **"Awaiting approval"** for a pending member, not
+  "pending" — an artist who has just joined should not be shown a database
+  value.
+- After inviting, the link panel appears and the **link is selectable and
+  fully visible**. A `break-all` code block at 320px is exactly where a
+  token gets visually truncated, and a half-copied link fails silently.
+- **Copy** puts the whole link on the clipboard and the button confirms.
+  Then: with clipboard access denied (Safari private browsing), the button
+  must not appear to succeed, and the link must still be selectable by hand.
+- "Remove" is absent on the owner's own row and on any member with upcoming
+  bookings, and the upcoming-booking count is visible on the row either way.
+
+*My hours* (`/dashboard/my-hours`, every member):
+
+- Opens saying **"You are bookable whenever <store> is open"**. This is the
+  state every artist is in and it is correct, not an unfinished form. A
+  reviewer who reports "no hours configured" has misread the screen — and so
+  has the design, if that reading is available.
+- Time inputs show `02:00 PM` complete at 320px. Suite 20 found Safari
+  rendering 12-hour and clipping `07:08 AM` to `07:08 AI`; these are the
+  same input type.
+- The store tab strip **scrolls** with four stores rather than pushing the
+  page sideways. Suite 20 found four store tabs adding 66px of page overflow.
+- Unticking every day and saving restores the store-hours state and the
+  banner returns. This is the way out and it must be reachable.
+- A day whose end is before its start blocks Save and says why on that row.
+
+*Join* (`/join/:token`, public, unauthenticated):
+
+- Renders with **no session at all** — the one screen a person reaches
+  before they have an account.
+- An invalid, expired or revoked token shows the same wording in every case.
+  If the copy ever distinguishes them it has undone AUTH-16 and FRAUD-11 in
+  the security plan.
+- Handle validation reports the rule while typing, and the preview line
+  `b-edge.com/book/<handle>` updates live.
+- After accepting, the confirmation says the profile is **awaiting review**.
+  Someone who joins and then cannot take bookings must not have to guess why.
+- Opening the same link a second time shows "This link is not valid".
+
+*Nav, as a member:*
+
+- No Services, Store hours, Promos, Products or Team — in the desktop
+  sidebar, the mobile bottom bar, **and the "More" sheet**. All three derive
+  from `navItems()`, but the bar and the sheet filter it again, so a
+  regression could land in one and not the others.
+- My hours, Bookings, Calendar, Clients and Earnings are all present.
+- Typing `/dashboard/services` redirects to Bookings.
+
+If 22.5 fails, the feature is not ready regardless of how well 22.1–22.4
+pass. Five of five salons on this platform have exactly one member, and the
+launch artist is one of them.
+
+---

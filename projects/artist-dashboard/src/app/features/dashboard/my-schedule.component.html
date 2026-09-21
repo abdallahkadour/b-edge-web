@@ -1,0 +1,161 @@
+<div class="p-4 sm:p-6 max-w-3xl">
+
+  <div class="mb-5">
+    <h1 class="text-lg font-bold text-ink tracking-tight">My hours</h1>
+    <p class="text-sm text-gray-400 mt-0.5">
+      When you work, within the hours your store is open.
+    </p>
+  </div>
+
+  @if (error(); as err) {
+    <div class="rounded-lg bg-danger-light border border-danger/20 px-4 py-3 text-sm text-danger-dark mb-4">
+      {{ err }}
+    </div>
+  }
+
+  @if (loading()) {
+    <bedge-skeleton class="h-64" />
+  } @else if (stores().length === 0) {
+    <p class="text-sm text-gray-400">You are not linked to any store yet.</p>
+  } @else {
+
+    @if (stores().length > 1) {
+      <div class="flex gap-2 mb-4 overflow-x-auto pb-1">
+        @for (s of stores(); track s.id) {
+          <button
+            type="button"
+            class="shrink-0 px-3 py-1.5 rounded-full text-sm border transition-colors"
+            [class]="s.id === selectedStoreId()
+              ? 'bg-ink text-white border-ink'
+              : 'bg-white text-gray-500 border-gray-200'"
+            (click)="selectStore(s.id)">
+            {{ s.name }}
+          </button>
+        }
+      </div>
+    }
+
+    <!-- The default state, stated plainly. An artist with no rota is
+         available for the whole store window - this is not an empty form
+         waiting to be filled in. -->
+    @if (usingStoreHours()) {
+      <div class="rounded-lg bg-success-light border border-success/20 px-4 py-3 mb-4">
+        <p class="text-sm text-success-dark">
+          You are bookable whenever
+          <span class="font-medium">{{ selectedStore()?.name }}</span> is open.
+          Tick the days below only if you want to work narrower hours.
+        </p>
+      </div>
+    }
+
+    <div class="rounded-xl border border-gray-200 bg-white divide-y divide-gray-100">
+      @for (d of week(); track d.dayOfWeek) {
+        <div class="flex items-center gap-3 px-4 py-3">
+          <label class="flex items-center gap-2.5 w-32 shrink-0 cursor-pointer">
+            <input
+              type="checkbox" class="rounded border-gray-300"
+              [checked]="d.working"
+              (change)="toggleDay(d.dayOfWeek)" />
+            <span class="text-sm" [class]="d.working ? 'text-ink font-medium' : 'text-gray-400'">
+              {{ d.name }}
+            </span>
+          </label>
+
+          @if (d.working) {
+            <div class="flex items-center gap-2">
+              <input
+                type="time" bedgeInput class="h-8 text-sm w-28"
+                [value]="d.start"
+                (input)="setTime(d.dayOfWeek, 'start', $any($event.target).value)" />
+              <span class="text-gray-300 text-sm">to</span>
+              <input
+                type="time" bedgeInput class="h-8 text-sm w-28"
+                [value]="d.end"
+                (input)="setTime(d.dayOfWeek, 'end', $any($event.target).value)" />
+            </div>
+            @if (d.start >= d.end) {
+              <span class="text-xs text-danger">End must be after start</span>
+            }
+          } @else {
+            <span class="text-xs text-gray-300">Not working</span>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="flex items-center gap-2 mt-4">
+      <bedge-button size="sm" [disabled]="!canSave() || saving()" (click)="save()">
+        {{ saving() ? 'Saving…' : 'Save hours' }}
+      </bedge-button>
+      @if (!usingStoreHours()) {
+        <bedge-button size="sm" variant="ghost" (click)="useStoreHours()">
+          Use store hours instead
+        </bedge-button>
+      }
+      @if (saved()) {
+        <span class="text-sm text-success-dark">Saved</span>
+      }
+    </div>
+
+    <!-- ── Days off ─────────────────────────────────────────────────── -->
+    <div class="flex items-center justify-between mt-8 mb-2">
+      <h2 class="text-sm font-semibold text-ink">Days off</h2>
+      @if (!showExceptionForm()) {
+        <bedge-button size="sm" variant="ghost" (click)="openExceptionForm()">
+          Add a day off
+        </bedge-button>
+      }
+    </div>
+
+    @if (showExceptionForm()) {
+      <div class="rounded-xl border border-gray-200 bg-white p-4 mb-3">
+        <div class="flex flex-wrap items-end gap-3">
+          <div>
+            <label for="exc-date" class="block text-xs font-medium text-gray-500 mb-1">Date</label>
+            <input
+              id="exc-date" type="date" bedgeInput class="h-9 text-sm"
+              [value]="excDate()" (input)="excDate.set($any($event.target).value)" />
+          </div>
+          <div class="flex-1 min-w-40">
+            <label for="exc-reason" class="block text-xs font-medium text-gray-500 mb-1">
+              Reason <span class="text-gray-300">(optional)</span>
+            </label>
+            <input
+              id="exc-reason" type="text" bedgeInput class="h-9 text-sm w-full"
+              placeholder="Holiday" [value]="excReason()"
+              (input)="excReason.set($any($event.target).value)" />
+          </div>
+        </div>
+        @if (excError(); as ee) {
+          <p class="text-sm text-danger mt-2">{{ ee }}</p>
+        }
+        <div class="flex gap-2 mt-3">
+          <bedge-button size="sm" [disabled]="!excDate()" (click)="addDayOff()">Add</bedge-button>
+          <bedge-button size="sm" variant="ghost" (click)="showExceptionForm.set(false)">
+            Cancel
+          </bedge-button>
+        </div>
+      </div>
+    }
+
+    @if (exceptions().length === 0) {
+      <p class="text-sm text-gray-400">No days off coming up.</p>
+    } @else {
+      <ul class="space-y-2">
+        @for (e of exceptions(); track e.id) {
+          <li class="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-2.5">
+            <div>
+              <span class="text-sm text-ink">{{ e.exception_date | date: 'EEEE, MMM d' }}</span>
+              @if (e.reason) {
+                <span class="text-xs text-gray-400 ml-2">{{ e.reason }}</span>
+              }
+            </div>
+            <bedge-button size="sm" variant="ghost" (click)="removeException(e)">
+              Remove
+            </bedge-button>
+          </li>
+        }
+      </ul>
+    }
+  }
+</div>
