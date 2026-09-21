@@ -1937,3 +1937,167 @@ expensive bugs will be if they exist.
 ## 5. Sign-off
 
 For each suite above, record: pass / fail / blocked, the build/commit tested, screenshots for anything visual, and a linked bug for every failure — not a verbal "mostly works." A suite with an unresolved **NO UI PATH** item is **blocked**, not skipped; it still needs a decision (build the screen, or explicitly accept the gap) before sign-off.
+
+### Suite 17 — Payer capture and the refund gate
+
+**Added Sep 21, 2026.** Covers migration 044, `depositPayerMismatch`, the
+`REFUND_PAYER_MISMATCH` conflict, and the deposit-verify field.
+
+B-Edge holds no money: deposits move customer-to-artist over OMT and Whish,
+and a refund is the same transfer in reverse with **no chargeback**. An
+error here is somebody out of pocket, so this suite is deliberately hostile.
+
+**17.1 — Recording the payer**
+
+- Confirm a deposit with the payer field **empty** → `deposit_payer_phone`
+  stays NULL. This is the normal case and must not become mandatory noise.
+- Confirm with a local-format number (`71 999 888`) → stored **E.164**.
+- Confirm with junk (`abc`, `+++`, a 40-digit string) → **422**, and the
+  deposit is **not** confirmed. A payer number that cannot be read back is
+  worse than none, because the mismatch check treats unparseable as
+  "cannot tell".
+- Re-confirm with a different number → the new one replaces it. Confirm
+  again with the field empty → the previous number is **kept**, not wiped.
+
+**17.2 — The gate, pushed**
+
+| Payer | Customer phone | `customer_contacted` | Expected |
+|---|---|---|---|
+| different | valid E.164 | omitted | `409 REFUND_PAYER_MISMATCH`, status unchanged |
+| different | valid E.164 | `false` | same |
+| different | valid E.164 | `"true"` (string) | rejected — a string is not a boolean |
+| different | valid E.164 | `true` | refunded |
+| same number, two formats | valid | omitted | **refunded** — `70 123 456` and `+96170123456` are one number |
+| none recorded | valid | omitted | refunded — unknown is not a mismatch |
+| different | unparseable | omitted | refunded, and **this is the known hole** — see FRAUD-09 |
+| different | valid | `true`, twice | second attempt `409 BOOKING_NOT_REFUND_DUE` |
+
+**17.3 — What the artist sees**
+
+- A mismatched booking shows **both numbers** and disables the confirm
+  button until the box is ticked.
+- A matching booking shows no warning and needs no extra click.
+- The warning must never appear on a booking with no payer recorded — a
+  false alarm on the common case is how the real one gets clicked through.
+
+---
+
+### Suite 18 — Delivery truth
+
+**Added Sep 21, 2026.** Covers migration 045, `provider_message_id`,
+`delivery_status`, the reconciler, and `delivery_looks_broken`.
+
+The premise: **`sent` never meant delivered.** It meant Twilio returned 2xx.
+The platform ran at 0% delivery for six weeks while every query reported
+success.
+
+**18.1 — The SID is captured and used**
+
+- Send any notification → `provider_message_id` is populated with `SM…`.
+- Provider accepts but returns no sid → the row is still `sent`, a warning
+  is logged, and the row is simply never reconcilable. Must not be treated
+  as a send failure.
+- The SID must appear in **no API response** (see DATA-01).
+
+**18.2 — Reconciliation**
+
+- A message Twilio reports `undelivered` → `delivery_status='undelivered'`,
+  `error_message` carries the provider code, `status` **stays `sent`**. The
+  two columns answer different questions and must not be collapsed.
+- `delivered` → recorded, and the row is never re-queried.
+- `queued` → re-queried on a later sweep.
+- Twilio unreachable → `delivery_checked_at` unchanged, no status written,
+  no crash. **Verified 2026-09-21 by an actual network outage.**
+- Zero deliveries across a sweep → `WARN … NOTHING is reaching recipients`.
+
+**18.3 — Telling the customer the truth**
+
+- Channel failing → `request-otp` returns `delivery_looks_broken: true` and
+  copy that offers guest booking.
+- Channel healthy → the ordinary message.
+- Health query errors → reported **healthy**. Cannot-tell must not announce
+  an outage.
+- **The response must be identical for an artist's number and a
+  customer's**, in both states. See AUTH-12 — this is the enumeration
+  property, and it is the reason the check is platform-wide.
+
+---
+
+### Suite 19 — Subscription enforcement at every surface
+
+**Added Sep 21, 2026.** Covers `subscription.Enforce` and its three call
+sites.
+
+The policy is at 100% coverage and was never the problem. **Enforcement was
+inconsistent**: `Enforce(cancelled)` said hidden while the discovery SQL
+said visible, and slot generation consulted no gate at all — so a cancelled
+artist was listed, offered 33 bookable times, and refused at the final tap.
+
+For **each** of trialing, active, grace, past_due, suspended, cancelled,
+and comped, check **all four** surfaces:
+
+| Surface | trialing / active / grace / comped | past_due / suspended / cancelled |
+|---|---|---|
+| Discovery listing | visible | hidden |
+| `GET /bookings/slots` | slots offered | `ARTIST_NOT_ACCEPTING_BOOKINGS` |
+| Guest hold | accepted | refused |
+| Share preview `/a/:handle` | renders | **unverified — check this** |
+
+Boundaries worth their own cases: **one day inside grace** (21 days) must
+still be fully sold, and **one day past it** must not. Cutting an artist off
+for being slightly late on a payment they are still allowed to make is its
+own defect.
+
+---
+
+### Suite 20 — Hours, calendar and the booking horizon
+
+**Added Sep 21, 2026.** Covers bulk hours, the 90-day strip, and three
+rendering defects that reached the launch artist.
+
+**20.1 — Apply to all days**
+
+- Sets the times on all seven days and **changes no day's open/closed
+  flag**. Opening a never-open Sunday in bulk would take real bookings.
+- Close time ≤ open time → refused before any request is sent.
+- Partial failure (one day 400s) → says so, and does not report success.
+- The grid renders **Monday first**, matching Calendar, while each row still
+  carries the API's `day_of_week` (0 = Sunday). Verify against the database,
+  not by eye.
+
+**20.2 — Rendering, in WebKit at 390px and 320px**
+
+These are regression cases for defects found in front of the artist, and
+**none was visible in desktop Chrome**:
+
+- Calendar hour labels fully on screen — they rendered as a single "M".
+- A one-hour appointment block shows its content without clipping.
+- Time inputs show `07:08 AM` complete — Safari renders 12-hour and the
+  value was cut to `07:08 AI`.
+- The store tab strip scrolls rather than pushing the page sideways — four
+  stores added 66px of horizontal page overflow.
+
+**20.3 — Booking horizon**
+
+- 90 dates offered, month chips for each month spanned.
+- Tapping a chip **scrolls, does not select**. "Show me November" is not
+  "book the 1st of November".
+- The last bookable start still respects closing time at every duration.
+
+---
+
+### Suite 21 — Draft survival
+
+**Added Sep 21, 2026.** Covers funnel draft persistence.
+
+- Type name, phone and notes; reload → all three restored.
+- Reload → the funnel returns to the **artist profile**, not the slot. The
+  hold is very likely expired and must not be resurrected.
+- Complete a booking → the draft is cleared. On a shared phone the next
+  customer must not see the previous one's details.
+- Abandon and start a different artist → no cross-contamination; the draft
+  is keyed per artist.
+- Private browsing / storage disabled → booking still works. A draft is a
+  convenience and must never block a booking.
+
+---
