@@ -2275,3 +2275,177 @@ pass. Five of five salons on this platform have exactly one member, and the
 launch artist is one of them.
 
 ---
+
+---
+
+### Suite 23 — A salon over time, with an adversary in it
+
+**Added and EXECUTED Sep 21, 2026 — 17 pass, 0 fail, 2 to decide.**
+Automated as `make e2e-suite23`. **It found a real hole on the money path:**
+`artists.status` was filtered by discovery, handle lookup, UUID lookup and
+the share preview, and by nothing on the booking path — so with a live
+subscription an artist an admin had **rejected** could still have a slot
+held and a deposit requested. Fixed the same day; tracked as FRAUD-13 in
+`B-Edge-Security-Test-Plan-v1.md`.
+
+**A second finding, FIXED the same day:** `internal/onboarding` created a
+store and **no `business_hours` rows**, so a newly-founded salon was
+completely unbookable and nothing said so — the store read as closed on every
+date, forever. This was the gap the launch artist raised: *"a makeup artist
+should have a default for opening hours, she should not go day by day."*
+
+Migration 049 adds `stores.default_open_time` / `default_close_time`
+(09:00–18:00), and onboarding seeds all seven days from them inside the same
+transaction. Verified end to end: a freshly registered artist, onboarded and
+approved through the real endpoints, is offered **33 slots, 09:00–18:00**.
+
+Case **23.0** now *asserts* this rather than papering over it. The suite used
+to seed hours itself in setup; a fixture that quietly repairs the thing under
+test is how a regression hides.
+
+Existing stores are deliberately **not** backfilled — `mkup3` and `mkup4`
+stay as they are. A migration that invents opening hours for a salon already
+trading can put an artist on Discover at a time they are not there.
+
+**Added Sep 21, 2026.** Every other suite tests one action in isolation.
+This one runs a salon's first year as a single continuous story, with six
+people in it, because the defects that reached the launch artist were never
+broken happy paths — they were alternate flows, and an alternate flow only
+exists once state has accumulated.
+
+**The cast**
+
+| | Who | What they do |
+|---|---|---|
+| **Amal** | founder | Creates the salon. Sole artist at the start and at the end. |
+| **Bassima** | second artist | Joins, takes real bookings, tries to leave while holding them, eventually leaves. |
+| **Carine** | third artist | Joins after Bassima. Still there at the end. |
+| **Dana** | customer | Books with Amal. |
+| **Elias** | customer | Books with Bassima — and is still holding that appointment when Bassima tries to walk out. |
+| **Mallory** | adversary | Wants the deposits. Not a hypothetical: on this platform money moves out of band over OMT and Whish, so whoever controls the salon's payment reference controls the money. |
+
+**Why Mallory is the point of this suite**
+
+B-Edge never touches a customer's money. A customer reads
+`GET /api/v1/salons/:salon_id/payment-methods` and sends a deposit to the
+OMT or Whish number it returns. There is no gateway to compromise and no
+balance to drain — **the entire financial attack surface is one string**.
+Change it and every deposit for that salon goes to the attacker, with the
+platform confirming the payment instructions as if nothing were wrong. The
+customer has no way to tell.
+
+That makes `salon_payment_methods` the highest-value row in the database,
+and 23.7 attacks it from every angle a real attacker would have.
+
+---
+
+**23.0 / 23.0b — A new salon is bookable, and the default actually works**
+
+- Onboarding leaves the store with **seven days of `business_hours`** seeded
+  from `stores.default_open_time` / `default_close_time` (09:00–18:00).
+  Asserted, not seeded by the fixture: a fixture that quietly repairs the
+  thing under test is how a regression hides.
+- Changing the default to 10:00 moves **every day** to 10:00.
+- A day the artist deliberately **closed stays closed**. The times move;
+  which days the salon trades does not. Opening a Sunday she had shut
+  because she adjusted a time would put her on Discover on a day she is not
+  there.
+
+**23.1 — One artist, one salon**
+
+- Amal onboards. Exactly one artist, and she is `salons.owner_id`.
+- Her token carries `salon_role=owner`.
+- No Team screen would be worth showing: the roster is one row.
+
+**23.2 — Bassima joins**
+
+- Amal invites, Bassima accepts, an admin approves.
+- Two artists in the salon; Bassima's token says `member`.
+- **Bassima is refused every owner-only write**, and the row is unchanged
+  afterwards — the check is on the effect, not the status code.
+
+**23.3 — Carine joins, making three**
+
+- Three artists, one owner, two members.
+- Each member sees the roster and **only their own** earnings.
+- Carine narrows her hours; **Amal's and Bassima's availability is
+  untouched**. Three artists is where a rota keyed on the wrong column
+  starts leaking between people, and two artists would not have caught it.
+
+**23.4 — Two customers book**
+
+- Dana books Amal. Elias books Bassima.
+- Each booking is attributed to the right artist, and both are visible to
+  the owner.
+- **Dana's appointment does not appear in Bassima's calendar**, and vice
+  versa.
+
+**23.5 — Bassima tries to leave while holding Elias's booking** ⚠️
+
+The case this suite exists for.
+
+- `POST /artists/salon/members/leave` → **409 `HAS_FUTURE_BOOKINGS`**.
+- Bassima is **still in the salon** afterwards.
+- **Elias's appointment is untouched** — same artist, same time, same
+  status. A customer must never discover their appointment evaporated
+  because of a staffing decision they were not party to.
+- The same refusal applies when the *owner* removes her, not only when she
+  leaves voluntarily. Two routes, one rule.
+
+**23.6 — Bassima leaves properly**
+
+- Elias's booking is resolved (cancelled or completed).
+- She leaves: `artists.salon_id` becomes NULL.
+- **Her history survives** — the booking row, its customer, its price.
+  Removing someone from a roster is not deleting what they did.
+- The salon is back to two artists, and Amal is still the owner.
+- Bassima can no longer read the salon's services.
+
+**23.7 — Mallory** ⚠️ **the money**
+
+Each of these is a separate, independent attempt on the deposit reference.
+
+- **a. Walk in the front door.** Mallory registers as an artist and calls
+  `PUT /artists/salon/payment-methods`. She has no salon → **403
+  `NO_SALON`**, and the salon's row is unchanged.
+- **b. Join, then redirect.** Mallory gets herself invited and accepts,
+  becoming a legitimate member. She calls the same endpoint → **403
+  `SALON_ROLE_FORBIDDEN`**. *A member of the salon must not be able to
+  redirect the salon's money.* Re-read the row: unchanged.
+- **c. Point at someone else's salon.** As a member of her own salon,
+  Mallory sends Amal's `salon_id` in the body and the path. The salon is
+  taken from her token and never from a request, so this must be inert.
+  Verify by re-reading **Amal's** row, not by the status code.
+- **d. Steal the invitation.** Mallory obtains a token issued to someone
+  else and accepts it. Decide deliberately: the token is the credential, so
+  this likely succeeds by design — but then **the owner must be able to see
+  who actually joined**, and removal must work. An invitation that can be
+  intercepted and silently redeemed by a stranger is a phishing primitive.
+- **e. Impersonate by handle.** Mallory registers and onboards with a handle
+  confusable with Amal's. She is `status='pending'` until an admin approves,
+  so she is invisible on Discover and unbookable. **Confirm she cannot take
+  a single booking while pending** — this is the only thing standing between
+  the platform and a fake artist collecting deposits under a real one's name.
+- **f. Outlive removal.** Mallory is removed from the salon. Her captured
+  access token is still valid for up to 15 minutes (`RevokeAllForUser`
+  revokes refresh tokens only). Enumerate exactly what it still reaches, and
+  confirm it is **not** the payment method. Cross-referenced as AUTH-14 in
+  the security plan.
+- **g. Read the customers.** As a member — and again as a removed member —
+  Mallory tries to read another artist's bookings and her client phone
+  numbers. Customer contact details are the second most saleable thing here
+  after the deposit reference.
+
+**23.8 — The salon survives its own history**
+
+After all of it:
+
+- Amal is still the owner; the salon has Amal and Carine.
+- **Amal's customer-facing availability is byte-identical to 23.1** —
+  before anyone joined, booked, attacked or left.
+- Every booking ever made still exists, attributed to the artist who took
+  it, including Bassima's after she left.
+- `salon_payment_methods` holds exactly what Amal set, unchanged by seven
+  attempts to move it.
+- The audit trail shows every membership change, with the actor on each.
+
