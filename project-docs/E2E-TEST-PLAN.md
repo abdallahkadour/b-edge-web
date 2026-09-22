@@ -2482,3 +2482,101 @@ After all of it:
   attempts to move it.
 - The audit trail shows every membership change, with the actor on each.
 
+---
+
+### Suite 24 — Plans, ceilings and message delivery
+
+**Added Sep 23, 2026** for everything that shipped with the pricing decision
+(`B-Edge-Pricing-Decision-v1.md`) and migrations 049–050.
+
+**24.1 and 24.3 are executed and passing** (via `make verify-security-salon`
+and `make e2e-suite23` cases 23.0/23.0b). **24.2, 24.4 and 24.5 are written
+and not yet automated** — 24.4 cannot be until `TWILIO_SMS_FROM` is
+provisioned, and it must **skip loudly** rather than report a delivery path
+that has never sent anything.
+
+**Why this suite exists:** the price ladder went from $7–$80 to $45–$249 and
+per-seat billing was rejected in favour of **ceilings** — `included_seats` is
+now the most artists a salon on that tier may have, and `seat_price` is 0
+everywhere. A ceiling that nothing enforces is a price list with no prices,
+so 24.1 is the case that matters most in this suite.
+
+**24.1 — The artist ceiling is enforced** — **FIXED AND PASSING** Sep 23
+
+- A salon on **Solo** (ceiling 1) has one artist. Inviting a second is
+  **refused**, with an error that names the upgrade rather than a generic
+  limit.
+- A salon on **Studio** (ceiling 4) can hold four and is refused the fifth.
+- **`comped` (ceiling 999) is never limited.** The launch artist and the
+  internal roster run on it, and a ceiling there would be a self-inflicted
+  outage.
+- Verify the **effect**, not the status code: after a refused invite,
+  re-read `salon_invitations` and confirm nothing was written.
+- An owner already **over** a ceiling — because the plan was downgraded
+  beneath them — keeps every existing artist. Enforcement applies to
+  *adding*, never to removing people already working.
+
+Found and fixed 2026-09-23. `included_seats` had been read only by the
+billing CRUD endpoints, so a $45 Solo salon could invite unlimited artists
+and every tier above the entry price was unsellable. Automated as FRAUD-14 in
+`make verify-security-salon`; 5 unit tests cover the boundary, the
+pending-invitation case and the never-bind rule for `comped`.
+
+**24.2 — A new artist lands on the right plan**
+
+- Register, onboard, get approved → the subscription is **`solo`**, not the
+  retired `starter`.
+- `GET /billing/plans` returns exactly the four public tiers in `sort_order`:
+  Solo $45, Studio $109, Salon $189, Multi $249.
+- `starter`, `growth`, `enterprise` and `comped` are **absent from the public
+  list but still resolvable** — `subscriptions.plan_code` is a foreign key,
+  and the six live comped subscriptions must keep working.
+- **`seat_price` is 0 on every plan**, public or retired. A non-zero value is
+  a regression against a decision, not a data-entry slip.
+
+**24.3 — Store default hours** — *partly covered by 23.0 / 23.0b*
+
+- Onboarding seeds **seven days** from `stores.default_open_time` /
+  `default_close_time` (09:00–18:00), so a new artist is bookable the moment
+  they are approved.
+- `PATCH /artists/stores/:id` with a new default **moves every day's times**.
+- A day the artist **closed stays closed**. The times move; which days the
+  salon trades does not.
+- **Existing stores are not backfilled.** `mkup3` and `mkup4` still have zero
+  `business_hours` rows, deliberately — a migration that invents opening
+  hours for a trading salon puts an artist on Discover when she is not there.
+- Invalid defaults (`close <= open`) are refused by
+  `stores_default_hours_check`.
+
+**24.4 — Message delivery survives WhatsApp being blocked** ⚠️
+
+The reason this matters is commercial, not technical: charging while
+reminders do not send makes *"it doesn't message my clients"* the churn
+reason for every customer, and it would be true.
+
+- With **only `TWILIO_SMS_FROM`** set, a queued notification is **delivered
+  by SMS** and `notifications.channel` records `sms`.
+- With **both** set, WhatsApp is used and `channel` records `whatsapp`.
+- With **both set and WhatsApp rejecting** (Meta 63051), the message falls
+  through to SMS **exactly once** — not twice, not a retry storm.
+- With **neither** set, the failure names `TWILIO_SMS_FROM` so the way out is
+  in the error.
+- **SKIP LOUDLY if `TWILIO_SMS_FROM` is unprovisioned.** It is procurement,
+  not code, and a silent skip here would report a working delivery path that
+  has never sent anything.
+
+**24.5 — An invitation actually queues a message**
+
+Regression for a bug that hid for a full day: the INSERT failed on a missing
+`::text` cast inside `jsonb_build_object` (Postgres 42P18) and the caller
+discarded the error with `_ =`, so queueing had **never once succeeded** and
+nothing said so.
+
+- Inviting an artist writes exactly **one** `notifications` row,
+  `template_name = 'salon_invitation'`, carrying the invitation id.
+- The queued message contains a **working link**.
+- Once the invitation is spent — accepted, declined, revoked or expired —
+  the payload is **redacted** and the raw token is no longer recoverable.
+- A notifier failure **must not** prevent the invitation being created. The
+  copyable link is the channel that works today.
+
