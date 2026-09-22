@@ -13,5 +13,5 @@
 export const environment = {
   production: false,
   apiBaseUrl: '/api/v1',
-  customerPwaUrl: 'https://exec-belong-helicopter-modeling.trycloudflare.com', // rewritten by scripts/share.sh
+  customerPwaUrl: 'https://laboratories-plans-scored-strip.trycloudflare.com', // rewritten by scripts/share.sh
 };

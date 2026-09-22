@@ -2580,3 +2580,89 @@ nothing said so.
 - A notifier failure **must not** prevent the invitation being created. The
   copyable link is the channel that works today.
 
+---
+
+### Suite 25 — Aggressive booking chaos
+
+**Added and EXECUTED Sep 23, 2026 — 16 pass, 0 fail, 5 informational.**
+`make chaos-booking`. Derived from an external hostile-testing brief; the
+parts that do not apply to B-Edge are listed below rather than quietly
+dropped.
+
+**Topology built each run:** 3 salons × (3, 3, 2) artists, 2 solo artists,
+20 customers. A "standalone" artist is the owner of a one-person salon —
+B-Edge has no artist without a salon, and that is the model, not a
+workaround.
+
+**25.1 — the state machine under attack**
+
+| Case | Result |
+|---|---|
+| Price mutated to `0.00` in the request | Stored **150.00**. Price is read from the service row, never accepted from the body |
+| Two terminal transitions fired simultaneously | One final state, no deadlock |
+| Reschedule into the past | Refused; slot unmoved |
+| Forged client timestamp (`client_time: 2020`) claiming free cancellation | Ignored; server time decided |
+| Customer hits the artist-only `complete` endpoint | 401 unauthenticated / **404** for another artist — indistinguishable from absent |
+| 5 concurrent refunds on one booking | Exactly **1** accepted |
+| Simultaneous `no_show` and `cancel` | One terminal state |
+| Artist cancels 48h out vs 30 min out | Both release the slot |
+
+**25.2 — cascading day shift**
+
+- `shift-preview` **writes nothing** — verified by comparing the day before
+  and after previewing.
+- A +15 min cascade that pushes a booking past closing time is **refused
+  all-or-nothing**, naming the booking: *"would finish at 19:15, after the
+  store closes at 18:00."* Nothing moves. Tested with a client cancelling
+  **concurrently**; 0 overlaps afterwards.
+- The source brief expected automatic refund, re-routing and fee-free
+  cancellation. **None of that exists** and it is not reported as passing.
+
+**25.3 — the 20-client siege**
+
+All 20 customers hold the same slot at the same instant: **1 × 201, 19 ×
+409**, one row holds the slot, **0 overlaps in the database**. This is the
+test that proves migration 001's claim about the GIST exclusion constraint
+being "the final atomic guard".
+
+**25.4 — money precision**
+
+`33.333`, `1e3`, `NaN`, `-10.00` all rejected **422** by
+`internal/pkg/money`'s whitelist. Zero NaN prices stored anywhere. There is
+no ledger to reconcile — B-Edge moves no money — so this is the strongest
+financial assertion the architecture permits.
+
+**25.5 — horizon and defaults**
+
+- A booking **305 days out was accepted**, and the slots endpoint offered
+  26 slots that day. **The API has no horizon cap**; the 90 days is
+  `STRIP_DAYS` in the customer PWA's date picker only. A booking that far
+  out outlives any change to the artist's hours, prices or employment.
+  **Open decision.**
+- Service defaults: deposit 0.00, deadline 48h, duration 60min.
+  Store defaults: same-day notice 4h, buffers 150/90, early-bird fee 0.00.
+- Onboarding seeds **7 days at 09:00–18:00**; a new artist is bookable
+  without touching the hours screen.
+
+**What this suite reports NOT APPLICABLE, never as a pass**
+
+Gateway pre-auth, wallets, commission splits, a payouts ledger, escrow,
+webhook idempotency, reliability scoring and automated compensation. Verified
+absent from the schema: `payouts`, `ledger`, `commissions`, `escrow`,
+`payment_intents`, `wallets`. B-Edge holds no money by design — customers pay
+deposits directly to the salon's own OMT or Whish number.
+
+**The defect this suite found**
+
+`CancelBooking` decided `refundDue` from `DepositAmount.IsPositive()` alone —
+the amount *required*, set at creation, not the amount *paid*. Cancelling
+from `pending`, `approved`, `deposit_paid` or `confirmed` with
+`deposit_paid_at` NULL produced `refund_due` in all four cases, putting
+bookings nobody had paid for into the artist's "Refund due" filter and
+telling her to send money to a customer who never sent her any. On a platform
+with no gateway, that refund is a manual OMT transfer out of her own pocket
+that does not come back.
+
+**Two existing unit tests were asserting the defective behaviour.** The suite
+was green and agreeing with the bug.
+
