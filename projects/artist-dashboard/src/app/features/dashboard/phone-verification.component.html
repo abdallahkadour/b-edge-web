@@ -1,0 +1,106 @@
+<div>
+  <h2 class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Phone number</h2>
+
+  @if (!hasPhone()) {
+    <!-- Accounts that predate the requirement. Registration collects a number
+         now, so this is rare rather than normal. -->
+    <div class="p-4 rounded-lg bg-warning-light border border-warning/30">
+      <p class="text-sm font-medium text-warning-dark">No phone number on your account</p>
+      <p class="text-xs text-warning-dark mt-1 max-w-lg">
+        Salons invite artists by phone number, so without one you cannot be added to a team.
+        Contact support to have it added.
+      </p>
+    </div>
+  } @else if (isVerified()) {
+    <div class="flex items-start gap-3 p-4 rounded-lg bg-success-light border border-success/30">
+      <lucide-icon name="badge-check" class="w-5 h-5 text-success-dark shrink-0 mt-0.5" />
+      <div class="min-w-0">
+        <p class="text-sm font-medium text-success-dark">
+          {{ phone() }} is verified
+        </p>
+        <p class="text-xs text-success-dark/90 mt-0.5">
+          Salons can invite you to their team.
+        </p>
+      </div>
+    </div>
+  } @else {
+    <!-- Loud, because an unverified artist is not merely missing a tick: no
+         salon can invite them at all, and nothing else on this page tells
+         them that. -->
+    <div class="p-4 rounded-lg bg-warning-light border border-warning/30 mb-4">
+      <p class="text-sm font-medium text-warning-dark">Your number is not verified</p>
+      <p class="text-xs text-warning-dark mt-1 max-w-lg">
+        Salons can only invite artists with a verified number, so until you confirm
+        <span class="font-medium">{{ phone() }}</span> you cannot be added to a team.
+      </p>
+    </div>
+
+    <p class="text-xs text-gray-500 mb-4 max-w-lg">
+      We will send a six-digit code to <span class="font-medium text-gray-700">{{ phone() }}</span>.
+      To change the number itself, contact support — it is deliberately not editable here,
+      so nobody can verify someone else's phone onto your profile.
+    </p>
+
+    @if (error(); as e) {
+      <p class="text-xs text-danger-dark mb-3" role="alert">{{ e }}</p>
+    }
+    @if (notice(); as n) {
+      <p class="text-xs text-success-dark mb-3" role="status">{{ n }}</p>
+    }
+
+    @if (!codeSent()) {
+      <bedge-button
+        variant="primary"
+        [loading]="sending()"
+        [disabled]="sending()"
+        (click)="requestCode()"
+      >Send code</bedge-button>
+    } @else {
+      <div class="flex flex-col gap-3 max-w-sm">
+        <div>
+          <label for="otp" class="block text-sm font-medium text-gray-700 mb-1.5">
+            Enter the six-digit code
+          </label>
+          <input
+            id="otp"
+            type="text"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            maxlength="6"
+            bedgeInput
+            [value]="code()"
+            (input)="onCodeInput($any($event.target).value)"
+            (keydown.enter)="submitCode()"
+            class="h-11 tracking-[0.4em] font-mono text-center"
+            placeholder="000000"
+          />
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <bedge-button
+            variant="primary"
+            [loading]="checking()"
+            [disabled]="checking() || !codeValid()"
+            (click)="submitCode()"
+          >Verify</bedge-button>
+
+          <bedge-button
+            variant="ghost"
+            [disabled]="sending() || cooldown() > 0"
+            (click)="requestCode()"
+          >
+            @if (cooldown() > 0) {
+              Resend in {{ cooldown() }}s
+            } @else {
+              Resend code
+            }
+          </bedge-button>
+        </div>
+
+        <p class="text-xs text-gray-500">
+          The code expires after 5 minutes.
+        </p>
+      </div>
+    }
+  }
+</div>

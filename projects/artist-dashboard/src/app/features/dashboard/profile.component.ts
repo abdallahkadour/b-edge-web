@@ -24,6 +24,7 @@ import {
 import type { ArtistProfile } from '@bedge/shared';
 
 import { PaymentMethodsComponent } from './payment-methods.component';
+import { PhoneVerificationComponent } from './phone-verification.component';
 import { PortfolioComponent } from './portfolio.component';
 
 /**
@@ -62,6 +63,7 @@ import { PortfolioComponent } from './portfolio.component';
     InputDirective,
     ThemeToggleComponent,
     PaymentMethodsComponent,
+    PhoneVerificationComponent,
   ],
   templateUrl: './profile.component.html',
 })
@@ -145,6 +147,17 @@ export class ProfileComponent implements OnInit {
   // ── Lifecycle ─────────────────────────────────────────────────────────────
 
   ngOnInit(): void {
+    this.load();
+  }
+
+  /**
+   * Re-read the profile after phone verification.
+   *
+   * The child emits rather than setting state itself, so the verified flag
+   * comes from the server rather than from the child inferring it. One source
+   * of truth, and the banner cannot disagree with the database.
+   */
+  reloadProfile(): void {
     this.load();
   }
 

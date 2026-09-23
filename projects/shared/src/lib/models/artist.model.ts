@@ -27,6 +27,15 @@ export interface ArtistProfile {
   readonly name: string;
   readonly email: string;
   readonly phone?: string;
+
+  /**
+   * ISO timestamp of when the artist proved this number is theirs, or absent
+   * if they never have.
+   *
+   * Not cosmetic: a salon may only invite an artist whose number is verified,
+   * so this is the difference between being hireable and not.
+   */
+  readonly phone_verified_at?: string;
   readonly bio?: string;
   readonly bio_ar?: string;
   readonly instagram?: string;

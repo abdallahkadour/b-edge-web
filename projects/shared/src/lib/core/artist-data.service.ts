@@ -44,6 +44,29 @@ export class ArtistDataService {
    * is always the resolved real UUID, which callers should use for any
    * further request that requires a genuine UUID (e.g. booking creation).
    */
+  /**
+   * POST /artists/me/phone/request-otp - send a code to your own number.
+   *
+   * Takes no arguments, deliberately. The server reads the number from the
+   * ACCOUNT; if this accepted one, an artist could verify somebody else's
+   * phone onto their own profile, which is the whole thing the flow exists
+   * to establish.
+   *
+   * 202, not 200: the code is QUEUED. Delivery is the worker's job and on
+   * this platform it has never once been confirmed.
+   */
+  requestPhoneOtp(): Observable<{ message: string }> {
+    return this.api.post<{ message: string }>('/artists/me/phone/request-otp', {});
+  }
+
+  /** POST /artists/me/phone/verify - confirm the six-digit code. */
+  verifyPhone(code: string): Observable<{ message: string; verified: boolean }> {
+    return this.api.post<{ message: string; verified: boolean }>(
+      '/artists/me/phone/verify',
+      { code },
+    );
+  }
+
   getArtistById(id: string): Observable<Artist> {
     return this.api.get<Artist>(`/artists/${id}`);
   }

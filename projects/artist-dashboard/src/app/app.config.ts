@@ -13,6 +13,7 @@ import {
   LucideAngularModule,
   Calendar,
   CalendarDays,
+  BadgeCheck,
   CalendarClock,
   Users,
   UsersRound,
@@ -94,6 +95,7 @@ export const appConfig: ApplicationConfig = {
     // static analysis of the `imports` array.
     importProvidersFrom(
       LucideAngularModule.pick({
+        BadgeCheck,
         Calendar,
         CalendarClock,
         CalendarDays,
