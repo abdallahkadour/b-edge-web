@@ -39,17 +39,29 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 /**
  * How many days ahead the date strip runs.
  *
- * Was 28, which meant the strip stopped dead four weeks out and a customer
- * could not book anything beyond it — reported as "booking is only available
- * for this month". Nothing on the server imposed that limit; it was this
- * constant alone.
+ * Was 28, then 90. Both were too short, and for the same reason: a number
+ * that sounded far away, picked without checking it against what the
+ * business actually sells.
  *
- * 90 days is a quarter, which covers the things people book far ahead —
- * weddings, graduations, Eid — without offering a date so distant that an
- * artist cannot reasonably honour it. A strip that long is too much to
- * scroll cell by cell, which is why `monthJumps` exists below.
+ * 28 meant the strip stopped dead four weeks out — reported as "booking is
+ * only available for this month". 90 was chosen as "a quarter, which covers
+ * the things people book far ahead — weddings, graduations, Eid". It does
+ * not cover weddings. Brides book six to twelve months ahead; the launch
+ * artist takes bridal 11–12 months out, and bridal is roughly double the
+ * price of anything else she does. So for as long as this said 90, her
+ * highest-value bookings could not be made through the funnel at all — they
+ * arrived by DM and were keyed in by hand.
+ *
+ * 400 days is "next year, same date" plus slack. The server bounds this
+ * independently at MaxBookingHorizon (550 days), which is a sanity bound
+ * rather than a product rule — see internal/booking/model.go. When
+ * services.max_advance_days lands, a regular session can go back to ~90
+ * while bridal keeps the long horizon; until then one number serves both.
+ *
+ * A strip this long is far too much to scroll cell by cell, which is why
+ * `monthJumps` exists below — and why its labels carry a year.
  */
-const STRIP_DAYS = 90;
+const STRIP_DAYS = 400;
 
 /**
  * The timezone appointment times are displayed in.
@@ -231,11 +243,19 @@ export class PickDatetimeScreenComponent {
   protected readonly monthJumps = computed(() => {
     const seen = new Set<string>();
     const out: { key: string; label: string; iso: string }[] = [];
+    // A strip longer than a year contains the same month twice. Labelling
+    // chips with the month alone then renders two chips both reading "Sep" —
+    // distinct keys, identical labels, and no way for a customer to tell
+    // next month from next year. The year is appended only when the strip
+    // actually spans one, so the common case stays "Sep" not "Sep 26".
+    const spansAYear = STRIP_DAYS > 365;
+
     for (const c of this.dateCells()) {
       const key = c.iso.slice(0, 7);
       if (seen.has(key)) continue;
       seen.add(key);
-      out.push({ key, label: c.month, iso: c.iso });
+      const label = spansAYear ? `${c.month} ${c.iso.slice(2, 4)}` : c.month;
+      out.push({ key, label, iso: c.iso });
     }
     return out;
   });

@@ -2635,10 +2635,14 @@ financial assertion the architecture permits.
 **25.5 — horizon and defaults**
 
 - A booking **305 days out was accepted**, and the slots endpoint offered
-  26 slots that day. **The API has no horizon cap**; the 90 days is
-  `STRIP_DAYS` in the customer PWA's date picker only. A booking that far
-  out outlives any change to the artist's hours, prices or employment.
-  **Open decision.**
+  26 slots that day. **The API had no horizon cap**; the 90 days was
+  `STRIP_DAYS` in the customer PWA's date picker only.
+  **CLOSED 2026-09-23 — and the fix went the other way.** The cap was set at
+  **550 days** and the picker **raised to 400**, because bridal is booked
+  11-12 months ahead and a tight cap would have refused the highest-value
+  bookings on the platform. The picker's 90 days had been silently blocking
+  them. Re-verify with: past → `BOOKING_IN_PAST`; 365 and 548 days → `201`;
+  551 and 3650 days → `BOOKING_TOO_FAR_AHEAD`. All seven verified live.
 - Service defaults: deposit 0.00, deadline 48h, duration 60min.
   Store defaults: same-day notice 4h, buffers 150/90, early-bird fee 0.00.
 - Onboarding seeds **7 days at 09:00–18:00**; a new artist is bookable
