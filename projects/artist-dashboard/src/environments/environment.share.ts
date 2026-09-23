@@ -13,5 +13,5 @@
 export const environment = {
   production: false,
   apiBaseUrl: '/api/v1',
-  customerPwaUrl: 'https://laboratories-plans-scored-strip.trycloudflare.com', // rewritten by scripts/share.sh
+  customerPwaUrl: 'https://shopping-environment-judgment-connector.trycloudflare.com', // rewritten by scripts/share.sh
 };

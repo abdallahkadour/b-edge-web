@@ -27,11 +27,20 @@ const MIN_PASSWORD_LENGTH = 8;
  * (confirmed by reading the frontend source, not assumed - see
  * project-docs/E2E-TEST-PLAN.md §4, Gap G1); this closes it.
  *
- * Deliberately minimal: name, email, password, confirm - no phone number,
- * even though the backend accepts an optional one. Onboarding.page.ts's own
- * doc comment argues explicitly for minimizing fields before first listing
- * ("time-to-first-listing", not "how complete a profile is on day one");
- * the same reasoning applies one step earlier, here.
+ * Name, email, password, confirm - and a PHONE NUMBER.
+ *
+ * The phone was deliberately left out when this screen was written, on the
+ * same "time-to-first-listing" reasoning onboarding.page.ts argues for. That
+ * reasoning no longer holds: since migration 051 a salon may only invite a
+ * registered artist, and the invitation is addressed to a verified phone
+ * number. An artist who signs up without one cannot be invited to a salon at
+ * all, and would have to come back and add it before any owner could reach
+ * them - which is worse friction, later, at a moment nobody is expecting it.
+ *
+ * Local format is fine: "70 555 123" is how a Lebanese artist writes their
+ * number, and the API normalises to E.164. The check here is deliberately
+ * loose - enough digits to be a real attempt - because the server owns the
+ * real rule and duplicating it in the client is how the two drift apart.
  *
  * On success, register() sets the session exactly like login() does (same
  * refresh cookie), so this can navigate straight into /onboarding rather
@@ -50,6 +59,7 @@ export class RegisterComponent {
 
   readonly name = signal('');
   readonly email = signal('');
+  readonly phone = signal('');
   readonly password = signal('');
   readonly confirmPassword = signal('');
 
@@ -67,6 +77,17 @@ export class RegisterComponent {
     return EMAIL_PATTERN.test(this.email().trim());
   }
 
+  /**
+   * Loose on purpose. internal/pkg/phone owns the real rule - which prefixes
+   * are valid Lebanese mobiles, what lengths are allowed - and re-implementing
+   * that here would give two rules that drift. This only catches an obviously
+   * empty or too-short entry so the user is not bounced by the server for
+   * something the form could have said immediately.
+   */
+  isPhoneValid(): boolean {
+    return this.phone().replace(/\D/g, '').length >= 7;
+  }
+
   isPasswordValid(): boolean {
     return this.password().length >= MIN_PASSWORD_LENGTH;
   }
@@ -79,7 +100,13 @@ export class RegisterComponent {
     this.touched.set(true);
     this.errorMessage.set(null);
 
-    if (!this.isNameValid() || !this.isEmailValid() || !this.isPasswordValid() || !this.isConfirmValid()) {
+    if (
+      !this.isNameValid() ||
+      !this.isEmailValid() ||
+      !this.isPhoneValid() ||
+      !this.isPasswordValid() ||
+      !this.isConfirmValid()
+    ) {
       return;
     }
 
@@ -89,6 +116,7 @@ export class RegisterComponent {
       .register({
         name: this.name().trim(),
         email: this.email().trim(),
+        phone: this.phone().trim(),
         password: this.password(),
         role: 'artist',
       })

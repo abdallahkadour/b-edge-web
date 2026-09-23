@@ -45,6 +45,18 @@ export interface RegisterRequest {
   email: string;
   password: string; // min 8 chars
   role: RegisterableRole;
+
+  /**
+   * REQUIRED when role is 'artist', optional for a customer.
+   *
+   * Optional in the type because one endpoint serves both roles; the server
+   * enforces the conditional rule. Local format is fine - "70 555 123" - the
+   * API normalises to E.164 through internal/pkg/phone.
+   *
+   * An artist who signs up without one cannot be invited to a salon: since
+   * migration 051 an invitation is addressed to a registered artist's
+   * verified number.
+   */
   phone?: string;
 }
 

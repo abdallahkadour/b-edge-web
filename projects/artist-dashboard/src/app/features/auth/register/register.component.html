@@ -76,6 +76,43 @@
           </div>
         </div>
 
+        <!-- Phone -->
+        <div class="mb-4">
+          <label for="phone" class="block text-sm font-medium text-gray-700 mb-1.5">
+            Phone number
+          </label>
+          <input
+            id="phone"
+            type="tel"
+            inputmode="tel"
+            bedgeInput
+            [invalid]="touched() && !isPhoneValid()"
+            [value]="phone()"
+            (input)="phone.set($any($event.target).value)"
+            (keydown.enter)="submit()"
+            autocomplete="tel"
+            [attr.aria-invalid]="touched() && !isPhoneValid()"
+            [attr.aria-describedby]="'phone-hint'"
+            class="h-11"
+            placeholder="70 555 123"
+          />
+          <div class="mt-1.5 min-h-4">
+            @if (touched() && !isPhoneValid()) {
+              <p class="text-xs text-danger leading-4">
+                @if (phone().trim().length === 0) {
+                  Phone number is required.
+                } @else {
+                  Enter a valid mobile number.
+                }
+              </p>
+            } @else {
+              <p id="phone-hint" class="text-xs text-gray-500 leading-4">
+                Salons use this to invite you to their team.
+              </p>
+            }
+          </div>
+        </div>
+
         <!-- Password -->
         <div class="mb-4">
           <label for="password" class="block text-sm font-medium text-gray-700 mb-1.5">
