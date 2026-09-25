@@ -65,12 +65,13 @@
       />
     }
     @case ('details') {
-      @if (selectedService() && selectedStore() && selectedStartTime() && heldUntil()) {
+      @if (selectedService() && selectedStore() && selectedStartTime() && heldUntil() && holdQuote()) {
         <app-guest-details-screen
           [service]="selectedService()!"
           [storeName]="selectedStore()!.name"
           [startTime]="selectedStartTime()!"
           [heldUntil]="heldUntil()!"
+          [quote]="holdQuote()!"
           [submitting]="submitting()"
           [submitError]="submitError()"
           [initialName]="customerName()"

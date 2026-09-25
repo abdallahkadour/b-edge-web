@@ -20,6 +20,7 @@ import type {
   MediaItem,
   Booking,
   DiscoveryStoreCard,
+  HoldGuestSlotResponse,
 } from '@bedge/shared';
 
 import { ArtistProfileScreenComponent } from './screens/artist-profile-screen.component';
@@ -127,6 +128,9 @@ export class BookingFunnelPage implements OnInit {
   protected readonly discountPreview = signal<DiscountPreview | null>(null);
   protected readonly checkingDiscount = signal(false);
   protected readonly confirmedBooking = signal<Booking | null>(null);
+
+  // ── Hold quote ────────────────────────────────────────────────────────────
+  protected readonly holdQuote = signal<HoldGuestSlotResponse | null>(null);
 
   protected readonly selectedService = computed(
     () => this.services().find((s) => s.id === this.selectedServiceId()) ?? null,
@@ -328,6 +332,7 @@ export class BookingFunnelPage implements OnInit {
         next: (hold) => {
           this.holdBookingId.set(hold.booking_id);
           this.heldUntil.set(hold.held_until);
+          this.holdQuote.set(hold);
           this.holdingSlot.set(false);
           this.step.set('details');
         },
@@ -425,6 +430,7 @@ export class BookingFunnelPage implements OnInit {
   protected onChooseAnotherTime(): void {
     this.holdBookingId.set(null);
     this.heldUntil.set(null);
+    this.holdQuote.set(null);
     this.submitError.set(null);
     this.step.set('pick-datetime');
   }
@@ -447,6 +453,7 @@ export class BookingFunnelPage implements OnInit {
     this.selectedStartTime.set(null);
     this.holdBookingId.set(null);
     this.heldUntil.set(null);
+    this.holdQuote.set(null);
     this.customerName.set('');
     this.customerPhone.set('');
     this.customerNotes.set('');

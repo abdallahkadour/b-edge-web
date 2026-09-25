@@ -7,7 +7,7 @@ import { isValidLocalPhone,
   isValidNationalPhone,
   toE164,
 } from '@bedge/shared';
-import type { DiscountPreview, PublicService } from '@bedge/shared';
+import type { DiscountPreview, PublicService, HoldGuestSlotResponse } from '@bedge/shared';
 
 /** The store's timezone. See pick-datetime-screen for why this isn't the browser's. */
 const STORE_TIMEZONE = 'Asia/Beirut';
@@ -40,6 +40,7 @@ export class GuestDetailsScreenComponent implements OnInit {
   readonly storeName = input.required<string>();
   readonly startTime = input.required<string>(); // ISO 8601
   readonly heldUntil = input.required<string>(); // ISO 8601 — 10-minute hold deadline
+  readonly quote = input.required<HoldGuestSlotResponse>();
   readonly submitting = input<boolean>(false);
   /** Set when the server rejects submit with HOLD_EXPIRED — a genuine race, not a form error. */
   readonly submitError = input<string | null>(null);
@@ -135,7 +136,7 @@ export class GuestDetailsScreenComponent implements OnInit {
     return p && !p.valid ? (p.reason ?? "That code isn't valid.") : null;
   });
 
-  protected readonly hasDeposit = computed(() => Number(this.service().deposit_amount) > 0);
+  protected readonly hasDeposit = computed(() => Number(this.quote().deposit_amount) > 0);
 
   protected readonly secondsRemaining = computed(() => {
     const deadline = new Date(this.heldUntil()).getTime();
