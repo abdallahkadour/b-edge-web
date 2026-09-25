@@ -207,6 +207,16 @@ export const routes: Routes = [
           ),
       },
       {
+        // The owner setting a specific member's prices. Owner-only for the
+        // same reason as /team - the API refuses a member's writes here too.
+        path: 'team/:artistId/services',
+        canActivate: [salonOwnerGuard()],
+        loadComponent: () =>
+          import('./features/dashboard/member-services.page').then(
+            (m) => m.MemberServicesPage,
+          ),
+      },
+      {
         // An artist's OWN working hours. Deliberately not owner-guarded -
         // this is the screen a salon member needs most, and store hours
         // (the owner's) live at /dashboard/hours.
@@ -214,6 +224,14 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/dashboard/my-schedule.component').then(
             (m) => m.MyScheduleComponent,
+          ),
+      },
+      {
+        // An artist's OWN services and prices. Not owner-guarded (PP-3).
+        path: 'my-services',
+        loadComponent: () =>
+          import('./features/dashboard/my-services.page').then(
+            (m) => m.MyServicesPage,
           ),
       },
       {

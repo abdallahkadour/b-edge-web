@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 
 import {
@@ -40,6 +41,7 @@ import type { SalonInvitation, SalonMember } from '@bedge/shared';
   standalone: true,
   imports: [
     DatePipe,
+    RouterLink,
     LucideAngularModule,
     ButtonComponent,
     BadgeComponent,

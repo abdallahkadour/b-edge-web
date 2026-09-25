@@ -109,14 +109,20 @@
               }
             </div>
 
-            @if (canRemove(m)) {
-              <bedge-button
-                size="sm" variant="ghost"
-                [disabled]="busyId() === m.artist_id"
-                (click)="removeMember(m)">
-                Remove
-              </bedge-button>
-            }
+            <div class="flex items-center gap-3 shrink-0">
+              @if (!m.is_owner) {
+                <a [routerLink]="['/dashboard/team', m.artist_id, 'services']"
+                   class="text-sm text-ink underline underline-offset-2">Services &amp; prices</a>
+              }
+              @if (canRemove(m)) {
+                <bedge-button
+                  size="sm" variant="ghost"
+                  [disabled]="busyId() === m.artist_id"
+                  (click)="removeMember(m)">
+                  Remove
+                </bedge-button>
+              }
+            </div>
           </div>
 
           @if (rowError(m.artist_id); as re) {

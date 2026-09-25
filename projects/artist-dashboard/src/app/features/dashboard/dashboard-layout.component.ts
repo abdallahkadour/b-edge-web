@@ -10,7 +10,7 @@ import { tap } from 'rxjs';
 import { LucideAngularModule } from 'lucide-angular';
 import { A11yModule } from '@angular/cdk/a11y';
 
-import { AuthStore, BillingDataService, OnboardingDataService } from '@bedge/shared';
+import { AuthStore, BillingDataService, MembershipDataService, OnboardingDataService } from '@bedge/shared';
 import type { SubscriptionStatus } from '@bedge/shared';
 
 import { NotificationBellComponent } from './notification-bell.component';
@@ -54,6 +54,7 @@ export class DashboardLayoutComponent {
   private readonly router = inject(Router);
   private readonly onboardingSvc = inject(OnboardingDataService);
   private readonly billingSvc = inject(BillingDataService);
+  private readonly membershipSvc = inject(MembershipDataService);
 
   /** Authenticated user — null when unauthenticated (guard prevents this). */
   readonly user = this.auth.user;
@@ -78,8 +79,24 @@ export class DashboardLayoutComponent {
    *  "my own profile" media/artist lookups were never status-gated in
    *  the first place, only the PUBLIC ones (Discover, GetArtistByID)
    *  were. This was purely a frontend gate being more restrictive than
-   *  it needed to be. */
-  private static readonly PENDING_ALLOWED_PATH = '/dashboard/profile';
+   *  it needed to be.
+   *
+   *  My services joins it for the same reason: a pending artist should be
+   *  able to choose what she offers while she waits for approval, rather
+   *  than discover the switch only exists once she's already reviewed -
+   *  see join-salon.page.ts, which shows this same screen at the join
+   *  step for exactly that reason. [0] is the redirect target; the
+   *  "is this URL allowed" check below tests membership in the whole list. */
+  private static readonly PENDING_ALLOWED_PATHS = [
+    '/dashboard/profile',
+    '/dashboard/my-services',
+  ];
+
+  /** Salon headcount, once known - see the constructor guard below for why
+   *  this is only ever fetched for a salon owner. Null until that resolves
+   *  (or forever, for anyone the fetch was skipped for or that it failed
+   *  for); navItems() reads a null the same as "solo salon". */
+  private readonly artistCount = signal<number | null>(null);
 
   constructor() {
     // Safety net for the case the login redirect doesn't cover: a pending
@@ -96,8 +113,8 @@ export class DashboardLayoutComponent {
         next: (status) => {
           if (status.status === 'pending') {
             this.isPending.set(true);
-            if (!this.router.url.startsWith(DashboardLayoutComponent.PENDING_ALLOWED_PATH)) {
-              this.router.navigateByUrl(DashboardLayoutComponent.PENDING_ALLOWED_PATH);
+            if (!DashboardLayoutComponent.PENDING_ALLOWED_PATHS.some((p) => this.router.url.startsWith(p))) {
+              this.router.navigateByUrl(DashboardLayoutComponent.PENDING_ALLOWED_PATHS[0]);
             }
           } else if (status.status !== 'active') {
             this.router.navigateByUrl('/onboarding');
@@ -112,6 +129,23 @@ export class DashboardLayoutComponent {
       this.billingSvc.getMySubscription().subscribe({
         next: (sub) => this.subscriptionStatus.set(sub.status ?? null),
         error: () => {},
+      });
+    }
+
+    // PP-8: only an owner's nav is ever gated on headcount (see navItems()
+    // below), so this only fires for one. That also keeps it from running
+    // for an admin (role !== 'artist', and listMembers is an artist-salon
+    // endpoint) or for an artist whose token predates joining any salon
+    // (salonRole 'none' - isSalonOwner() is false there too, see
+    // salon-role.util.ts), where the call would have nothing to answer.
+    if (this.auth.role() === 'artist' && this.auth.isSalonOwner()) {
+      this.membershipSvc.listMembers().subscribe({
+        next: (members) => this.artistCount.set(members.length),
+        error: () => {
+          // Left null. navItems() treats null the same as a solo salon and
+          // hides "My services" - the safe default when headcount couldn't
+          // be confirmed, rather than assuming a team exists.
+        },
       });
     }
   }
@@ -131,6 +165,7 @@ export class DashboardLayoutComponent {
     { path: '/dashboard/services', label: 'Services', icon: 'scissors' },
     { path: '/dashboard/discounts', label: 'Promos', icon: 'tag' },
     { path: '/dashboard/my-hours', label: 'My hours', icon: 'clock' },
+    { path: '/dashboard/my-services', label: 'My services', icon: 'scissors' },
     { path: '/dashboard/hours',    label: 'Store hours', icon: 'calendar-clock' },
     { path: '/dashboard/team',     label: 'Team',     icon: 'users-round' },
     { path: '/dashboard/profile',  label: 'Profile',  icon: 'user' },
@@ -166,13 +201,24 @@ export class DashboardLayoutComponent {
   readonly navItems = computed<NavItem[]>(() => {
     if (this.isPending()) {
       return this.allNavItems.filter(
-        (item) => item.path === '/dashboard/profile' || item.path === '/dashboard/help',
+        (item) =>
+          DashboardLayoutComponent.PENDING_ALLOWED_PATHS.includes(item.path) ||
+          item.path === '/dashboard/help',
       );
     }
-    if (this.auth.isSalonOwner()) return this.allNavItems;
-    return this.allNavItems.filter(
-      (item) => !DashboardLayoutComponent.OWNER_ONLY_PATHS.includes(item.path),
-    );
+    const items = this.auth.isSalonOwner()
+      ? this.allNavItems
+      : this.allNavItems.filter(
+          (item) => !DashboardLayoutComponent.OWNER_ONLY_PATHS.includes(item.path),
+        );
+    // PP-8: a solo salon has nobody else to price differently, so the
+    // screen would just mirror the salon's own menu back at her with
+    // nothing to do on it. (artistCount() ?? 1) treats "not yet known" the
+    // same as "solo" - see the constructor's load and its doc comment.
+    if (this.auth.isSalonOwner() && (this.artistCount() ?? 1) <= 1) {
+      return items.filter((item) => item.path !== '/dashboard/my-services');
+    }
+    return items;
   });
 
   /**

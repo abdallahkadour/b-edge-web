@@ -11,6 +11,8 @@ import {
 } from '@bedge/shared';
 import type { InvitationPreview } from '@bedge/shared';
 
+import { ServiceOfferingsComponent } from '../dashboard/service-offerings.component';
+
 /**
  * Accepting an invitation to join a salon. Reached from the link an owner
  * sends: /join/:token
@@ -33,7 +35,7 @@ import type { InvitationPreview } from '@bedge/shared';
 @Component({
   selector: 'bedge-join-salon',
   standalone: true,
-  imports: [RouterLink, ButtonComponent, InputDirective, SkeletonComponent],
+  imports: [RouterLink, ButtonComponent, InputDirective, SkeletonComponent, ServiceOfferingsComponent],
   templateUrl: './join-salon.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -56,6 +58,11 @@ export class JoinSalonPage implements OnInit {
   protected readonly submitting = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly joined = signal(false);
+  /** True when the post-join session refresh failed. The services step
+   *  needs a fresh access token carrying the new salon_id (see accept()
+   *  below); without one, ServiceOfferingsComponent's calls would 403 with
+   *  NO_SALON, so this steers her to log in again instead of showing it. */
+  protected readonly needsLogin = signal(false);
 
   protected readonly isAuthenticated = this.auth.isAuthenticated;
 
@@ -122,8 +129,12 @@ export class JoinSalonPage implements OnInit {
       })
       .subscribe({
         next: () => {
-          this.submitting.set(false);
-          this.joined.set(true);
+          // The access token was minted before she joined and carries no
+          // salon. Refresh so the services step can call salon endpoints.
+          this.auth.refresh().subscribe({
+            next: () => { this.submitting.set(false); this.joined.set(true); },
+            error: () => { this.submitting.set(false); this.joined.set(true); this.needsLogin.set(true); },
+          });
         },
         error: (err) => {
           this.submitting.set(false);
