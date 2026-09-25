@@ -92,11 +92,24 @@ export class DashboardLayoutComponent {
     '/dashboard/my-services',
   ];
 
-  /** Salon headcount, once known - see the constructor guard below for why
-   *  this is only ever fetched for a salon owner. Null until that resolves
-   *  (or forever, for anyone the fetch was skipped for or that it failed
-   *  for); navItems() reads a null the same as "solo salon". */
-  private readonly artistCount = signal<number | null>(null);
+  /** Salon headcount, once known - drives whether "My services" appears for
+   *  an owner (see navItems() below). Three states, not two:
+   *   - 'loading': the request is in flight. Hidden for an owner while
+   *     loading, to avoid a show-then-hide flicker for the common case - a
+   *     solo owner, like the launch artist.
+   *   - 'unknown': the load failed, or was never attempted because there's
+   *     nothing to ask it about (an admin, a member, or an artist whose
+   *     token predates joining any salon - see the constructor). SHOWN -
+   *     fails open, same convention as the billing-status banner above: a
+   *     missing answer must never cost a real multi-artist owner her entry
+   *     point, it can only add one that nobody but a solo owner sees for the
+   *     length of one failed request.
+   *   - a number: the confirmed headcount. Hidden only when the caller is
+   *     the owner and the count is <= 1 - a solo salon has nobody else to
+   *     price differently.
+   *  A member's nav is never gated on this (see navItems()), so none of the
+   *  three states can hide anything for a member. */
+  private readonly artistCount = signal<number | 'loading' | 'unknown'>('loading');
 
   constructor() {
     // Safety net for the case the login redirect doesn't cover: a pending
@@ -133,7 +146,7 @@ export class DashboardLayoutComponent {
     }
 
     // PP-8: only an owner's nav is ever gated on headcount (see navItems()
-    // below), so this only fires for one. That also keeps it from running
+    // below), so this only fetches for one. That also keeps it from running
     // for an admin (role !== 'artist', and listMembers is an artist-salon
     // endpoint) or for an artist whose token predates joining any salon
     // (salonRole 'none' - isSalonOwner() is false there too, see
@@ -141,12 +154,17 @@ export class DashboardLayoutComponent {
     if (this.auth.role() === 'artist' && this.auth.isSalonOwner()) {
       this.membershipSvc.listMembers().subscribe({
         next: (members) => this.artistCount.set(members.length),
-        error: () => {
-          // Left null. navItems() treats null the same as a solo salon and
-          // hides "My services" - the safe default when headcount couldn't
-          // be confirmed, rather than assuming a team exists.
-        },
+        // Fail open - see artistCount's doc comment. A transient error must
+        // not cost a real multi-artist owner her entry point.
+        error: () => this.artistCount.set('unknown'),
       });
+    } else {
+      // Never asked (admin, member, or an artist with no salon yet) - move
+      // straight to 'unknown' rather than leaving this stuck in 'loading'
+      // forever. Harmless either way here, since navItems() gates the whole
+      // check on isSalonOwner() first, but 'unknown' is the honest state:
+      // this never fetched, so it can never resolve on its own.
+      this.artistCount.set('unknown');
     }
   }
 
@@ -213,10 +231,16 @@ export class DashboardLayoutComponent {
         );
     // PP-8: a solo salon has nobody else to price differently, so the
     // screen would just mirror the salon's own menu back at her with
-    // nothing to do on it. (artistCount() ?? 1) treats "not yet known" the
-    // same as "solo" - see the constructor's load and its doc comment.
-    if (this.auth.isSalonOwner() && (this.artistCount() ?? 1) <= 1) {
-      return items.filter((item) => item.path !== '/dashboard/my-services');
+    // nothing to do on it. Only ever evaluated for an owner - see
+    // artistCount's doc comment for what each of its three states means
+    // here: hide while 'loading' (avoids a flicker for the common solo-owner
+    // case), hide once a confirmed count says solo, but SHOW on 'unknown'
+    // (fail open - a failed load must not cost a real owner her nav entry).
+    if (this.auth.isSalonOwner()) {
+      const count = this.artistCount();
+      if (count === 'loading' || (typeof count === 'number' && count <= 1)) {
+        return items.filter((item) => item.path !== '/dashboard/my-services');
+      }
     }
     return items;
   });

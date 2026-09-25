@@ -52,11 +52,23 @@ export class ServiceOfferingsComponent implements OnInit {
   }
 
   protected toggle(row: ServiceOffering): void {
-    if (row.offered && row.own_price &&
-        !confirm(`Turning off ${row.service_name} removes your price of $${row.own_price}. Turn it off?`)) {
+    if (row.offered && (row.own_price || row.own_deposit) && !confirm(this.turnOffWarning(row))) {
       return;
     }
     this.save(row, { offered: !row.offered });
+  }
+
+  /**
+   * What turning a service off costs her, named plainly rather than left
+   * for her to notice missing later - spec §5. A custom deposit is lost the
+   * same way a custom price is, so both are called out when both are set.
+   */
+  private turnOffWarning(row: ServiceOffering): string {
+    const lost = [
+      row.own_price ? `price of $${row.own_price}` : null,
+      row.own_deposit ? `deposit of $${row.own_deposit}` : null,
+    ].filter((s): s is string => s !== null);
+    return `Turning off ${row.service_name} removes your ${lost.join(' and ')}. Turn it off?`;
   }
 
   protected savePrices(row: ServiceOffering): void {

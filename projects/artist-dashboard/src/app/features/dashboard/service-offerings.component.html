@@ -1,7 +1,7 @@
 @if (loading()) {
   <div class="flex flex-col gap-2"><bedge-skeleton height="72px" /><bedge-skeleton height="72px" /></div>
 } @else {
-  @if (rowError()['_']; as e) { <p class="text-sm text-danger mb-3">{{ e }}</p> }
+  @if (rowError()['_']; as e) { <p class="text-sm text-danger mb-3" role="alert">{{ e }}</p> }
   <ul class="flex flex-col gap-2">
     @for (row of rows(); track row.service_id) {
       <li class="rounded-xl border border-gray-200 bg-white p-4">
