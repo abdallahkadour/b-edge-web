@@ -177,6 +177,11 @@ export interface HoldGuestSlotResponse {
   readonly held_until: string; // ISO 8601 UTC timestamp - 10-minute hold deadline
   readonly start_time: string;
   readonly end_time: string;
+  /** What the hold CHARGED - display these, not the service list's numbers. */
+  readonly original_price: string;
+  readonly early_bird_fee: string;
+  readonly final_price: string;
+  readonly deposit_amount: string;
 }
 
 /**

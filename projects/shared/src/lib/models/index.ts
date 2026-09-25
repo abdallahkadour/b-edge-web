@@ -12,6 +12,7 @@ export * from './customer-auth.model';
 export * from './waitlist.model';
 export * from './product.model';
 export * from './onboarding.model';
+export * from './offering.model';
 export * from './admin.model';
 export * from './enriched-booking.model';
 export * from './earnings.model';
