@@ -2584,7 +2584,7 @@ nothing said so.
 
 ### Suite 25 — Aggressive booking chaos
 
-**Added Sep 23, 2026. Last executed Sep 25, 2026 — 20 pass, 0 fail, 2
+**Added Sep 23, 2026. Last executed Sep 25, 2026 — 23 pass, 0 fail, 2
 informational.**
 
 *Sep 25: re-run after the invitation rules landed. It went RED first, twice,
@@ -2708,4 +2708,27 @@ A third failure was environmental and worth recording because it wasted time:
 `.air.toml` gaining `-tags devbypass`. A stale one rebuilt `tmp/main` without
 the tag and clobbered the tagged build, so the bypass silently stopped
 working. `pgrep -x air` should return exactly one.
+
+**3.6 / 3.6b / 4.3 — artist, store and service must belong together (added Sep 25)**
+
+The API accepted **any** combination across salons. Both of these returned
+`201` against real data before the fix:
+
+| Request | Was | Now |
+|---|---|---|
+| member + her store + **another salon's** service | `201` — booked at the other salon's price, filed under the other salon | `404 SERVICE_NOT_FOUND` |
+| member + her service + **another salon's** store | `201` — booked where she does not work | `404 STORE_NOT_FOUND` |
+| member + her own store and service (control) | `201` | `201` |
+
+The positive control uses a **joined member**, not an owner, on purpose. Every
+artist in the database when the guard was written was a salon owner, so the
+check that "every artist is linked to their salon's stores" had only ever been
+true of owners. Joining links a member to every active store
+(`onboarding/repository.go:225`); if that ever stopped, this guard would refuse
+every booking with a member and the two refusals would still pass.
+
+**4.3** is a standing invariant rather than a probe: no booking, **ever**,
+whose salon or store differs from its artist's. It reports its denominator —
+"across all 52 bookings ever" — because a zero over an empty table proves
+nothing. Security plan: **FRAUD-16**.
 
