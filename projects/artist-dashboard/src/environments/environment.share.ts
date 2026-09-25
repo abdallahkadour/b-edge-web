@@ -13,5 +13,5 @@
 export const environment = {
   production: false,
   apiBaseUrl: '/api/v1',
-  customerPwaUrl: 'https://heather-supervisors-website-hull.trycloudflare.com', // rewritten by scripts/share.sh
+  customerPwaUrl: 'https://truth-board-hollywood-cooler.trycloudflare.com', // rewritten by scripts/share.sh
 };

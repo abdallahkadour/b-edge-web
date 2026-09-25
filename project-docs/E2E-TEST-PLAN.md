@@ -2584,15 +2584,29 @@ nothing said so.
 
 ### Suite 25 — Aggressive booking chaos
 
-**Added and EXECUTED Sep 23, 2026 — 16 pass, 0 fail, 5 informational.**
+**Added Sep 23, 2026. Last executed Sep 25, 2026 — 20 pass, 0 fail, 2
+informational.**
+
+*Sep 25: re-run after the invitation rules landed. It went RED first, twice,
+and both failures were the product working — see "What this suite caught about
+itself" at the end of this suite.*
 `make chaos-booking`. Derived from an external hostile-testing brief; the
 parts that do not apply to B-Edge are listed below rather than quietly
 dropped.
 
 **Topology built each run:** 3 salons × (3, 3, 2) artists, 2 solo artists,
-20 customers. A "standalone" artist is the owner of a one-person salon —
-B-Edge has no artist without a salon, and that is the model, not a
-workaround.
+20 customers. A "standalone" artist is the owner of a one-person salon.
+
+Since migration 051 the topology exercises the real joining flow end to end:
+register with a phone → **verify it through `POST /artists/me/phone/verify`**
+→ owner invites → accept. The verification step uses the dev bypass code
+rather than reading an OTP out of the database, so the handler, the auth
+middleware and the `artistOnly` gate are all exercised. Writing
+`phone_verified_at` directly in SQL would set the column without proving the
+endpoint that sets it still works.
+
+**This suite therefore requires the API built with `-tags devbypass` and
+`APP_ENV=development`**, which `.air.toml` and `make dev` provide.
 
 **25.1 — the state machine under attack**
 
@@ -2669,4 +2683,29 @@ that does not come back.
 
 **Two existing unit tests were asserting the defective behaviour.** The suite
 was green and agreeing with the bug.
+
+**What this suite caught about itself — Sep 25**
+
+Re-running it after the invitation rules shipped is the whole reason the
+suite exists, and it failed twice before passing. Neither failure was a bug in
+the suite's subject; both were the product refusing something it should refuse.
+
+1. **`409 NOT_AN_ARTIST` on accounts that were plainly artists.** The new
+   invite gate required an `artists` row, and that row is created *only* by
+   onboarding. So a colleague who signed up specifically **to join** a salon
+   could not be invited until they had founded their own — the opposite of
+   what an invitation is for. The gate now keys on `users.role`, and the
+   specialty is declared at accept, where `AcceptInvitation` already requires
+   it. **A real product defect, found by a test suite going red rather than by
+   a user.**
+
+2. **`409 PHONE_NOT_VERIFIED`.** Correct: the gate was on and the harness had
+   never verified. Fixed in the harness, not the product, by adding the
+   verification step above.
+
+A third failure was environmental and worth recording because it wasted time:
+**three `air` supervisors were running**, two of them days old and predating
+`.air.toml` gaining `-tags devbypass`. A stale one rebuilt `tmp/main` without
+the tag and clobbered the tagged build, so the bypass silently stopped
+working. `pgrep -x air` should return exactly one.
 
