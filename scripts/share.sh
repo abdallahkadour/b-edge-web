@@ -79,7 +79,13 @@ echo "    $CUST_URL"
 # app, which lives on a different origin. It is the only value here that
 # cannot be relative, so it is rewritten before the dashboard is built rather
 # than left as a stale localhost link an artist would send to a real customer.
+#
+# The file is GENERATED from its committed template on every run and is
+# gitignored, because it carries the live tunnel hostname. It used to be
+# tracked and rewritten in place, which left a hostname in the working tree
+# after every run - and eight of them were committed.
 echo "==> artist dashboard"
+cp "${DASH_ENV%.ts}.example.ts" "$DASH_ENV"
 sed -i '' "s|customerPwaUrl: '[^']*'|customerPwaUrl: '$CUST_URL'|" "$DASH_ENV"
 npx ng build artist-dashboard --configuration share >"$RUN/build-dash.log" 2>&1 \
   || { echo "build failed — see $RUN/build-dash.log" >&2; exit 1; }

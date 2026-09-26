@@ -7,11 +7,15 @@
  * a DIFFERENT origin — the customer app's own tunnel. It is therefore the only
  * reason this app needs rebuilding when a tunnel restarts.
  *
- * scripts/share.sh rewrites the line below before building, so that rebuild is
- * automatic rather than something to remember.
+ * THIS IS A TEMPLATE. The build uses environment.share.ts, which
+ * scripts/share.sh generates from this file on every run and then points at
+ * the current tunnel. That generated file is gitignored: it carries a live
+ * tunnel hostname, and before 2026-09-26 it was tracked, so every share run
+ * left a hostname in the working tree waiting to be committed — and it was,
+ * in at least eight commits. Edit this file, never the generated one.
  */
 export const environment = {
   production: false,
   apiBaseUrl: '/api/v1',
-  customerPwaUrl: 'https://given-municipal-probably-aware.trycloudflare.com', // rewritten by scripts/share.sh
+  customerPwaUrl: 'http://localhost:4200', // rewritten by scripts/share.sh
 };
