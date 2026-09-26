@@ -98,6 +98,15 @@ export class BookingDataService {
   }
 
   /**
+   * DELETE /bookings/guest/hold/:id - ends an unsubmitted guest hold now
+   * rather than when its 10 minutes run out, so the slot she let go is free
+   * again. No auth. 404 for anything that is not an unsubmitted hold.
+   */
+  releaseGuestHold(bookingId: string): Observable<void> {
+    return this.api.delete(`/bookings/guest/hold/${bookingId}`);
+  }
+
+  /**
    * PATCH /bookings/guest/:id/submit - guest submits name + phone (C-05), no auth.
    * Attaches the guest's identity and transitions the booking held → pending.
    * Fails with HOLD_EXPIRED (409) if the 10-minute window has passed.

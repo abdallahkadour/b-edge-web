@@ -83,7 +83,7 @@
           (nameChange)="customerName.set($event)"
           (phoneChange)="customerPhone.set($event)"
           (notesChange)="customerNotes.set($event)"
-          (back)="step.set('pick-datetime')"
+          (back)="onBackFromDetails()"
           (applyPromo)="onApplyPromo($event)"
           (clearPromo)="onClearPromo()"
           (submitDetails)="onDetailsSubmit($event)"

@@ -2883,3 +2883,35 @@ restored around the test, which this pass's throwaway-salon convention
 is shared, longer-lived fixture data, not something this suite creates fresh
 each time.
 
+
+### Suite 27 — Leaving a salon, and letting a hold go
+
+Executed 2026-09-26 against the live API with throwaway salons built from
+`scripts/chaos-booking.py`'s own helpers and torn down by its `cleanup()`
+(residual 0 both runs). The roster was not touched.
+
+**27.1 — A member who left a salon disappears from Discover ✅ PASS**
+
+Found by measurement, not assumed. Before the fix, a member who left was
+**still listed on Discover at her old salon's city**, and her profile showed
+that salon's store with 0 services and nothing bookable: leaving cleared
+`salon_id` and her `artist_services` rows but kept her `artist_stores` links,
+Discover lists artists through those links, and her own trial subscription
+kept her visible. Fixed in api `12e4f29` (leaving deletes her links to that
+salon's stores in the same statement; Discover's list and store queries and
+the funnel's store picker count only a store of her current salon).
+Re-run: listed while a member (positive control), **gone after leaving**,
+profile stores 0.
+
+**27.2 — Going back from the last screen frees the slot ✅ PASS (API live; UI unit-tested)**
+
+Before: going back from guest details left the slot she had held blocked
+for the rest of its 10 minutes. Now `DELETE /bookings/guest/hold/:id` (api
+`ba77aeb`) ends an unsubmitted hold, and the funnel's back button calls it.
+Live, in order: hold → 201 (`held`); the same slot again → 409
+`SLOT_UNAVAILABLE` (control); release → 204 (`expired`); the same slot again
+→ **201, free immediately**; release again → 404; malformed id → 400. A
+submitted booking and a logged-in customer's hold are never released (DB
+test). The button → release wiring is covered by
+`booking-funnel.page.spec.ts` (watched failing with the call removed), not
+by a browser run.

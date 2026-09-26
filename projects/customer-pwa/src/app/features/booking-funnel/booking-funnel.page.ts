@@ -426,6 +426,24 @@ export class BookingFunnelPage implements OnInit {
       });
   }
 
+  /**
+   * From Guest Details - back to picking a time. Releases her hold first, so
+   * the slot she let go is free now instead of looking taken for the rest of
+   * its 10 minutes. Best-effort: if the call fails the timer still frees the
+   * slot, so going back never waits on it or reports an error.
+   */
+  protected onBackFromDetails(): void {
+    const id = this.holdBookingId();
+    if (id) {
+      this.bookingApi.releaseGuestHold(id).subscribe({ error: () => undefined });
+    }
+    this.holdBookingId.set(null);
+    this.heldUntil.set(null);
+    this.holdQuote.set(null);
+    this.submitError.set(null);
+    this.step.set('pick-datetime');
+  }
+
   /** From Slot Unavailable - back to picking a time, keeping service and contact details. */
   protected onChooseAnotherTime(): void {
     this.holdBookingId.set(null);
