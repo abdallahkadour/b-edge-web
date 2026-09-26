@@ -138,6 +138,9 @@ export class GuestDetailsScreenComponent implements OnInit {
 
   protected readonly hasDeposit = computed(() => Number(this.quote().deposit_amount) > 0);
 
+  /** Numeric, not a string match on '0'/'0.00' - any spelling of zero hides the line. */
+  protected readonly hasEarlyBirdFee = computed(() => Number(this.quote().early_bird_fee) > 0);
+
   protected readonly secondsRemaining = computed(() => {
     const deadline = new Date(this.heldUntil()).getTime();
     return Math.max(0, Math.floor((deadline - this.nowMs()) / 1000));
