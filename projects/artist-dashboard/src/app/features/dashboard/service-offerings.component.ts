@@ -35,6 +35,12 @@ export class ServiceOfferingsComponent implements OnInit {
   protected readonly loading = signal(true);
   protected readonly busy = signal<string | null>(null);
   protected readonly rowError = signal<Record<string, string>>({});
+  // What she has typed but not yet saved, per service. Each box shows its
+  // draft if there is one, else the saved value - so a box always shows
+  // what the next Save would send, and clearing a draft (after a save
+  // succeeds) puts the box back to what is stored. Binding the box to the
+  // saved value alone left a superseded typed value on screen: [value] only
+  // re-applies when the bound value changes.
   protected readonly draftPrice = signal<Record<string, string>>({});
   protected readonly draftDeposit = signal<Record<string, string>>({});
 
@@ -51,11 +57,19 @@ export class ServiceOfferingsComponent implements OnInit {
     });
   }
 
-  protected toggle(row: ServiceOffering): void {
+  /**
+   * The switch is a native checkbox bound with [checked]. The click has
+   * ALREADY flipped the DOM box by the time this runs, and [checked] only
+   * re-applies when row.offered changes - so if she cancels the confirm, or
+   * the save fails, row.offered never changes and the box would keep showing
+   * the state she did not get. Both paths put the box back to row.offered.
+   */
+  protected toggle(row: ServiceOffering, box: HTMLInputElement): void {
     if (row.offered && (row.own_price || row.own_deposit) && !confirm(this.turnOffWarning(row))) {
+      box.checked = row.offered;
       return;
     }
-    this.save(row, { offered: !row.offered });
+    this.save(row, { offered: !row.offered }, () => { box.checked = row.offered; });
   }
 
   /**
@@ -80,6 +94,7 @@ export class ServiceOfferingsComponent implements OnInit {
     this.save(row, req);
   }
 
+  /** Clears BOTH overrides - the button says "Use salon price & deposit". */
   protected useSalonPrice(row: ServiceOffering): void {
     this.save(row, { offered: true, price: null, deposit_amount: null });
   }
@@ -89,7 +104,7 @@ export class ServiceOfferingsComponent implements OnInit {
     s.set({ ...s(), [id]: value });
   }
 
-  private save(row: ServiceOffering, req: UpdateOfferingRequest): void {
+  private save(row: ServiceOffering, req: UpdateOfferingRequest, onFail?: () => void): void {
     const id = this.memberArtistId();
     this.busy.set(row.service_id);
     this.rowError.set({ ...this.rowError(), [row.service_id]: '' });
@@ -97,12 +112,26 @@ export class ServiceOfferingsComponent implements OnInit {
       .subscribe({
         next: (updated) => {
           this.rows.set(this.rows().map((r) => (r.service_id === updated.service_id ? updated : r)));
+          // What she typed is now saved (or deliberately replaced - "use
+          // salon price", switched off). A draft left behind would be sent
+          // again by the next Save: after "use salon price", a deposit-only
+          // save quietly restored the price she had just cleared.
+          this.clearDrafts(row.service_id);
           this.busy.set(null);
         },
         error: (err: HttpErrorResponse) => {
+          // Drafts are KEPT on a refusal, so she can correct and resend.
           this.busy.set(null);
           this.rowError.set({ ...this.rowError(), [row.service_id]: extractApiErrorMessage(err, 'Could not save.') });
+          onFail?.();
         },
       });
+  }
+
+  private clearDrafts(serviceId: string): void {
+    for (const s of [this.draftPrice, this.draftDeposit]) {
+      const { [serviceId]: _dropped, ...rest } = s();
+      s.set(rest);
+    }
   }
 }

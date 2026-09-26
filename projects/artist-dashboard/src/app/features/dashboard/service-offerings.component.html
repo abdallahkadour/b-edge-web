@@ -13,7 +13,7 @@
           <input type="checkbox" role="switch" class="w-5 h-5 accent-ink shrink-0"
                  [checked]="row.offered" [disabled]="busy() === row.service_id"
                  [attr.aria-label]="'Offer ' + row.service_name"
-                 (change)="toggle(row)" />
+                 (change)="toggle(row, $any($event.target))" />
         </label>
 
         @if (row.offered) {
@@ -21,13 +21,13 @@
             <div>
               <label class="block text-xs text-gray-500 mb-1" [attr.for]="'p-' + row.service_id">Your price</label>
               <input bedgeInput inputmode="decimal" class="h-10" [id]="'p-' + row.service_id"
-                     [value]="row.own_price ?? ''" [placeholder]="row.salon_price"
+                     [value]="draftPrice()[row.service_id] ?? row.own_price ?? ''" [placeholder]="row.salon_price"
                      (input)="setDraft('price', row.service_id, $any($event.target).value)" />
             </div>
             <div>
               <label class="block text-xs text-gray-500 mb-1" [attr.for]="'d-' + row.service_id">Your deposit</label>
               <input bedgeInput inputmode="decimal" class="h-10" [id]="'d-' + row.service_id"
-                     [value]="row.own_deposit ?? ''" [placeholder]="row.salon_deposit"
+                     [value]="draftDeposit()[row.service_id] ?? row.own_deposit ?? ''" [placeholder]="row.salon_deposit"
                      (input)="setDraft('deposit', row.service_id, $any($event.target).value)" />
             </div>
           </div>
@@ -40,7 +40,7 @@
           <div class="mt-2 flex flex-wrap gap-2">
             <bedge-button size="sm" [loading]="busy() === row.service_id" (click)="savePrices(row)">Save</bedge-button>
             @if (row.own_price || row.own_deposit) {
-              <bedge-button size="sm" variant="ghost" (click)="useSalonPrice(row)">Use salon price</bedge-button>
+              <bedge-button size="sm" variant="ghost" (click)="useSalonPrice(row)">Use salon price &amp; deposit</bedge-button>
             }
           </div>
         }
