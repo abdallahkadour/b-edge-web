@@ -15,6 +15,21 @@
  * o-deposit/o-salon/o-overflow), since it is the one shared component used
  * in three different places (spec §7).
  *
+ * Added by the final-review fix wave (2026-09-26), each watched FAILING
+ * against the code before the fix and passing after:
+ *   5b/o-cancel  cancelling the turn-off confirm on a PRICED row leaves the
+ *                switch ON and the row (and its price) in SQL - the switch
+ *                used to show OFF while the service stayed ON;
+ *   7b/o-label   the reset button says it clears both: "Use salon price &
+ *                deposit";
+ *   7c/o-draft   Save 200 -> Use salon price -> change ONLY the deposit ->
+ *                Save: the stored price stays NULL (a stale draft used to
+ *                resend 200);
+ *   8b           the audit row of member1's change names HER artist_id,
+ *                with actor_role and the client IP (API, via SQL);
+ *   o-offered    a PUT without "offered" is 422 on "offered" and deletes
+ *                nothing (API; it used to read as false and delete the row).
+ *
  * Check 9 runs in CHROMIUM instead: Chromium keeps a Secure cookie set over
  * http://localhost, so - unlike WebKit - a full page.goto() there does not
  * drop the session. That is exactly what the join step needs after
@@ -155,15 +170,39 @@ async function runOfferingChecks(page, email, ids, { isJoiner }) {
   rec(ids[i++], own(email, 'price') === '200.00' && /\$200(?!\d)/.test(rowText5),
     `stored '${own(email, 'price')}', shown trimmed ($200, never $200.00)`);
 
+  // She changes her mind at the turn-off confirm of a PRICED row. The
+  // precondition is the dialog itself: no dialog would mean the click
+  // never reached the confirm branch, and "still ON" would mean nothing.
+  let dialogMsg = null;
+  page.once('dialog', (d) => { dialogMsg = d.message(); d.dismiss(); });
+  await sw.click();
+  await page.waitForTimeout(1500);
+  const stillOn = await sw.isChecked();
+  rec(ids[i++], dialogMsg !== null && /Turning off/.test(dialogMsg) && stillOn
+      && own(email, 'artist_id') !== '' && own(email, 'price') === '200.00',
+    `cancelled the turn-off confirm (${dialogMsg === null ? 'NO dialog shown' : 'dialog shown'}): `
+    + `switch ${stillOn ? 'ON' : 'OFF'}, SQL row ${own(email, 'artist_id') !== '' ? 'present' : 'GONE'}, price '${own(email, 'price')}'`);
+
   await row.locator('input[inputmode="decimal"]').nth(1).fill('250.00');
   await row.locator('bedge-button', { hasText: 'Save' }).click();
   await page.waitForTimeout(1500);
   rec(ids[i++], (await row.locator('[role="alert"]').count()) === 1 && own(email, 'deposit_amount') === 'null',
     `a deposit above her price is refused server-side, nothing saved (stored ${own(email, 'deposit_amount')})`);
 
-  await row.locator('bedge-button', { hasText: 'Use salon price' }).click();
+  const resetBtn = row.locator('bedge-button', { hasText: 'Use salon price' });
+  const resetLabel = (await resetBtn.innerText()).trim();
+  await resetBtn.click();
   await page.waitForTimeout(1500);
   rec(ids[i++], own(email, 'price') === 'null', 'Use salon price clears her override');
+  rec(ids[i++], resetLabel === 'Use salon price & deposit', `reset button reads "${resetLabel}"`);
+
+  // Only the deposit changes now. The 200 typed before must not ride along.
+  await row.locator('input[inputmode="decimal"]').nth(1).fill('20.00');
+  await row.locator('bedge-button', { hasText: 'Save' }).click();
+  await page.waitForTimeout(1500);
+  rec(ids[i++], own(email, 'price') === 'null' && own(email, 'deposit_amount') === '20.00',
+    `deposit-only save after Use salon price: stored price '${own(email, 'price')}' (must stay null), `
+    + `deposit '${own(email, 'deposit_amount')}'`);
 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   rec(ids[i++], overflow <= 0, `page overflow at 390px: ${overflow}px`);
@@ -264,7 +303,17 @@ try {
   if (visible) {
     await link.click();
     await page.waitForTimeout(2000);
-    await runOfferingChecks(page, mem1Email, ['2', '3', '4', '5', '6', '7', '8'], { isJoiner: true });
+    await runOfferingChecks(page, mem1Email, ['2', '3', '4', '5', '5b', '6', '7', '7b', '7c', '8'], { isJoiner: true });
+
+    // The audit row of her change names HER, over real HTTP (clientip).
+    const m1Artist = sql(`SELECT a.id FROM artists a JOIN users u ON u.id=a.user_id WHERE u.email='${mem1Email}'`);
+    const audited = sql(`SELECT count(*) FROM audit_events WHERE entity_type='artist_service'
+      AND action='offering.update' AND new_values->>'artist_id'='${m1Artist}'
+      AND old_values->>'artist_id'='${m1Artist}' AND actor_role='artist' AND ip_address IS NOT NULL`);
+    const anyAudit = sql(`SELECT count(*) FROM audit_events WHERE entity_type='artist_service'
+      AND salon_id='${salonId}'`);
+    rec('8b', Number(anyAudit) > 0 && Number(audited) > 0,
+      `${audited} of ${anyAudit} artist_service audit rows in this salon name member1's artist_id with role + IP`);
   } else {
     // Regression guard, not the expected path any more: a defect that once
     // made this link unreachable for a pending member at 390px (the mobile
@@ -297,7 +346,19 @@ try {
   rec('o1', (await ownerLink.count()) === 1, 'the OWNER (3-artist salon, PP-8 unaffected) sees My services in the nav');
   await ownerLink.click();
   await page.waitForTimeout(2000);
-  await runOfferingChecks(page, ownerEmail, ['o-rows', 'o-price', 'o-deposit', 'o-salon', 'o-overflow'], { isJoiner: false });
+  await runOfferingChecks(page, ownerEmail,
+    ['o-rows', 'o-price', 'o-cancel', 'o-deposit', 'o-salon', 'o-label', 'o-draft', 'o-overflow'], { isJoiner: false });
+
+  // API: "offered" is required. As a plain bool an omitted key read as
+  // false and deleted her row; the precondition is that the row exists.
+  const ownSvc = sql(`SELECT os.service_id FROM artist_services os JOIN artists a ON a.id=os.artist_id
+    JOIN users u ON u.id=a.user_id WHERE u.email='${ownerEmail}' LIMIT 1`);
+  const noOffered = await call('PUT', `/artists/salon/my-services/${ownSvc}`, { deposit_amount: '10.00' }, ownTok);
+  const fields = (noOffered.json.error?.details ?? []).map((d) => d.field);
+  rec('o-offered', ownSvc !== '' && noOffered.status === 422 && fields.includes('offered')
+      && own(ownerEmail, 'artist_id') !== '' && own(ownerEmail, 'deposit_amount') === '20.00',
+    `PUT without "offered" -> ${noOffered.status} [${fields.join(',')}]; row ${own(ownerEmail, 'artist_id') !== '' ? 'kept' : 'DELETED'}, `
+    + `deposit '${own(ownerEmail, 'deposit_amount')}'`);
 
   // ── Chromium: check 9, the join step's post-accept refresh ──────────
   cr = await chromium.launch();
