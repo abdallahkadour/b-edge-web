@@ -2825,6 +2825,21 @@ every run (residual row count printed with its denominator).
   refused server-side (a `role="alert"` appears on the row, nothing saved);
   "Use salon price" clears the override back to NULL; no horizontal
   overflow at 390px.
+- **Final-review fix wave, WebKit, automated, PASS (2026-09-26).** Added
+  for both the pending member (checks 5b, 7b, 7c) and the owner (o-cancel,
+  o-label, o-draft): cancelling the turn-off confirm on a **priced** row
+  leaves the switch ON and the SQL row present at its price (the dialog
+  appearing is the precondition — it used to leave the switch showing OFF
+  while the service stayed ON); the reset button reads "Use salon price &
+  deposit"; Save 200 → Use salon price → change only the deposit → Save
+  keeps the stored price NULL (a stale draft used to resend 200). API, via
+  the same run: member1's `artist_service` audit rows name her `artist_id`
+  in old and new values with `actor_role` and the client IP (8b); a PUT
+  without `offered` is `422` on `offered` and deletes nothing (o-offered).
+  Run: 23 pass, 0 FAIL, 0 residual out of 33. These browser checks were
+  seen passing only — they were not run against the pre-fix code; the same
+  behaviours are pinned by `service-offerings.component.spec.ts` (vitest)
+  and the Go service tests, each watched failing before its fix.
 
 **26.3 — Owner override of a member's price**
 
@@ -2845,9 +2860,18 @@ one salon — owner at the salon price, one member overridden to $200, one to
 $100 — profile price, hold price and stored booking price agree for all
 three; after the $200 member switches her service off, booking her returns
 `404 SERVICE_NOT_FOUND`, identical to a service that never existed. 25 pass,
-0 fail, 2 informational; cleanup residual 0.
+0 fail, 2 informational; cleanup residual 0. Since the final-review fix wave
+(re-run 2026-09-26, same result), 3.7b only runs when that member's 3.7 leg
+passed — a POSITIVE CONTROL like 3.6's — so it cannot pass on a member who
+never offered the service; with the control failing it records FAIL and
+sends no switch-off.
 
 **26.5 — Early-bird fee on the confirmation screen ⚠ MANUAL**
+
+The zero-fee side is unit-tested since 2026-09-26
+(`guest-details-screen.component.spec.ts`): any spelling of a zero fee
+("0", "0.00", "0.0", "0.000") hides the line, and a $15 fee shows
+"includes $15 early-bird fee". The end-to-end path below is still manual.
 
 Not automated in this pass. Procedure: set `early_bird_cutoff`/`early_bird_fee`
 on a test store, book a slot before the cutoff in the customer app, confirm
