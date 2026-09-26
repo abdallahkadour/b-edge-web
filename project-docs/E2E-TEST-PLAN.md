@@ -2773,25 +2773,41 @@ every run (residual row count printed with its denominator).
 
 **26.2 — "My services"**
 
-- **WebKit, automated, a real defect found and NOT fixed in this pass.** A
+- **WebKit, automated, PASS — fixed 2026-09-26, commit `5836f48`** ("fix(dashboard):
+  mobile bottom nav never renders empty - falls back to the filtered nav
+  itself"). Originally found as a real defect and filed rather than patched: a
   PENDING member (accepted an invitation, not yet admin-approved) is exactly
-  who Task 12 added to `PENDING_ALLOWED_PATHS` so she could reach My
-  services before review finishes. At **390px she cannot reach it through
-  any UI element.** The mobile bottom nav bar — and with it the only "More"
-  button that would open the sheet containing the My services link — is
-  itself wrapped in `@if (mobilePrimaryNavItems().length > 0)`
+  who Task 12 added to `PENDING_ALLOWED_PATHS` so she could reach My services
+  before review finishes, but at **390px she could not reach it through any UI
+  element.** The mobile bottom nav bar — and with it the only "More" button
+  that would open the sheet containing the My services link — was itself
+  wrapped in `@if (mobilePrimaryNavItems().length > 0)`
   (`dashboard-layout.component.html`). A pending member's `navItems()` is
   collapsed to profile/my-services/help, none of which are in
   `MOBILE_PRIMARY_PATHS` (bookings/calendar/orders/clients), so that whole
-  bar — bottom nav, "More" button, and therefore the sheet — never renders
-  for her on a real phone. Confirmed not even force-clickable: the anchor is
-  `display:none` with a zero-size layout box (Playwright refuses even
+  bar — bottom nav, "More" button, and therefore the sheet — never rendered
+  for her on a real phone; not even force-clickable (the anchor was
+  `display:none` with a zero-size layout box; Playwright refused even
   `{ force: true }`, "Element is not visible"). Only the desktop sidebar's
-  copy of the same link exists in the DOM, CSS-hidden below the `md:`
-  breakpoint. **Desktop is unaffected**, and so is the join step (26.1),
-  since it embeds the same component inline without going through this nav
-  at all. Filed, not patched — no Go or Angular source changed to chase
-  this check to green.
+  copy of the same link existed in the DOM, CSS-hidden below the `md:`
+  breakpoint. **Desktop was unaffected**, and so was the join step (26.1),
+  since it embeds the same component inline without going through this nav at
+  all. **Fix:** `mobilePrimaryNavItems()` now falls back to showing the
+  filtered `navItems()` itself as the bar's primary items whenever none of
+  them match `MOBILE_PRIMARY_PATHS` (today: exactly the pending member, whose
+  bar then reads Profile / My services / Help directly, no "More" needed);
+  `mobileMoreNavItems()` derives from that same fallback instead of the
+  static path list so nothing duplicates into the sheet. Re-run of
+  `node scripts/verify-offerings-ui.mjs` after the fix: check 1 and the
+  previously-skipped checks 2–8 all PASS (a pending member reaches My
+  services, starts every service OFF per PP-7, switches one on, price/deposit
+  save and trim correctly, an over-cap deposit is refused, "Use salon price"
+  clears her override, no horizontal overflow at 390px) — 15 pass, 0 fail,
+  0 residual out of 7 rows created. Approved owners and members are
+  unaffected — confirmed by reading the fix: their `navItems()` always
+  includes at least one of Bookings/Calendar/Orders/Clients, so the old
+  intersection-based primary list is never empty for them and the fallback
+  branch never triggers.
 - **Supplementary, WebKit, automated, PASS.** The OWNER (active; PP-8's nav
   gate never collapses HER nav the way a pending member's is collapsed, and
   her 3-artist salon keeps PP-8 itself out of the way) exercises the same
