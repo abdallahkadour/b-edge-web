@@ -2927,3 +2927,16 @@ Live, from one address: hold 1 → 201, hold 2 → 201, hold 3 → **429
 her on the time picker with the reason instead of "that time was just taken"
 (`booking-funnel.page.spec.ts`). Chaos suite unaffected: 25 pass, 0 FAIL.
 Security plan FRAUD-18 records the burst test (6 simultaneous → exactly 2).
+
+**27.4 — Retrying a checkout does not place a second order ✅ PASS (API live; UI unit-tested, 2026-09-27)**
+
+An order is placed before it is paid, so when the reply was lost on a bad
+connection she saw an error, tapped "Place order" again and got a second
+order and a second stock deduction. The cart now sends a random
+`request_id` per checkout and reuses it on retry; the server keeps it
+unique (migration 054) and answers a repeat with the order already placed.
+Live: the same request three times → one order id, stock 5 → 3 once; the
+same id for another salon → **409 `REQUEST_ID_REUSED`**. Anything she
+changes (cart, name, phone, pin, notes) makes it a new checkout, and a
+placed order starts the next one fresh (`cart.page.spec.ts`, including the
+plain-http fallback where `crypto.randomUUID` does not exist).

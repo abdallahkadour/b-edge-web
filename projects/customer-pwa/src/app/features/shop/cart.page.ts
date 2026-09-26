@@ -25,6 +25,19 @@ import {
   isValidNationalPhone,
   toE164,
 } from '@bedge/shared';
+import type { PlaceOrderRequest } from '@bedge/shared';
+
+/** A random v4 UUID. crypto.randomUUID exists only in secure contexts, so a
+ *  phone testing over plain http on the LAN falls back to getRandomValues,
+ *  which does not need one. */
+function newRequestId(): string {
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  const b = crypto.getRandomValues(new Uint8Array(16));
+  b[6] = (b[6] & 0x0f) | 0x40;
+  b[8] = (b[8] & 0x3f) | 0x80;
+  const h = Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('');
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
 
 /**
  * Cart and checkout.
@@ -67,6 +80,12 @@ export class CartPage implements OnInit {
 
   /** Resolved from the artist's stores, same as the catalogue screen. */
   private readonly salonId = signal<string | null>(null);
+
+  /** The checkout this page is placing. A retry of the same order sends the
+   *  same request_id, so a reply lost on a bad connection answers with the
+   *  order already placed instead of placing a second one (the server keeps
+   *  the id unique). Anything she changes makes it a new order. */
+  private attempt: { body: string; requestId: string } | null = null;
 
   ngOnInit(): void {
     this.artistSvc.getStoresByArtist(this.artistId()).subscribe({
@@ -145,22 +164,29 @@ export class CartPage implements OnInit {
     this.placing.set(true);
     this.errorMessage.set(null);
 
+    const req: PlaceOrderRequest = {
+      salon_id: salonId,
+      name: this.name().trim(),
+      // Bare local digits, no +961 prefix - matches how every other
+      // phone in this app is stored, so a customer's orders and bookings
+      // resolve to the same identity.
+      phone: toE164(this.phoneDigits(), this.phoneIso()),
+      delivery_lat: location.lat,
+      delivery_lng: location.lng,
+      delivery_notes: this.deliveryNotes().trim() || undefined,
+      items: this.cart.toOrderItems(),
+    };
+    const body = JSON.stringify(req);
+    if (this.attempt?.body !== body) {
+      this.attempt = { body, requestId: newRequestId() };
+    }
+
     this.productSvc
-      .placeOrder({
-        salon_id: salonId,
-        name: this.name().trim(),
-        // Bare local digits, no +961 prefix - matches how every other
-        // phone in this app is stored, so a customer's orders and bookings
-        // resolve to the same identity.
-        phone: toE164(this.phoneDigits(), this.phoneIso()),
-        delivery_lat: location.lat,
-        delivery_lng: location.lng,
-        delivery_notes: this.deliveryNotes().trim() || undefined,
-        items: this.cart.toOrderItems(),
-      })
+      .placeOrder({ ...req, request_id: this.attempt.requestId })
       .subscribe({
         next: (order) => {
           this.placing.set(false);
+          this.attempt = null;
           this.cart.clear();
           this.router.navigate(['/shop', this.artistId(), 'confirmed', order.id]);
         },

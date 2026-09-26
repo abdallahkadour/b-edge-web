@@ -139,6 +139,9 @@ export interface PlaceOrderRequest {
   delivery_lng: number;
   delivery_notes?: string;
   items: { product_id: string; quantity: number }[];
+  /** A random UUID the cart makes per checkout and sends again on a retry,
+   *  so a reply lost on a bad connection cannot become a second order. */
+  request_id?: string;
 }
 
 /** PATCH /artists/orders/:id/confirm-payment */
