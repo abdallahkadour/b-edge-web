@@ -2954,3 +2954,15 @@ the 28th, the first instant of that day; `ends_on` with `ends_at` → 422.
 `discounts.component.spec.ts` shows "Until 1 Dec" on devices in Beirut, UTC,
 Los Angeles and Kiritimati. Codes made before this keep their stored instant;
 the list shows the day they really end on the salon's calendar.
+
+**27.6 — An order paid with a code shows the discount wherever it is read ✅ PASS (API live; screens render-tested, 2026-09-27)**
+
+A $40 order with a $10 code was placed correctly (total $30), but every read
+of it afterwards - the order endpoint, My Orders, and the artist's order
+queue - dropped the discount, so each screen listed $40 of items above a $30
+total with nothing in between. The artist confirming a $30 transfer saw the
+gap too. All order reads now share one column list, and the confirmation
+page, My Orders and the artist queue show a "SAVE10 −$10" line under the
+items, and no line when nothing was taken off. Live, throwaway salon: the
+artist queue returned the coded order with `discount_amount 10`,
+`discount_code SAVE10`, total 30, and the uncoded one without either.

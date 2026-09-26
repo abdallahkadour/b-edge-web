@@ -98,7 +98,12 @@ export interface OrderItem {
 export interface Order {
   readonly id: string;
   readonly status: OrderStatus;
+  /** What is owed, AFTER any discount - so the items add up to this plus
+   *  discount_amount, and a screen listing items must show the discount. */
   readonly total_amount: string;
+  /** Absent when nothing was taken off. */
+  readonly discount_amount?: string;
+  readonly discount_code?: string;
   readonly payment_reference?: string;
   readonly delivery_notes?: string;
   /** Pin-dropped delivery location. Absent on orders placed before this

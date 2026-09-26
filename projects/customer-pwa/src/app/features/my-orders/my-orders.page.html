@@ -117,6 +117,13 @@
                       <span class="font-semibold text-ink">${{ item.subtotal }}</span>
                     </div>
                   }
+                  <!-- The items add up to the total PLUS this, so it must show. -->
+                  @if (o.discount_amount) {
+                    <div class="py-2 flex items-center justify-between text-[13px] text-success-dark font-medium">
+                      <span>{{ o.discount_code ?? 'Discount' }}</span>
+                      <span>−${{ o.discount_amount }}</span>
+                    </div>
+                  }
                 </div>
 
                 @if (o.delivery_notes) {

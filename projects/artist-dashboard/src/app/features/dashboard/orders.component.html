@@ -87,6 +87,14 @@
                   <span class="font-semibold text-ink shrink-0">${{ item.subtotal }}</span>
                 </div>
               }
+              <!-- The items add up to the total PLUS this: without it, an
+                   artist confirming a $30 transfer sees $40 of items. -->
+              @if (order.discount_amount) {
+                <div class="pt-2 pb-0 flex items-center justify-between gap-3 text-[13px] text-success-dark font-medium">
+                  <span class="truncate">{{ order.discount_code ?? 'Discount' }}</span>
+                  <span class="shrink-0">−${{ order.discount_amount }}</span>
+                </div>
+              }
             </div>
 
             @if (order.delivery_notes) {
