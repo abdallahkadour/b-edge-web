@@ -115,6 +115,12 @@ export class BookingFunnelPage implements OnInit {
   protected readonly holdBookingId = signal<string | null>(null);
   protected readonly heldUntil = signal<string | null>(null);
   protected readonly holdingSlot = signal(false);
+  /**
+   * Set when a hold is refused because this network already holds the
+   * limit of unfinished slots with this artist (TOO_MANY_HOLDS). Shown on
+   * the picker instead of "someone took your time", which it is not.
+   */
+  protected readonly holdLimitMessage = signal<string | null>(null);
 
   // ── Guest contact details - lifted so they survive a re-hold cycle ────────
   protected readonly customerName = signal('');
@@ -320,6 +326,7 @@ export class BookingFunnelPage implements OnInit {
     if (!service || !artistId) return; // guarded by canContinue upstream; defensive only
 
     this.holdingSlot.set(true);
+    this.holdLimitMessage.set(null);
 
     this.bookingApi
       .holdGuestSlot({
@@ -336,12 +343,19 @@ export class BookingFunnelPage implements OnInit {
           this.holdingSlot.set(false);
           this.step.set('details');
         },
-        error: () => {
-          // Covers SLOT_UNAVAILABLE (409, someone else took it in the last
-          // few seconds) and any other hold failure. Treated the same way
-          // deliberately - whatever the cause, the customer's only useful
-          // next action is picking a different time.
+        error: (err: HttpErrorResponse) => {
           this.holdingSlot.set(false);
+          // This network already holds 2 unfinished slots with this artist:
+          // picking another time would be refused too, so say why and stay.
+          const code = (err.error as { error?: { code?: string } })?.error?.code;
+          if (code === 'TOO_MANY_HOLDS') {
+            this.holdLimitMessage.set(extractApiErrorMessage(err,
+              "You're already holding 2 times with this artist. Finish one of those bookings, or wait a few minutes."));
+            return;
+          }
+          // SLOT_UNAVAILABLE (409, someone else took it in the last few
+          // seconds) and any other hold failure: the customer's only useful
+          // next action is picking a different time.
           this.step.set('slot-unavailable');
         },
       });

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
 
 import {
@@ -66,5 +67,52 @@ describe('BookingFunnelPage - back from the last screen', () => {
     expect(() => page.onBackFromDetails()).not.toThrow();
     expect(page.holdBookingId()).toBeNull();
     expect(page.step()).toBe('pick-datetime');
+  });
+});
+
+// A hold refused because this network already holds 2 unfinished slots with
+// the artist is not "someone took your time": the picker stays, with the
+// server's explanation, so she can finish one of the bookings she started.
+function pickerWith(holdError: HttpErrorResponse) {
+  TestBed.resetTestingModule();
+  TestBed.configureTestingModule({
+    providers: [
+      { provide: BookingDataService, useValue: { holdGuestSlot: () => throwError(() => holdError) } },
+      { provide: ArtistDataService, useValue: {} },
+      { provide: MediaDataService, useValue: {} },
+      { provide: DiscountDataService, useValue: {} },
+      { provide: DiscoveryDataService, useValue: {} },
+      { provide: Router, useValue: {} },
+    ],
+  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const page = TestBed.runInInjectionContext(() => new BookingFunnelPage()) as any;
+  page.resolvedArtistId.set('artist-1');
+  page.services.set([{ id: 'svc-1', name: 'Bridal', duration_min: 90, price: '150', deposit_amount: '30', deposit_deadline_hours: 48 }]);
+  page.selectedServiceId.set('svc-1');
+  page.step.set('pick-datetime');
+  return page;
+}
+
+const apiError = (status: number, code: string, message: string) =>
+  new HttpErrorResponse({ status, error: { data: null, error: { code, message }, meta: null } });
+
+describe('BookingFunnelPage - a refused hold', () => {
+  it('TOO_MANY_HOLDS keeps her on the picker and says why', () => {
+    const page = pickerWith(apiError(429, 'TOO_MANY_HOLDS', "You're already holding 2 times with this artist."));
+
+    page.onSlotChosen({ storeId: 'store-1', startTime: '2026-10-05T09:00:00Z' });
+
+    expect(page.step()).toBe('pick-datetime');
+    expect(page.holdLimitMessage()).toBe("You're already holding 2 times with this artist.");
+    expect(page.holdingSlot()).toBe(false);
+  });
+
+  it('SLOT_UNAVAILABLE still goes to "choose another time"', () => {
+    const page = pickerWith(apiError(409, 'SLOT_UNAVAILABLE', 'This slot was just taken.'));
+
+    page.onSlotChosen({ storeId: 'store-1', startTime: '2026-10-05T09:00:00Z' });
+
+    expect(page.step()).toBe('slot-unavailable');
   });
 });

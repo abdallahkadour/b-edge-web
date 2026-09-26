@@ -2915,3 +2915,15 @@ submitted booking and a logged-in customer's hold are never released (DB
 test). The button → release wiring is covered by
 `booking-funnel.page.spec.ts` (watched failing with the call removed), not
 by a browser run.
+
+**27.3 — One network cannot hoard an artist's day ✅ PASS (live, 2026-09-26)**
+
+A guest hold needs no account, so before this one person could keep every
+slot an artist has blocked, rolling, 10 minutes at a time. Now at most **2
+unfinished holds per artist per network address** (migration 053; the
+founder's choice, per artist because Lebanese carriers share addresses).
+Live, from one address: hold 1 → 201, hold 2 → 201, hold 3 → **429
+`TOO_MANY_HOLDS`**; after releasing hold 1, hold 3 → 201. The funnel keeps
+her on the time picker with the reason instead of "that time was just taken"
+(`booking-funnel.page.spec.ts`). Chaos suite unaffected: 25 pass, 0 FAIL.
+Security plan FRAUD-18 records the burst test (6 simultaneous → exactly 2).

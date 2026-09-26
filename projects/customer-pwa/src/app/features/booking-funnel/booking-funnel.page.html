@@ -55,6 +55,9 @@
       />
     }
     @case ('pick-datetime') {
+      @if (holdLimitMessage(); as m) {
+        <p class="mx-4 mt-4 p-3 rounded-lg border border-warning/30 bg-warning-light text-sm text-warning-dark" role="alert">{{ m }}</p>
+      }
       <app-pick-datetime-screen
         [artistId]="resolvedArtistId()!"
         [serviceId]="selectedServiceId()!"
