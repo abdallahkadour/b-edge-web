@@ -148,10 +148,10 @@ export class DiscountsComponent implements OnInit {
       value: d.value,
       max_redemptions: d.maxRedemptions ? Number(d.maxRedemptions) : undefined,
       first_time_only: d.firstTimeOnly,
-      // A date input gives a local calendar day; the API wants an instant.
-      // End of that day, so "ends 30 September" includes the 30th - the
-      // expiry check itself is exclusive.
-      ends_at: d.endsAt ? new Date(`${d.endsAt}T23:59:59`).toISOString() : undefined,
+      // The day as picked. The API ends the code at the next midnight in
+      // the SALON's timezone; converting here would use the device's, and a
+      // laptop on UTC made a code that ran into the next day in Beirut.
+      ends_on: d.endsAt || undefined,
     };
 
     this.creating.set(true);
@@ -208,11 +208,15 @@ export class DiscountsComponent implements OnInit {
       : `${d.redemption_count} used`;
   }
 
+  /** "Until 1 Dec 2026". The day comes from ends_on, the salon's calendar
+   *  day, formatted as a bare date (UTC in, UTC out) so the device's own
+   *  timezone cannot move it; ends_at only decides whether it has passed. */
   protected expiryLabel(d: Discount): string | null {
-    if (!d.ends_at) return null;
-    const end = new Date(d.ends_at);
-    const expired = end.getTime() < Date.now();
-    const date = end.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    if (!d.ends_at || !d.ends_on) return null;
+    const expired = new Date(d.ends_at).getTime() < Date.now();
+    const date = new Date(`${d.ends_on}T00:00:00Z`).toLocaleDateString('en-GB', {
+      day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC',
+    });
     return expired ? `Expired ${date}` : `Until ${date}`;
   }
 

@@ -17,7 +17,11 @@ export interface Discount {
   /** Decimal as string - an amount for 'fixed', 0-100 for 'percentage'. */
   readonly value: string;
   readonly starts_at?: string;
+  /** The instant the code stops working (exclusive). */
   readonly ends_at?: string;
+  /** The last day it works, on the salon's calendar ("2026-12-01"). Show
+   *  this, not ends_at: the API already did the timezone arithmetic. */
+  readonly ends_on?: string;
   readonly max_redemptions?: number;
   /** Counts CONSUMED redemptions only, matching what max_redemptions is
    *  checked against - a released code (cancelled booking) is not counted. */
@@ -37,6 +41,11 @@ export interface CreateDiscountRequest {
   value: string;
   starts_at?: string;
   ends_at?: string;
+  /** The last day the code works, as a date on the salon's calendar. The
+   *  API turns it into the next midnight in the salon's timezone - a date
+   *  converted on the artist's device ended at a different hour depending
+   *  on where the device thought it was. Send this or ends_at, not both. */
+  ends_on?: string;
   max_redemptions?: number;
   first_time_only?: boolean;
 }

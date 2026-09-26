@@ -2940,3 +2940,17 @@ same id for another salon → **409 `REQUEST_ID_REUSED`**. Anything she
 changes (cart, name, phone, pin, notes) makes it a new checkout, and a
 placed order starts the next one fresh (`cart.page.spec.ts`, including the
 plain-http fallback where `crypto.randomUUID` does not exist).
+
+**27.5 — A promo code's end date is a day on the salon's calendar ✅ PASS (API live; UI unit-tested, 2026-09-27)**
+
+"Ends 1 December" used to be turned into an instant on the artist's device
+(`new Date('…T23:59:59')`), so a laptop on UTC made a code that ran until
+01:59 on the 2nd in Beirut, and the last second of the 1st was lost either
+way. The dashboard now sends the day as `ends_on`; the API ends the code at
+the next midnight in the timezone of the salon's store and returns `ends_on`
+for display. Live, Beirut store: `ends_on 2026-12-01` → stops 2026-12-02
+00:00 Beirut; `2027-03-27` (clocks go forward that night) → stops 01:00 on
+the 28th, the first instant of that day; `ends_on` with `ends_at` → 422.
+`discounts.component.spec.ts` shows "Until 1 Dec" on devices in Beirut, UTC,
+Los Angeles and Kiritimati. Codes made before this keep their stored instant;
+the list shows the day they really end on the salon's calendar.
