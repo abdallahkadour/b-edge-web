@@ -41,6 +41,7 @@ export const CUSTOMER_GUIDE: Guide = {
             'You will receive confirmation on WhatsApp.',
             'You do not need an account to book. Your phone number is how the artist reaches you.',
             'Only times the artist is genuinely free are offered, so anything you can pick is really available.',
+            'The total on the summary is the price your booking is made at. It is this artist\'s own price - two artists in the same salon can charge differently - and early slots can add an early-bird fee, shown as **includes $X early-bird fee** under the total.',
           ],
         },
         {
