@@ -78,6 +78,7 @@ export const ARTIST_GUIDE: Guide = {
             'Prices and deposits are in US dollars and take at most two decimal places - 45 or 45.50, not 45.999.',
             'The deposit must not be more than the price.',
             'Duration plus cleanup time is what actually blocks your calendar, so a 60-minute service with 15 minutes cleanup fills a 75-minute slot.',
+            'In a salon with other artists, a service you add is switched on for you and off for everyone else. Each of them switches it on under **My services** if they do it.',
           ],
         },
         {
@@ -92,6 +93,38 @@ export const ARTIST_GUIDE: Guide = {
           notes: [
             'Making a service inactive hides it from clients but keeps every past booking intact, along with what was actually charged at the time.',
             'Changing the price never changes bookings that already exist. Clients pay what they were quoted.',
+          ],
+        },
+        {
+          id: 'my-services',
+          title: 'Choose the salon services you offer, and your price',
+          summary: 'In a salon with more than one artist, each artist switches on her own services and can charge her own price and deposit.',
+          steps: [
+            'Go to **My services**. Right after you join a salon, the same list appears under **Which services do you offer?**',
+            'Tick the switch next to each service you do. Until you switch on at least one, customers can\'t book you.',
+            'To charge your own amount, fill in **Your price** and, if you like, **Your deposit**, then choose **Save**. Leave a box blank to use the salon\'s.',
+            'To go back to the salon\'s numbers, choose **Use salon price & deposit**. It clears both.',
+          ],
+          notes: [
+            'When you join a salon every service starts switched off, and a service the owner adds later starts off for you too. The owner\'s own services start on.',
+            'Switching a service off removes your price and deposit for it. If you had set either, you are asked to confirm first.',
+            'Your deposit cannot be more than your price. If the salon\'s deposit is higher than your price, clients pay your price as the deposit and the screen says **The deposit was lowered to your price.**',
+            'A change applies to new bookings only. Bookings already made keep their price.',
+            'Salon owners see **My services** once a second artist has joined the salon.',
+          ],
+        },
+        {
+          id: 'member-services',
+          title: 'Set a team member\'s services and prices',
+          summary: 'Salon owners can switch a member\'s services on or off and change her price or deposit.',
+          steps: [
+            'Go to **Team**.',
+            'Next to the member, choose **Services & prices**.',
+            'Use the switches, the price and deposit boxes, **Save** and **Use salon price & deposit** exactly as on **My services**.',
+          ],
+          notes: [
+            'Changes you make here are recorded as yours, and each service shows who last changed it.',
+            'A member can change her own services and prices; only the owner can change another member\'s.',
           ],
         },
         {
