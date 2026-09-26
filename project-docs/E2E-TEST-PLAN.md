@@ -2732,3 +2732,107 @@ whose salon or store differs from its artist's. It reports its denominator —
 "across all 52 bookings ever" — because a zero over an empty table proves
 nothing. Security plan: **FRAUD-16**.
 
+---
+
+### Suite 26 — Per-artist service pricing
+
+**Added Sep 26, 2026.** Covers migration 052 (`artist_services`),
+`internal/pkg/pricing`, the `internal/offering` domain, and the three-place
+`ServiceOfferingsComponent`. Spec: `B-Edge-Per-Artist-Pricing-Spec-v1.md`
+(b-edge-api). Automated with `node scripts/verify-offerings-ui.mjs`
+(WebKit + Chromium, 390px) plus `make chaos-booking` in b-edge-api; a
+throwaway owner + salon + members, never Rania's real salon, torn down after
+every run (residual row count printed with its denominator).
+
+**26.1 — Joining a salon: the services step**
+
+- **Chromium, automated, PASS.** A second throwaway artist logs in through
+  the dashboard UI (so the Secure refresh cookie is set), opens her
+  invitation link with `page.goto()`, and accepts through the join page's
+  own form. "Which services do you offer?" appears with at least one
+  `input[role="switch"]`.
+- **Why Chromium and not WebKit for this one.** `auth.refresh()` runs right
+  after `accept()`, to exchange a token minted before joining for one
+  carrying the new `salon_id` — without it the services step would 403
+  `NO_SALON`. That refresh rides the Secure cookie set at login. WebKit
+  drops a Secure cookie over plain `http://localhost`; Chromium keeps it. A
+  WebKit run would only ever exercise the **fallback** ("Log in again, then
+  choose your services under My services"), never the real refresh.
+- **⚠ MANUAL — the cookies-blocked fallback.** With cookies blocked, confirm
+  the join page shows that fallback message instead of a screen that looks
+  broken (a blank services step, or a silent 403 in the console). Not
+  automated in this pass: it needs the browser context configured to accept
+  the login's cookie and then reject it specifically for the refresh call,
+  which the harness above does not yet stage. Recorded as manual, not as a
+  pass.
+- **A joiner starts with every service switched OFF (PP-7)** — verified via
+  the OWNER's own row in 26.2 below rather than a joiner's, once the 26.2
+  defect made the pending-member path unreachable in a real browser (see
+  below); the switch/save/validate mechanics are the same shared component
+  in all three places it appears (spec §7).
+
+**26.2 — "My services"**
+
+- **WebKit, automated, a real defect found and NOT fixed in this pass.** A
+  PENDING member (accepted an invitation, not yet admin-approved) is exactly
+  who Task 12 added to `PENDING_ALLOWED_PATHS` so she could reach My
+  services before review finishes. At **390px she cannot reach it through
+  any UI element.** The mobile bottom nav bar — and with it the only "More"
+  button that would open the sheet containing the My services link — is
+  itself wrapped in `@if (mobilePrimaryNavItems().length > 0)`
+  (`dashboard-layout.component.html`). A pending member's `navItems()` is
+  collapsed to profile/my-services/help, none of which are in
+  `MOBILE_PRIMARY_PATHS` (bookings/calendar/orders/clients), so that whole
+  bar — bottom nav, "More" button, and therefore the sheet — never renders
+  for her on a real phone. Confirmed not even force-clickable: the anchor is
+  `display:none` with a zero-size layout box (Playwright refuses even
+  `{ force: true }`, "Element is not visible"). Only the desktop sidebar's
+  copy of the same link exists in the DOM, CSS-hidden below the `md:`
+  breakpoint. **Desktop is unaffected**, and so is the join step (26.1),
+  since it embeds the same component inline without going through this nav
+  at all. Filed, not patched — no Go or Angular source changed to chase
+  this check to green.
+- **Supplementary, WebKit, automated, PASS.** The OWNER (active; PP-8's nav
+  gate never collapses HER nav the way a pending member's is collapsed, and
+  her 3-artist salon keeps PP-8 itself out of the way) exercises the same
+  `bedge-service-offerings` component on her own auto-created row: 1 row for
+  1 active service; setting a price of `200.00` stores `'200.00'` and shows
+  it trimmed as `$200` (never `$200.00` — the API trims trailing zeros, the
+  UI mirrors it); setting a deposit of `250.00` against that price is
+  refused server-side (a `role="alert"` appears on the row, nothing saved);
+  "Use salon price" clears the override back to NULL; no horizontal
+  overflow at 390px.
+
+**26.3 — Owner override of a member's price**
+
+Covered by chaos 3.7/3.7b (26.4) for the legitimate path, and by
+**FRAUD-17** (`B-Edge-Security-Test-Plan-v1.md`) for the boundary: a member
+(not the owner) gets `403 SALON_ROLE_FORBIDDEN` on a colleague's row,
+regardless of salon; the owner gets `404 MEMBER_NOT_FOUND` naming an artist
+outside her own salon even though she legitimately holds
+`member_services:write` for her own. Money outside `internal/pkg/money`'s
+whitelist (`1e3`, `NaN`, `-10.00`, `33.333`) is `400 INVALID_PRICE`; a
+deposit above the price is `422 VALIDATION_ERROR`. All measured live against
+throwaway salons, torn down after (residual 0).
+
+**26.4 — Shown == held == charged**
+
+`make chaos-booking` 3.7/3.7b, last run 2026-09-26: owner + two members of
+one salon — owner at the salon price, one member overridden to $200, one to
+$100 — profile price, hold price and stored booking price agree for all
+three; after the $200 member switches her service off, booking her returns
+`404 SERVICE_NOT_FOUND`, identical to a service that never existed. 25 pass,
+0 fail, 2 informational; cleanup residual 0.
+
+**26.5 — Early-bird fee on the confirmation screen ⚠ MANUAL**
+
+Not automated in this pass. Procedure: set `early_bird_cutoff`/`early_bird_fee`
+on a test store, book a slot before the cutoff in the customer app, confirm
+the total equals the hold's `final_price` with an "includes $X early-bird
+fee" line, then restore the store's original values. Reason it stayed
+manual: it needs a real store's early-bird configuration changed and
+restored around the test, which this pass's throwaway-salon convention
+(built and torn down entirely per run) does not fit — the store in question
+is shared, longer-lived fixture data, not something this suite creates fresh
+each time.
+
