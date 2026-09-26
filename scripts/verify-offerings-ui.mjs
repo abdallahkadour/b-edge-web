@@ -15,8 +15,10 @@
  * o-deposit/o-salon/o-overflow), since it is the one shared component used
  * in three different places (spec §7).
  *
- * Added by the final-review fix wave (2026-09-26), each watched FAILING
- * against the code before the fix and passing after:
+ * Added by the final-review fix wave (2026-09-26). These browser checks were
+ * only ever seen PASSING - reverting the fix to watch them fail was not
+ * possible in that session. The behaviour each one decides was watched
+ * failing in the vitest and Go tests instead:
  *   5b/o-cancel  cancelling the turn-off confirm on a PRICED row leaves the
  *                switch ON and the row (and its price) in SQL - the switch
  *                used to show OFF while the service stayed ON;
@@ -153,7 +155,7 @@ async function runOfferingChecks(page, email, ids, { isJoiner }) {
     rec(ids[i++], !(await sw.isChecked()), 'a joiner starts with every service OFF (PP-7)');
     await sw.click();
     await page.waitForTimeout(1500);
-    rec(ids[i++], (await sw.isChecked()) && own(email, 'artist_id') !== 'null', 'switching on is saved (a row exists)');
+    rec(ids[i++], (await sw.isChecked()) && own(email, 'artist_id') !== '', 'switching on is saved (a row exists)');
   } else if (!(await sw.isChecked())) {
     await sw.click();
     await page.waitForTimeout(1500);
