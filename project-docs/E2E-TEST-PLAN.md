@@ -2765,11 +2765,15 @@ every run (residual row count printed with its denominator).
   the login's cookie and then reject it specifically for the refresh call,
   which the harness above does not yet stage. Recorded as manual, not as a
   pass.
-- **A joiner starts with every service switched OFF (PP-7)** — verified via
-  the OWNER's own row in 26.2 below rather than a joiner's, once the 26.2
-  defect made the pending-member path unreachable in a real browser (see
-  below); the switch/save/validate mechanics are the same shared component
-  in all three places it appears (spec §7).
+- **A joiner starts with every service switched OFF (PP-7) — WebKit,
+  automated, PASS (check 3).** Runs directly against the pending member's own
+  row: her first service's switch is unchecked before any interaction, she
+  switches it on, and the row is confirmed saved (`artist_services` gains a
+  row) — all in the same `node scripts/verify-offerings-ui.mjs` run as 26.2's
+  check 1, now that the mobile-nav defect there is fixed. The OWNER's row in
+  26.2 exercises the same switch/save/validate mechanics a second time,
+  since `bedge-service-offerings` is the one shared component used in all
+  three places it appears (spec §7) — not a substitute for this check.
 
 **26.2 — "My services"**
 
@@ -2803,7 +2807,10 @@ every run (residual row count printed with its denominator).
   services, starts every service OFF per PP-7, switches one on, price/deposit
   save and trim correctly, an over-cap deposit is refused, "Use salon price"
   clears her override, no horizontal overflow at 390px) — 15 pass, 0 fail,
-  0 residual out of 7 rows created. Approved owners and members are
+  0 residual out of 33 rows created (the denominator now mirrors every one of
+  the 16 tables the script's teardown deletes from, taken once all three
+  throwaway accounts and their rows exist, not just the 8-table/owner-only
+  snapshot an earlier pass under-counted). Approved owners and members are
   unaffected — confirmed by reading the fix: their `navItems()` always
   includes at least one of Bookings/Calendar/Orders/Clients, so the old
   intersection-based primary list is never empty for them and the fallback

@@ -2,11 +2,18 @@
 /**
  * Per-artist services & prices, in a real browser at 390px.
  *
- * Checks 1-8 run in WebKit: logs in within the session and navigates by
- * CLICKING - the refresh cookie is Secure, so WebKit drops it over plain
- * HTTP and page.goto() would bounce to /login. Asserts ELEMENTS and stored
- * values, never loose text - a regex once matched "Verify" inside "verified"
- * and passed a broken button.
+ * Checks 1-8 run in WebKit, driven as a PENDING member (mem1Email): logs in
+ * within the session and navigates by CLICKING - the refresh cookie is
+ * Secure, so WebKit drops it over plain HTTP and page.goto() would bounce
+ * to /login. Asserts ELEMENTS and stored values, never loose text - a regex
+ * once matched "Verify" inside "verified" and passed a broken button. Check
+ * 1 proves she can reach My services at all (Task 12; a mobile-nav defect
+ * that briefly made this unreachable was found and fixed in web 5836f48);
+ * checks 2-8 then drive the bedge-service-offerings component itself
+ * (switch/price/deposit/use-salon-price/overflow). The same component is
+ * re-verified against the OWNER's own row too (labelled o-rows/o-price/
+ * o-deposit/o-salon/o-overflow), since it is the one shared component used
+ * in three different places (spec §7).
  *
  * Check 9 runs in CHROMIUM instead: Chromium keeps a Secure cookie set over
  * http://localhost, so - unlike WebKit - a full page.goto() there does not
@@ -27,15 +34,6 @@
  * renders before any admin review happens.
  *
  * Requires the API built with -tags devbypass (for the 000000 phone code).
- *
- * Check 1 verifies a real, discovered defect: at 390px a PENDING member has
- * no reachable path to My services at all (see the comment at check 1's
- * definition below for the root cause). Per this task's rules that defect
- * is reported, not fixed. Checks 2-8 are then re-run against the OWNER
- * (labelled o5-o8 for the money-handling ones; the owner's own row starts
- * already offered=true, so the joiner-only PP-7 assertions don't apply to
- * her) so the shared bedge-service-offerings component still gets verified
- * end to end through a path that IS reachable in a real browser.
  */
 import { webkit, chromium } from 'playwright';
 import { execFileSync } from 'node:child_process';
@@ -83,21 +81,39 @@ const own = (email, col) => sql(`SELECT coalesce(os.${col}::text,'null') FROM ar
 
 // The same tally, before and after cleanup, gives a residual count WITH its
 // denominator rather than a bare "0" that could just mean the query is
-// wrong. Users are counted regardless of deleted_at for the "created"
-// snapshot (soft-deleted still means "existed"), and only the live ones
-// for the "residual" snapshot (soft-deleted is this app's convention for
-// gone - see register()'s own deleted_at=NULL undo in chaos-booking.py).
+// wrong. Mirrors EVERY table the teardown below deletes from (16 tables,
+// same WHERE shape each), so a leak in any one of them - not just the
+// obvious ones - shows up as a nonzero residual. Users are counted
+// regardless of deleted_at for the "created" snapshot (soft-deleted still
+// means "existed"), and - when usersLive is true, for the "residual"
+// snapshot - only the ones still deleted_at IS NULL count as a leak
+// (soft-deleted is this app's convention for gone: see register()'s own
+// deleted_at=NULL undo in chaos-booking.py).
 const tally = (usersLive) => Number(sql(`
   SELECT
-      (SELECT count(*) FROM salons WHERE name='${salonName}')
-    + (SELECT count(*) FROM artists a JOIN users u ON u.id=a.user_id WHERE u.email IN (${emailList}))
-    + (SELECT count(*) FROM artist_services os JOIN artists a ON a.id=os.artist_id
-         JOIN users u ON u.id=a.user_id WHERE u.email IN (${emailList}))
+      (SELECT count(*) FROM artist_services WHERE artist_id IN
+         (SELECT a.id FROM artists a JOIN users u ON u.id=a.user_id WHERE u.email IN (${emailList})))
+    + (SELECT count(*) FROM notifications WHERE user_id IN (SELECT id FROM users WHERE email IN (${emailList}))
+         OR recipient_phone IN (${phoneList}))
+    + (SELECT count(*) FROM artist_schedules WHERE artist_id IN
+         (SELECT a.id FROM artists a JOIN users u ON u.id=a.user_id WHERE u.email IN (${emailList})))
+    + (SELECT count(*) FROM salon_invitations WHERE phone IN (${phoneList})
+         OR salon_id=(SELECT id FROM salons WHERE name='${salonName}'))
+    + (SELECT count(*) FROM artist_stores WHERE store_id IN
+         (SELECT id FROM stores WHERE salon_id=(SELECT id FROM salons WHERE name='${salonName}')))
+    + (SELECT count(*) FROM subscriptions WHERE artist_id IN
+         (SELECT a.id FROM artists a JOIN users u ON u.id=a.user_id WHERE u.email IN (${emailList})))
+    + (SELECT count(*) FROM salon_payment_methods WHERE salon_id=(SELECT id FROM salons WHERE name='${salonName}'))
     + (SELECT count(*) FROM services WHERE salon_id=(SELECT id FROM salons WHERE name='${salonName}'))
+    + (SELECT count(*) FROM business_hours WHERE store_id IN
+         (SELECT id FROM stores WHERE salon_id=(SELECT id FROM salons WHERE name='${salonName}')))
+    + (SELECT count(*) FROM business_hours_exceptions WHERE store_id IN
+         (SELECT id FROM stores WHERE salon_id=(SELECT id FROM salons WHERE name='${salonName}')))
     + (SELECT count(*) FROM stores WHERE salon_id=(SELECT id FROM salons WHERE name='${salonName}'))
-    + (SELECT count(*) FROM salon_invitations WHERE phone IN (${phoneList}))
-    + (SELECT count(*) FROM subscriptions s JOIN artists a ON a.id=s.artist_id
-         JOIN users u ON u.id=a.user_id WHERE u.email IN (${emailList}))
+    + (SELECT count(*) FROM artists WHERE user_id IN (SELECT id FROM users WHERE email IN (${emailList})))
+    + (SELECT count(*) FROM audit_events WHERE salon_id=(SELECT id FROM salons WHERE name='${salonName}'))
+    + (SELECT count(*) FROM salons WHERE name='${salonName}')
+    + (SELECT count(*) FROM refresh_tokens WHERE user_id IN (SELECT id FROM users WHERE email IN (${emailList})))
     + (SELECT count(*) FROM users WHERE email IN (${emailList})${usersLive ? ' AND deleted_at IS NULL' : ''})
 `));
 
@@ -155,14 +171,17 @@ async function runOfferingChecks(page, email, ids, { isJoiner }) {
 
 let wk, cr;
 let created = null;
+let setupStep = 'signing in as admin';
 try {
   // ── setup: a throwaway owner + salon + two members ──────────────────
   const admTok = await login(ADMIN);
   if (!admTok) throw new Error('cannot sign in as admin - is ADMIN correct / API up?');
 
+  setupStep = 'registering the owner';
   await call('POST', '/auth/register',
     { name: 'T14 Owner', email: ownerEmail, password: PW, role: 'artist', phone: ownerPhone });
   const ownTokPre = await login(ownerEmail);
+  setupStep = 'onboarding the owner (salon + first service)';
   const ob = await call('POST', '/onboarding/complete', {
     handle: `t14-own-${tag}`, category: 'makeup', salon_name: salonName,
     store_name: `${salonName} branch`, city: 'Beirut',
@@ -171,46 +190,60 @@ try {
   if (ob.status >= 400) throw new Error(`onboard owner: ${ob.status} ${JSON.stringify(ob.json.error)}`);
   const ownerArtistId = ob.json.data.artist_id;
 
+  setupStep = 'approving the owner';
   await call('POST', `/admin/artists/${ownerArtistId}/approve`, {}, admTok);
   if (sql(`SELECT status FROM artists WHERE id='${ownerArtistId}'`) !== 'active') {
     sql(`UPDATE artists SET status='active' WHERE id='${ownerArtistId}'`);
   }
   const salonId = sql(`SELECT salon_id FROM artists WHERE id='${ownerArtistId}'`);
+  setupStep = 'putting the salon on the multi-seat plan';
   // New salons land on 'solo' (1-seat ceiling, enforced on invite); this
   // throwaway salon needs room for the owner plus two members.
   sql(`UPDATE subscriptions SET plan_code='multi' WHERE artist_id IN
        (SELECT id FROM artists WHERE salon_id='${salonId}')`);
   const ownTok = await login(ownerEmail);
 
-  // Snapshot BEFORE anything else could fail, so the denominator in the
-  // teardown report reflects what setup actually built even on an early throw.
-  created = tally(false);
-
   // member 1: registered, phone-verified, invited, ACCEPTED via the API,
   // and left PENDING (never approved) - this is who checks 1-8 drive, to
   // prove a pending member still reaches My services (Task 12).
+  setupStep = 'registering member1';
   await call('POST', '/auth/register',
     { name: 'T14 Mem1', email: mem1Email, password: PW, role: 'artist', phone: mem1Phone });
   const m1tok = await login(mem1Email);
+  setupStep = 'verifying member1\'s phone';
   const v1 = await call('POST', '/artists/me/phone/verify', { code: '000000' }, m1tok);
   if (v1.status >= 400) throw new Error(`phone verify mem1 ${v1.status} - is the API built with -tags devbypass?`);
+  setupStep = 'inviting member1';
   const inv1 = await call('POST', '/artists/salon/members/invite', { phone: mem1Phone }, ownTok);
   if (inv1.status >= 400) throw new Error(`invite mem1 ${inv1.status} ${JSON.stringify(inv1.json.error)}`);
   const tok1 = inv1.json.data.link.split('/').pop();
+  setupStep = 'accepting member1\'s invitation';
   const acc1 = await call('POST', `/invitations/${tok1}/accept`,
     { handle: `t14-mem1-${tag}`, category: 'makeup' }, m1tok);
   if (acc1.status >= 400) throw new Error(`accept mem1 ${acc1.status} ${JSON.stringify(acc1.json.error)}`);
 
   // member 2: registered and phone-verified via the API only. NOT accepted
   // here - accepting through the join page's own UI is check 9 itself.
+  setupStep = 'registering member2';
   await call('POST', '/auth/register',
     { name: 'T14 Mem2', email: mem2Email, password: PW, role: 'artist', phone: mem2Phone });
   const m2tok = await login(mem2Email);
+  setupStep = 'verifying member2\'s phone';
   const v2 = await call('POST', '/artists/me/phone/verify', { code: '000000' }, m2tok);
   if (v2.status >= 400) throw new Error(`phone verify mem2 ${v2.status} - is the API built with -tags devbypass?`);
+  setupStep = 'inviting member2';
   const inv2 = await call('POST', '/artists/salon/members/invite', { phone: mem2Phone }, ownTok);
   if (inv2.status >= 400) throw new Error(`invite mem2 ${inv2.status} ${JSON.stringify(inv2.json.error)}`);
   const tok2 = inv2.json.data.link.split('/').pop();
+
+  // Snapshot only once ALL setup has completed - all three accounts and
+  // every row they created (owner + salon + first service + member1's
+  // accepted membership + member2's pending invitation) - so the
+  // denominator reflects this run's full footprint, not a partial one
+  // taken mid-setup. See the catch/finally below for what prints instead
+  // if setup throws before reaching here.
+  setupStep = 'setup complete';
+  created = tally(false);
 
   // ── WebKit: checks 1-8, driven as member1 (pending) ──────────────────
   wk = await webkit.launch();
@@ -233,22 +266,18 @@ try {
     await page.waitForTimeout(2000);
     await runOfferingChecks(page, mem1Email, ['2', '3', '4', '5', '6', '7', '8'], { isJoiner: true });
   } else {
-    // REAL DEFECT, not fixed here (out of this task's scope - see report):
-    // the mobile bottom nav bar - and with it the ONLY "More" trigger that
-    // would reveal this link - is itself wrapped in
+    // Regression guard, not the expected path any more: a defect that once
+    // made this link unreachable for a pending member at 390px (the mobile
+    // bottom nav bar, and its only "More" trigger, were wrapped in
     // `@if (mobilePrimaryNavItems().length > 0)` in dashboard-layout.
-    // component.html. A pending member's navItems() is collapsed to just
-    // profile/my-services/help, none of which are in MOBILE_PRIMARY_PATHS
-    // (bookings/calendar/orders/clients), so that whole bar never renders
-    // for her at 390px - not even force-clickable, since it's display:none
-    // with zero layout box, confirmed by Playwright refusing even a
-    // { force: true } click ("Element is not visible"). Only the desktop
-    // sidebar's copy of the same <a> exists in the DOM, CSS-hidden below
-    // the md breakpoint. Checks 2-8 are therefore genuinely UNREACHABLE for
-    // a pending member on a real phone; skipped here (not faked as PASS),
-    // and re-verified below against the OWNER instead, who has an
-    // unaffected nav and exercises the exact same shared component.
-    console.log('  SKIP 2-8 blocked by check 1\'s defect - a pending member has no reachable path to My services at 390px');
+    // component.html, which a pending member's collapsed navItems() never
+    // satisfies) was found during this script's first run and fixed in web
+    // 5836f48. If check 1 ever goes FAIL again, checks 2-8 have no
+    // reachable path to run (not even force-clickable - the link is
+    // display:none with zero layout box) and are skipped here rather than
+    // faked as PASS; the OWNER's equivalent checks below still cover the
+    // shared component regardless.
+    console.log('  SKIP 2-8 blocked by check 1\'s failure - a pending member has no reachable path to My services at 390px');
   }
 
   // Supplementary: the OWNER (active, unaffected by the check-1 defect,
@@ -297,7 +326,7 @@ try {
   rec('9', (await heading.count()) === 1 && (await switches.count()) >= 1,
     'accepted through the join page UI in Chromium; services step rendered with switches');
 } catch (e) {
-  rec('err', false, String(e).slice(0, 200));
+  rec('err', false, `${setupStep === 'setup complete' ? '' : `(during: ${setupStep}) `}${String(e).slice(0, 200)}`);
 } finally {
   if (wk) await wk.close();
   if (cr) await cr.close();
@@ -341,6 +370,8 @@ try {
   }
 
   const residual = tally(true);
-  console.log(`\n  cleanup: ${residual} residual out of ${created ?? '?'} rows this run created`);
+  console.log(created === null
+    ? `\n  cleanup: ${residual} residual (partial - setup failed at "${setupStep}", so no full-run denominator was established; users only count as residual while deleted_at IS NULL)`
+    : `\n  cleanup: ${residual} residual out of ${created} rows this run created (users only count as residual while deleted_at IS NULL)`);
   console.log(`  ${results.filter(Boolean).length} pass, ${results.filter((x) => !x).length} FAIL`);
 }
