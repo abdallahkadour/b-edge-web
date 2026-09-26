@@ -263,18 +263,49 @@ export class DashboardLayoutComponent {
     '/dashboard/clients',
   ];
 
-  readonly mobilePrimaryNavItems = computed<NavItem[]>(() =>
-    this.navItems().filter((item) => DashboardLayoutComponent.MOBILE_PRIMARY_PATHS.includes(item.path)),
-  );
+  /**
+   * The bottom bar's own items - normally the MOBILE_PRIMARY_PATHS
+   * intersected with navItems(), same as before.
+   *
+   * FALLBACK, added for a real defect (Task 14, E2E-TEST-PLAN.md Suite
+   * 26.2): a pending member's navItems() is collapsed to just
+   * profile/my-services/help, none of which are in MOBILE_PRIMARY_PATHS, so
+   * the intersection used to be empty - and the whole bottom bar template is
+   * `@if (mobilePrimaryNavItems().length > 0)`, so it rendered NOTHING. With
+   * it went the only "More" trigger, which is what would otherwise have
+   * surfaced My services - a pending member had no reachable nav at all on
+   * a real phone, even though the desktop sidebar's copy of the same link
+   * exists (just CSS-hidden below `md:`). The bottom bar must never be
+   * empty when there is a nav to show at all: if nothing in the filtered
+   * nav matches the usual primary set, show the filtered nav itself as the
+   * primary items instead (today: exactly a pending member, whose bar then
+   * reads Profile / My services / Help). This changes nothing for an
+   * approved owner or member - their navItems() always includes at least
+   * one of Bookings/Calendar/Orders/Clients, so the intersection is never
+   * empty and this branch is never reached for them.
+   */
+  readonly mobilePrimaryNavItems = computed<NavItem[]>(() => {
+    const items = this.navItems();
+    const primary = items.filter((item) => DashboardLayoutComponent.MOBILE_PRIMARY_PATHS.includes(item.path));
+    return primary.length > 0 ? primary : items;
+  });
 
-  readonly mobileMoreNavItems = computed<NavItem[]>(() =>
-    this.navItems().filter(
+  /** Everything else, for the "More" sheet. Derived from
+   *  mobilePrimaryNavItems() (not the static MOBILE_PRIMARY_PATHS list
+   *  directly) so it stays correct under that computed's fallback above -
+   *  when the bar is showing the filtered nav itself as its primary items
+   *  (the pending-member case), nothing is left over for "More" and the
+   *  sheet's trigger button simply doesn't render (see the template's
+   *  `@if (mobileMoreNavItems().length > 0)`). */
+  readonly mobileMoreNavItems = computed<NavItem[]>(() => {
+    const primaryPaths = new Set(this.mobilePrimaryNavItems().map((item) => item.path));
+    return this.navItems().filter(
       (item) =>
-        !DashboardLayoutComponent.MOBILE_PRIMARY_PATHS.includes(item.path) &&
+        !primaryPaths.has(item.path) &&
         item.path !== '/dashboard/profile' &&
         item.path !== '/dashboard/help',
-    ),
-  );
+    );
+  });
 
   /** Whether the mobile "More" sheet is open. Closed on navigation (each
    *  link inside it clears this itself) and on backdrop tap/Escape. */
