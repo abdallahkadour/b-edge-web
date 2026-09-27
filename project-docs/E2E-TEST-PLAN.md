@@ -2966,3 +2966,21 @@ page, My Orders and the artist queue show a "SAVE10 −$10" line under the
 items, and no line when nothing was taken off. Live, throwaway salon: the
 artist queue returned the coded order with `discount_amount 10`,
 `discount_code SAVE10`, total 30, and the uncoded one without either.
+
+**27.7 — A promo code in the cart ✅ PASS (live, headless browser, 2026-09-27)**
+
+The API always accepted a code on an order, but the cart had no field, and
+placing an order with a refused code silently charges full price (by design,
+as for bookings: a bad code never fails a checkout). So the code is priced
+first: `POST /orders/discount-preview` (public, commits nothing) prices the
+cart from current product prices and reports the code at face value; the
+per-customer rules run when the order is placed. Live, 2 × $20 serum:
+`OLD` (ended 2020) → "That code has expired.", total stays $40.00; `SAVE10`
+→ field locks as "SAVE10 applied" with Remove, Subtotal $40.00 / SAVE10
+−$10.00 / Total $30.00, sticky footer $30.00. Previews wrote no order and
+took no stock. `cart.page.spec.ts`: an accepted code is sent with the order;
+a refused one is not; changing the cart after applying asks for the code
+again ("Your cart changed…") and stops sending it; removing it stops sending
+it; adding a code after a failed attempt makes a new checkout (new
+`request_id`). Security plan FRAUD-20 records that the previews can be used
+to guess codes, bounded today only by the general rate limit.

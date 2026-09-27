@@ -9,6 +9,8 @@ import type {
   Order,
   EnrichedOrder,
   PlaceOrderRequest,
+  OrderDiscountPreviewRequest,
+  DiscountPreview,
   ConfirmOrderPaymentRequest,
   CancelOrderRequest,
 } from '../models';
@@ -53,6 +55,12 @@ export class ProductDataService {
   /** POST /orders - public, guest-friendly. Identity resolved by phone. */
   placeOrder(req: PlaceOrderRequest): Observable<Order> {
     return this.api.post<Order>('/orders', req);
+  }
+
+  /** POST /orders/discount-preview - what a code would do to this cart.
+   *  Public; commits nothing. */
+  previewOrderDiscount(req: OrderDiscountPreviewRequest): Observable<DiscountPreview> {
+    return this.api.post<DiscountPreview>('/orders/discount-preview', req);
   }
 
   /** GET /orders/me - the authenticated customer's own order history. */

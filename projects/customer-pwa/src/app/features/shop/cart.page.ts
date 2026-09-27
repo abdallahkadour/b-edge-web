@@ -25,7 +25,7 @@ import {
   isValidNationalPhone,
   toE164,
 } from '@bedge/shared';
-import type { PlaceOrderRequest } from '@bedge/shared';
+import type { DiscountPreview, PlaceOrderRequest } from '@bedge/shared';
 
 /** A random v4 UUID. crypto.randomUUID exists only in secure contexts, so a
  *  phone testing over plain http on the LAN falls back to getRandomValues,
@@ -87,6 +87,18 @@ export class CartPage implements OnInit {
    *  the id unique). Anything she changes makes it a new order. */
   private attempt: { body: string; requestId: string } | null = null;
 
+  // ── Promo code ─────────────────────────────────────────────────────────────
+  //
+  // Placing an order never fails over a refused code: it goes through at
+  // full price. So a code only reaches the order after the server has priced
+  // it against THIS cart and she has seen the result - the same shape as the
+  // booking funnel. Applying is an explicit tap, not a keystroke.
+
+  readonly promo = signal('');
+  readonly checkingDiscount = signal(false);
+  /** The server's answer, and the cart it was worked out for. */
+  private readonly preview = signal<{ result: DiscountPreview; items: string } | null>(null);
+
   ngOnInit(): void {
     this.artistSvc.getStoresByArtist(this.artistId()).subscribe({
       next: (stores) => {
@@ -108,6 +120,63 @@ export class CartPage implements OnInit {
       },
       error: () => this.salonId.set(null),
     });
+  }
+
+  private itemsKey(): string {
+    return JSON.stringify(this.cart.toOrderItems());
+  }
+
+  /** An accepted code counts only while the cart is the one it was priced
+   *  against - a changed cart can change what a percentage takes off, or
+   *  fall outside the code's rules. */
+  protected appliedPreview(): DiscountPreview | null {
+    const p = this.preview();
+    return p && p.result.valid && p.items === this.itemsKey() ? p.result : null;
+  }
+
+  protected promoError(): string | null {
+    const p = this.preview();
+    if (!p) return null;
+    if (!p.result.valid) return p.result.reason ?? "That code isn't valid.";
+    if (p.items !== this.itemsKey()) return 'Your cart changed. Apply the code again to update the total.';
+    return null;
+  }
+
+  /** What she will be asked to send. */
+  protected shownTotal(): string {
+    return this.appliedPreview()?.final ?? this.cart.estimatedTotal();
+  }
+
+  onPromoInput(value: string): void {
+    this.promo.set(value.slice(0, 32));
+  }
+
+  applyPromo(): void {
+    const code = this.promo().trim();
+    const salonId = this.salonId();
+    if (!code || !salonId || this.checkingDiscount() || this.cart.isEmpty()) return;
+
+    const items = this.cart.toOrderItems();
+    const key = JSON.stringify(items);
+    this.checkingDiscount.set(true);
+    this.productSvc.previewOrderDiscount({ salon_id: salonId, code, items }).subscribe({
+      next: (result) => {
+        this.checkingDiscount.set(false);
+        this.preview.set({ result, items: key });
+      },
+      error: (err: HttpErrorResponse) => {
+        this.checkingDiscount.set(false);
+        this.preview.set({
+          result: { code, valid: false, reason: extractApiErrorMessage(err, 'Could not check that code. Please try again.') },
+          items: key,
+        });
+      },
+    });
+  }
+
+  clearPromo(): void {
+    this.promo.set('');
+    this.preview.set(null);
   }
 
   protected isNameValid(): boolean {
@@ -175,6 +244,7 @@ export class CartPage implements OnInit {
       delivery_lng: location.lng,
       delivery_notes: this.deliveryNotes().trim() || undefined,
       items: this.cart.toOrderItems(),
+      discount_code: this.appliedPreview()?.code,
     };
     const body = JSON.stringify(req);
     if (this.attempt?.body !== body) {

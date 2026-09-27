@@ -147,6 +147,18 @@ export interface PlaceOrderRequest {
   /** A random UUID the cart makes per checkout and sends again on a retry,
    *  so a reply lost on a bad connection cannot become a second order. */
   request_id?: string;
+  /** Only a code the cart has previewed and she can see applied. A refused
+   *  code places the order at full price without an error. */
+  discount_code?: string;
+}
+
+/** POST /orders/discount-preview - the cart as it stands and a code. No
+ *  name or phone: the preview reports the code at face value, and the
+ *  per-customer rules are checked when the order is placed. */
+export interface OrderDiscountPreviewRequest {
+  salon_id: string;
+  code: string;
+  items: { product_id: string; quantity: number }[];
 }
 
 /** PATCH /artists/orders/:id/confirm-payment */
