@@ -31,8 +31,11 @@
 set -uo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-CUST_PORT=8080
-DASH_PORT=8081
+# Not 8080: a local Jenkins holds 127.0.0.1:8080 on this machine, and a
+# tunnel pointed at a port something else answers on publishes THAT (see
+# port_free below). Override either with CUST_PORT=... DASH_PORT=...
+CUST_PORT="${CUST_PORT:-8090}"
+DASH_PORT="${DASH_PORT:-8081}"
 API="http://localhost:3000"
 RUN=/tmp/bedge-share
 DASH_ENV="projects/artist-dashboard/src/environments/environment.share.ts"
@@ -48,6 +51,28 @@ stop_all() {
 
 stop_all >/dev/null 2>&1
 mkdir -p "$RUN"
+
+# A port another program already listens on is worse than a failed start.
+# The proxy binds 0.0.0.0, and another server can still hold 127.0.0.1 on the
+# same port - the more specific bind wins, so the tunnel reaches THAT server
+# and puts it on the public internet. On 2026-09-28 the customer link was
+# about to serve this machine's Jenkins login page. So: refuse, and say who.
+port_free() { ! lsof -nP -iTCP:"$1" -sTCP:LISTEN >/dev/null 2>&1; }
+for p in "$CUST_PORT" "$DASH_PORT"; do
+  if ! port_free "$p"; then
+    echo "port $p is already in use by:" >&2
+    lsof -nP -iTCP:"$p" -sTCP:LISTEN >&2
+    echo "pick free ports, e.g.  CUST_PORT=8092 DASH_PORT=8093 $0" >&2
+    exit 1
+  fi
+done
+
+# http2 over TCP 443, not the default QUIC over UDP: on the phone hotspot
+# this machine usually uses, UDP to Cloudflare drops out ("sendmsg: network
+# is unreachable") and a QUIC tunnel can sit retrying without ever
+# connecting. 127.0.0.1 rather than localhost so the tunnel cannot resolve to
+# a different listener on ::1.
+tunnel() { nohup cloudflared tunnel --protocol http2 --url "http://127.0.0.1:$1" >"$2" 2>&1 & }
 
 command -v cloudflared >/dev/null || { echo "cloudflared missing: brew install cloudflared" >&2; exit 1; }
 curl -sf -o /dev/null --max-time 5 "$API/api/v1/health" \
@@ -71,7 +96,7 @@ npx ng build customer-pwa --configuration share >"$RUN/build-cust.log" 2>&1 \
   || { echo "build failed — see $RUN/build-cust.log" >&2; exit 1; }
 nohup node scripts/share-proxy.mjs --dir dist/customer-pwa/browser --port "$CUST_PORT" --api "$API" \
   >"$RUN/proxy-cust.log" 2>&1 &
-nohup cloudflared tunnel --url "http://localhost:$CUST_PORT" >"$RUN/tun-cust.log" 2>&1 &
+tunnel "$CUST_PORT" "$RUN/tun-cust.log"
 CUST_URL=$(await_url "$RUN/tun-cust.log") || { echo "customer tunnel did not come up; see $RUN/tun-cust.log" >&2; exit 1; }
 echo "    $CUST_URL"
 
@@ -91,7 +116,7 @@ npx ng build artist-dashboard --configuration share >"$RUN/build-dash.log" 2>&1 
   || { echo "build failed — see $RUN/build-dash.log" >&2; exit 1; }
 nohup node scripts/share-proxy.mjs --dir dist/artist-dashboard/browser --port "$DASH_PORT" --api "$API" \
   >"$RUN/proxy-dash.log" 2>&1 &
-nohup cloudflared tunnel --url "http://localhost:$DASH_PORT" >"$RUN/tun-dash.log" 2>&1 &
+tunnel "$DASH_PORT" "$RUN/tun-dash.log"
 DASH_URL=$(await_url "$RUN/tun-dash.log") || { echo "dashboard tunnel did not come up; see $RUN/tun-dash.log" >&2; exit 1; }
 echo "    $DASH_URL"
 
