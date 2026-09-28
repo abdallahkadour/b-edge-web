@@ -449,6 +449,11 @@ Given/When/Then, numbered, each ending in a concrete pass/fail check against the
 - Given the same account, still pending
 - When you manually navigate to `/dashboard/bookings`, `/dashboard/services`, any dashboard URL
 - Then you're redirected back to `/onboarding` — every dashboard screen except Profile should be unreachable while pending (Profile is intentionally allow-listed so photos can be added early)
+- **Corrected 2026-09-29:** the redirect goes to **`/dashboard/profile`**, not
+  `/onboarding`, and **My services** is allowed too — by design
+  (`PENDING_ALLOWED_PATHS` in `dashboard-layout.component.ts`: she can add
+  photos and choose her services while she waits). Every other dashboard URL
+  is still unreachable. ✅ PASS against that design.
 
 **1.5 — Admin approves**
 - Given a second browser session logged in as admin
@@ -622,6 +627,9 @@ Given/When/Then, numbered, each ending in a concrete pass/fail check against the
 > between test passes or it will confuse the next tester.
 
 **8.1 — Comped artist billing screen (the normal state for all current artists)**
+- *Note 2026-09-29:* an artist approved **today** starts on a **Solo trial**,
+  not comped — only the older accounts are comped. Test 8.1 against a comped
+  account, or make one comped first (the journey harness does).
 - Log in as Rania (`rania@bedge.com`) → `/dashboard/billing`
 - Then: plan shows "Comped" with an Active badge, no invoice section, no "I've paid" button, no payment instructions
 - No banner anywhere in the dashboard (comped = active = no enforcement)
@@ -1964,6 +1972,18 @@ expensive bugs will be if they exist.
 ---
 
 ## 5. Sign-off
+
+> **Suites 1-16 executed 2026-09-29, and now executable.** Behaviour:
+> `make e2e-journeys` (`b-edge-api/scripts/e2e-journeys.py`) — **93 pass, 0
+> fail**. Screens: `node scripts/e2e-journeys-ui.mjs` (this repo, Chromium at
+> 390px) — **28 pass, 0 fail** after one defect was fixed (1.3: the
+> onboarding form disabled its submit button without saying which field was
+> wrong; it now says). Not executed, and not passes: 11.7 and 14.8 (a real
+> crawler and real calendar apps), 13.5 (needs a forced Twilio failure — and
+> no automated test covers it), 9.1's "ended earlier today" and 12.4's
+> "starts exactly now" (time-of-day), 4.1's real image upload (it would go to
+> Cloudinary), 3.3's and 3.7's screens (their behaviour is covered). Full
+> record: `b-edge-api/project-docs/B-Edge-Test-Execution-2026-09-29.md`.
 
 For each suite above, record: pass / fail / blocked, the build/commit tested, screenshots for anything visual, and a linked bug for every failure — not a verbal "mostly works." A suite with an unresolved **NO UI PATH** item is **blocked**, not skipped; it still needs a decision (build the screen, or explicitly accept the gap) before sign-off.
 

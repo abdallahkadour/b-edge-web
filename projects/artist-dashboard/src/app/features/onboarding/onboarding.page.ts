@@ -114,6 +114,23 @@ export class OnboardingPage implements OnInit {
     this.fieldErrors.set(next);
   }
 
+  /** Why "Submit for review" is disabled, said where she is typing. The
+   *  form only ever disabled the button, so an empty handle, a negative
+   *  price or a zero duration left a greyed-out button and nothing to
+   *  explain it (E2E 1.3, measured 2026-09-29). Each message appears once
+   *  the field holds something it will not accept - never on a field she
+   *  has not reached yet, except the handle, whose rule is always shown. */
+  durationProblem(): string | null {
+    const n = Number(this.serviceDurationMin());
+    return n >= 15 && n <= 480 ? null : 'Enter a duration from 15 to 480 minutes.';
+  }
+
+  priceProblem(): string | null {
+    const v = this.servicePrice().trim();
+    if (!v) return null;
+    return /^\d+(\.\d{1,2})?$/.test(v) ? null : 'Enter a price like 50 or 50.00.';
+  }
+
   isFormValid(): boolean {
     return (
       this.handle().trim().length >= 3 &&
