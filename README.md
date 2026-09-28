@@ -42,13 +42,20 @@ apply" confusion that looks like a caching bug and isn't one.
 
 ```bash
 ng build shared
-ng serve --project artist-dashboard --port 4200
-ng serve --project customer-pwa --port 4200   # see CORS note below
+ng serve customer-pwa --port 4200
+ng serve artist-dashboard --port 4300
 ```
 
-Both apps default to `:4200`. The Go API's CORS allow-list
-(`CLIENT_URL` in its `.env`) currently permits only one origin, so run one
-app at a time unless the API is configured for multiple.
+Both apps would default to `:4200`, so the dashboard is given `:4300` — the
+port every test plan and script in this repo expects. The Go API's CORS
+allow-list (`CLIENT_URL` in its `.env`) takes a comma-separated list; the
+development value is `http://localhost:4200,http://localhost:4300`, so both
+apps run at once.
+
+**Rebuilding `@bedge/shared` under a running `ng serve` breaks it**: the dev
+server's cache loses the library and the app renders an empty shell with
+`Failed to resolve import "@bedge/shared"` in the serve log. Restart the dev
+server after `ng build shared`.
 
 ---
 
