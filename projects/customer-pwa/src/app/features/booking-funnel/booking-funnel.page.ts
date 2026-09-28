@@ -386,14 +386,16 @@ export class BookingFunnelPage implements OnInit {
         this.discountPreview.set(preview);
         this.customerPromo.set(preview.valid ? preview.code : '');
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.checkingDiscount.set(false);
         // A network failure must not read as "your code is invalid" - the
         // customer would go looking for a new code that they do not need.
+        // But when the server SAYS why - too many codes tried from here
+        // (FRAUD-20) - that is what she needs to read, not "try again".
         this.discountPreview.set({
           code,
           valid: false,
-          reason: "Couldn't check that code just now. Please try again.",
+          reason: extractApiErrorMessage(err, "Couldn't check that code just now. Please try again."),
         });
       },
     });

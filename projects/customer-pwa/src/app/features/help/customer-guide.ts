@@ -57,6 +57,7 @@ export const CUSTOMER_GUIDE: Guide = {
           ],
           notes: [
             'One code per booking or order. To use a different one, tap **Remove** and apply the new code.',
+            'If you try a lot of codes in a short time, you will be asked to wait a few minutes before trying another.',
             'In the cart, changing what is in it after applying a code asks you to apply it again, because the discount is worked out for the cart as it was.',
             'Some codes are only for clients booking with that artist for the first time, or can be used only once. That is checked when you send the booking or order; if the code turns out not to apply to you, it goes through at the full price.',
           ],

@@ -20,10 +20,24 @@ export const rateLimitInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((err: HttpErrorResponse) => {
-      if (err.status === 429) {
+      if (err.status === 429 && !namesItsOwnReason(err)) {
         rateLimitStore.trigger();
       }
       return throwError(() => err);
     }),
   );
 };
+
+/**
+ * The banner says "You're making requests too quickly", which is true of the
+ * general per-address limiter (RATE_LIMIT_EXCEEDED) and of nothing else. A
+ * 429 carrying any other code - TOO_MANY_HOLDS, TOO_MANY_CODE_ATTEMPTS, the
+ * sign-in RATE_LIMITED - has its own message, which the screen that made the
+ * call shows; the banner on top of it told her something false (found
+ * 2026-09-28: the 2-hold limit showed both). A 429 with no code at all - an
+ * edge or proxy - still gets the banner, so no 429 is ever silent.
+ */
+function namesItsOwnReason(err: HttpErrorResponse): boolean {
+  const code = (err.error as { error?: { code?: unknown } } | null)?.error?.code;
+  return typeof code === 'string' && code !== 'RATE_LIMIT_EXCEEDED';
+}

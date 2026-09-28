@@ -116,3 +116,48 @@ describe('BookingFunnelPage - a refused hold', () => {
     expect(page.step()).toBe('slot-unavailable');
   });
 });
+
+// ── A code the server would not check ──────────────────────────────────────
+
+function pageWithPreview(preview: () => ReturnType<DiscountDataService['previewForBooking']>) {
+  TestBed.resetTestingModule();
+  TestBed.configureTestingModule({
+    providers: [
+      { provide: BookingDataService, useValue: {} },
+      { provide: ArtistDataService, useValue: {} },
+      { provide: MediaDataService, useValue: {} },
+      { provide: DiscountDataService, useValue: { previewForBooking: preview } },
+      { provide: DiscoveryDataService, useValue: {} },
+      { provide: Router, useValue: {} },
+    ],
+  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const page = TestBed.runInInjectionContext(() => new BookingFunnelPage()) as any;
+  page.holdBookingId.set('bk-1');
+  return page;
+}
+
+describe('BookingFunnelPage - a promo code the server would not check', () => {
+  it('says why when the server says why - too many codes tried is not a network fault', () => {
+    // Before: every refusal read "Couldn't check that code just now", so a
+    // guest stopped by the code-attempt limit (FRAUD-20) kept retrying.
+    const page = pageWithPreview(() => throwError(() => new HttpErrorResponse({
+      status: 429,
+      error: { data: null, meta: null, error: { code: 'TOO_MANY_CODE_ATTEMPTS',
+        message: 'Too many promo codes tried. Please wait a few minutes and try again.' } },
+    })));
+
+    page.onApplyPromo('SAVE10');
+
+    expect(page.discountPreview().valid).toBe(false);
+    expect(page.discountPreview().reason).toBe('Too many promo codes tried. Please wait a few minutes and try again.');
+  });
+
+  it('keeps its own words for a real network failure', () => {
+    const page = pageWithPreview(() => throwError(() => new HttpErrorResponse({ status: 0 })));
+
+    page.onApplyPromo('SAVE10');
+
+    expect(page.discountPreview().reason).toBe("Couldn't check that code just now. Please try again.");
+  });
+});

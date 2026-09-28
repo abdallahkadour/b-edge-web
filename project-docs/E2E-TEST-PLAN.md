@@ -3018,6 +3018,20 @@ it; adding a code after a failed attempt makes a new checkout (new
 `request_id`). Security plan FRAUD-20 records that the previews can be used
 to guess codes, bounded today only by the general rate limit.
 
+**27.9 — A limit that has its own reason says it, not "too quickly" ✅ PASS (2026-09-28)**
+
+Promo previews are limited to 20 per address per 10 minutes across the
+booking and the cart (security FRAUD-20). In the cart, the 21st shows **Too
+many promo codes tried. Please wait a few minutes and try again.** under the
+field, nothing is taken off, and the total stays put. Before this, every 429
+also raised the app-wide banner **"You're making requests too quickly"** —
+true only of the general request limit, and false for the 2-hold limit
+(27.3), this one, and the sign-in code limit, each of which the screen
+already explains. The banner now appears only for the general limit
+(`RATE_LIMIT_EXCEEDED`) or a 429 that gives no reason. Measured live in the
+cart at 390px with the budget spent: the message under the field, banner
+absent. `rate-limit.interceptor.spec.ts`, `booking-funnel.page.spec.ts`.
+
 **27.8 — Neither a forged address nor someone else's hold gets around the hold rules ✅ PASS (2026-09-28, `make e2e-suite27`)**
 
 - With two unfinished holds with an artist, a third sent with
