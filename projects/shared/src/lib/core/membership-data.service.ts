@@ -88,7 +88,7 @@ export class MembershipDataService {
     return this.api.post(`/invitations/${token}/accept`, body);
   }
 
-  /** POST /invitations/:token/decline - public. */
+  /** POST /invitations/:token/decline - the invitee only, logged in. */
   declineInvitation(token: string): Observable<void> {
     return this.api.command(`/invitations/${token}/decline`, 'POST');
   }

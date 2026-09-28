@@ -145,10 +145,14 @@ export class JoinSalonPage implements OnInit {
       });
   }
 
+  /** Only the invitee may decline (API INVITATION_NOT_FOR_YOU otherwise).
+   *  A refusal is shown, not swallowed: this used to navigate away on ANY
+   *  error, so "this was sent to someone else" never reached her. */
   protected decline(): void {
+    this.error.set(null);
     this.api.declineInvitation(this.token()).subscribe({
-      next: () => void this.router.navigate(['/login']),
-      error: () => void this.router.navigate(['/login']),
+      next: () => void this.router.navigate(['/dashboard']),
+      error: (err) => this.error.set(extractApiErrorMessage(err, 'Could not decline that invitation.')),
     });
   }
 }

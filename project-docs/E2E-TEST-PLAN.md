@@ -2479,10 +2479,16 @@ Each of these is a separate, independent attempt on the deposit reference.
   taken from her token and never from a request, so this must be inert.
   Verify by re-reading **Amal's** row, not by the status code.
 - **d. Steal the invitation.** Mallory obtains a token issued to someone
-  else and accepts it. Decide deliberately: the token is the credential, so
-  this likely succeeds by design — but then **the owner must be able to see
-  who actually joined**, and removal must work. An invitation that can be
-  intercepted and silently redeemed by a stranger is a phishing primitive.
+  else and accepts it. **Decided 2026-09-29 (D26): refused — 403
+  `INVITATION_NOT_FOR_YOU`**, checked before anything else, so Mallory (a
+  member here already) learns only that it is not hers. Declining someone
+  else's invitation is refused the same way, and needs a login at all.
+  ✅ PASS in `make e2e-suite23` and `make verify-security-salon`. *(As first
+  written: "Decide deliberately: the token is the credential, so this likely
+  succeeds by design — but then the owner must be able to see who actually
+  joined." An invitation that can be intercepted and silently redeemed by a
+  stranger is a phishing primitive, which is why it was decided the other
+  way.)*
 - **e. Impersonate by handle.** Mallory registers and onboards with a handle
   confusable with Amal's. She is `status='pending'` until an admin approves,
   so she is invisible on Discover and unbookable. **Confirm she cannot take

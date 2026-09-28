@@ -53,12 +53,14 @@
         </p>
 
         @if (!isAuthenticated()) {
+          <!-- Only the person the invitation was sent to can accept or
+               decline it, so both need her account (API AUTH-16/FRAUD-11). -->
           <p class="text-sm text-gray-500 mt-4">
-            Sign in to your B-Edge account to accept, or create one first.
+            Sign in with the account this invitation was sent to, to accept or decline it.
+            New to B-Edge? Create an account with that phone number first.
           </p>
           <div class="flex gap-2 mt-4">
-            <bedge-button size="sm" (click)="signIn()">Sign in to accept</bedge-button>
-            <bedge-button size="sm" variant="ghost" (click)="decline()">Decline</bedge-button>
+            <bedge-button size="sm" (click)="signIn()">Sign in</bedge-button>
           </div>
 
         } @else {

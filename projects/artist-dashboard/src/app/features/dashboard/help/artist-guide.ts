@@ -114,6 +114,38 @@ export const ARTIST_GUIDE: Guide = {
           ],
         },
         {
+          id: 'invite-artist',
+          title: 'Invite an artist to your salon',
+          summary: 'Salon owners add artists by sending them an invitation link.',
+          steps: [
+            'Go to **Team** and choose **Invite artist**.',
+            'Enter the artist\'s **Mobile number** and choose **Send invitation**.',
+            'Copy the link that appears (**Copy**) and send it to her yourself - on WhatsApp, for example.',
+            'Until she accepts, she is listed under **Waiting to accept**.',
+          ],
+          notes: [
+            'She needs a B-Edge artist account with that mobile number, and must have verified the number on her profile, before you can invite her.',
+            'The link works only for her. Anyone else who opens it - if it is forwarded, say - cannot join your salon or decline it on her behalf.',
+            'An invitation lasts 7 days. After that, send a new one.',
+            'Your plan sets how many artists your salon can have. If you are at the limit, the invitation is refused until you upgrade.',
+          ],
+        },
+        {
+          id: 'join-salon',
+          title: 'Join a salon from an invitation',
+          summary: 'A salon owner sent you a link to work at their salon.',
+          steps: [
+            'Open the link and choose **Sign in**. Use the account with the mobile number the invitation was sent to.',
+            'Choose **Your public handle** and what you do, then choose **Join** and the salon\'s name.',
+            'Switch on the services you offer when **Which services do you offer?** appears.',
+          ],
+          notes: [
+            'The invitation only works for the account it was sent to. Signed in as someone else, you will be told it was sent to someone else.',
+            'If you do not want to join, choose **Decline** once you are signed in.',
+            'After you join, the B-Edge team reviews your profile before clients can book you.',
+          ],
+        },
+        {
           id: 'member-services',
           title: 'Set a team member\'s services and prices',
           summary: 'Salon owners can switch a member\'s services on or off and change her price or deposit.',
