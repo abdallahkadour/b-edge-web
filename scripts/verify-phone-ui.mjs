@@ -66,8 +66,19 @@ try {
 
   if (count === 1) {
     const text = (await section.innerText()).replace(/\s+/g, ' ').trim();
-    rec('2', text.includes('not verified') ? 'PASS' : 'FAIL',
-        `unverified warning shown: "${text.slice(0, 90)}…"`);
+    // The account's state decides which half can run. rania@ was verified on
+    // 2026-09-23, the day this shipped, so every later run met the VERIFIED
+    // screen and failed 2 and 5 against a precondition, not a defect. Driving
+    // the unverified flow again would mean clearing her verification and
+    // pressing Send code - which queues a real code to her number - so it is
+    // skipped and said so, and the verified screen is checked instead.
+    const alreadyVerified = text.includes('is verified') && !text.includes('not verified');
+    if (alreadyVerified) {
+      rec('2v', 'PASS', `verified state shown: "${text.slice(0, 90)}…"`);
+    } else {
+      rec('2', text.includes('not verified') ? 'PASS' : 'FAIL',
+          `unverified warning shown: "${text.slice(0, 90)}…"`);
+    }
     rec('3', text.includes('+96176555001') ? 'PASS' : 'FAIL',
         'the number is displayed so the artist knows what is being verified');
 
@@ -77,7 +88,12 @@ try {
 
     // Send code
     const sendBtn = section.locator('button', { hasText: /Send code/i }).first();
-    if (await sendBtn.count()) {
+    if (alreadyVerified) {
+      const offered = await sendBtn.count();
+      rec('5v', offered === 0 ? 'PASS' : 'FAIL',
+          `no "Send code" offered once verified (buttons: ${offered})`);
+      rec('5', 'SKIP', 'the send-code and verify flow needs an UNVERIFIED artist; this account was verified 2026-09-23');
+    } else if (await sendBtn.count()) {
       await sendBtn.click();
       await page.waitForTimeout(2500);
       // Assert on the ELEMENT, not on text. The first version of this
@@ -118,5 +134,7 @@ try {
   await browser.close();
   const p = results.filter(r => r[1] === 'PASS').length;
   const f = results.filter(r => r[1] === 'FAIL').length;
+  const sk = results.filter(r => r[1] === 'SKIP').length;
+  if (sk) console.log(`  ${sk} skipped - read the SKIP lines, a skip is not a pass`);
   console.log(`\n  ${p} pass, ${f} FAIL`);
 }

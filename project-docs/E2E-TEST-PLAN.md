@@ -213,6 +213,14 @@
 - customer-pwa up: `http://localhost:4200`
 - artist-dashboard up: `http://localhost:4300`
 - Postgres reachable via `docker exec bedge-postgres psql -U postgres -d bedge`
+- **Testing through the share links** (`scripts/share.sh`): every remote
+  tester reaches the API through the local share proxy, and the API trusts
+  no proxy, so **they all appear as one address** (`127.0.0.1`). Anything
+  keyed on the address is then shared between them: the 2-unfinished-holds
+  limit per artist (27.3) and the general rate limit (600 requests / 5 min).
+  A second tester seeing "You're already holding 2 times with this artist"
+  is this, not a defect. The same applies to running several suites back to
+  back from one machine - see the 2026-09-28 execution record.
 
 **Test accounts you'll need**
 - One artist account, already past onboarding (`status: active`) — e.g. `rania@bedge.com` / `password123` if seeded, or create your own (see Gap G1 below — there's no self-serve way to get the *first* account today).
@@ -1278,12 +1286,18 @@ Until Sep 3 only cancellation did. Each row below frees real time:
 | Cancel | next waiting entry → `notified` |
 | **No-show** | same |
 | **Complete** (releases unused cleanup) | same |
-| **Hold expiry** (lazy sweep on read) | same |
-| **Deposit-deadline expiry** (lazy sweep) | same |
+| **Hold expiry** (sweep) | same — **did not happen until 2026-09-26**, see below |
+| **Deposit-deadline expiry** (sweep) | same — **did not happen until 2026-09-26** |
 
-Drive each through the real API, then read `waitlist_entries.status`. The
-last two fire on the read path of an availability query, so trigger them by
-querying slots after letting a hold lapse.
+Drive each through the real API, then read `waitlist_entries.status`.
+
+**Correction, 2026-09-28.** The last two rows were written as if they
+already held. They did not: the expiry sweep on the read path called the
+repository methods directly, which returned only a row count and threw away
+WHICH slots had opened, so nobody waiting was ever told. Found checking an
+external review; fixed in `a206894` (the sweep now cascades, and a background
+worker runs it every minute - 16.5). This plan claimed a behaviour no test
+had observed; 16.5 is the executable check that now does.
 
 **16.2 — The stall the sweep exists for ⚠**
 
@@ -1316,6 +1330,21 @@ naming the date and the minutes remaining.
 **Delivery is D8-blocked** — the row queues and sends when a sender exists.
 The confirm-window UI needs customer login, also D8. Both are written here so
 they are not forgotten, and marked unrunnable until then.
+
+**16.5 — The clock frees an abandoned hold, with nobody reading ✅ PASS (2026-09-28, `make e2e-suite27`)**
+
+Since `a206894` an expiry worker runs both sweeps every minute
+(`booking.ExpiryWorker`, supervised in `cmd/main.go`). Before it, an
+abandoned hold stayed `held` until someone happened to load that artist's
+availability, and the waitlist heard nothing even then.
+
+- Hold a slot; put a customer on the waitlist for that artist, store,
+  service and day. Positive control: hold `held`, entry `waiting`.
+- Lapse the hold (`held_until` in the past) and **read nothing** — no slots
+  query, no funnel open.
+- Within ~60 s: hold `expired`, entry `notified`.
+
+Measured: `expired` / `notified` after 51 s with no reads.
 
 
 ## 2.5 Adversarial hardening pass — applies to EVERY suite above
@@ -2890,6 +2919,10 @@ Executed 2026-09-26 against the live API with throwaway salons built from
 `scripts/chaos-booking.py`'s own helpers and torn down by its `cleanup()`
 (residual 0 both runs). The roster was not touched.
 
+**Executable since 2026-09-28: `make e2e-suite27`** (`b-edge-api/scripts/e2e-suite27.py`)
+runs 27.1-27.8, 16.5 and security FRAUD-18/19/21/22 in one pass, building
+and destroying its own salon. First full run: 15 pass, 0 fail, residual 0.
+
 **27.1 — A member who left a salon disappears from Discover ✅ PASS**
 
 Found by measurement, not assumed. Before the fix, a member who left was
@@ -2984,3 +3017,13 @@ again ("Your cart changed…") and stops sending it; removing it stops sending
 it; adding a code after a failed attempt makes a new checkout (new
 `request_id`). Security plan FRAUD-20 records that the previews can be used
 to guess codes, bounded today only by the general rate limit.
+
+**27.8 — Neither a forged address nor someone else's hold gets around the hold rules ✅ PASS (2026-09-28, `make e2e-suite27`)**
+
+- With two unfinished holds with an artist, a third sent with
+  `CF-Connecting-IP`, `X-Forwarded-For` and `X-Real-IP` all forged to another
+  address → still **429 `TOO_MANY_HOLDS`**. `TRUSTED_PROXIES` is unset, so no
+  header is believed (security FRAUD-21).
+- Releasing a booking that has been SUBMITTED → **404**, status unchanged;
+  an unknown id → the same **404**, so the public release route cannot be
+  used to learn whether a booking exists (security FRAUD-22).

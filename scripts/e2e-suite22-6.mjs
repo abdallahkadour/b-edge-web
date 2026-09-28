@@ -26,6 +26,15 @@
  *     that filters navItems() again and could regress on its own.
  */
 import { webkit } from 'playwright';
+import { mkdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+// Where the screenshots go. With SHOT unset, `${process.env.SHOT}` became the literal
+// folder "undefined/" inside the repo (2026-09-28) - an untracked directory
+// of screenshots one careless add away from a commit.
+const SHOT = process.env.SHOT || join(tmpdir(), 'bedge-e2e-22-6');
+mkdirSync(SHOT, { recursive: true });
 
 const BASE = 'http://localhost:4300';
 const EMAIL = 'rania@bedge.com';
@@ -130,7 +139,7 @@ async function run(width) {
     rec(`22.6-team@${width}`, (teamH1 === 'Team' && ov === 0 && clip.length === 0) ? 'PASS' : 'FAIL',
       `h1="${teamH1}" overflow=${ov}px clipped=${clip.length ? JSON.stringify(clip) : 'none'}`);
 
-    await page.screenshot({ path: `${process.env.SHOT}/team-${width}.png`, fullPage: true });
+    await page.screenshot({ path: `${SHOT}/team-${width}.png`, fullPage: true });
 
     // The invite panel, and whether the link is fully visible
     const inviteBtn = page.locator('bedge-button:has-text("Invite artist")');
@@ -141,7 +150,7 @@ async function run(width) {
       const phoneVisible = await page.locator('#invite-phone').isVisible();
       rec(`22.6-invite@${width}`, (ovForm === 0 && phoneVisible) ? 'PASS' : 'FAIL',
         `invite form: phone input visible=${phoneVisible} overflow=${ovForm}px`);
-      await page.screenshot({ path: `${process.env.SHOT}/team-invite-${width}.png`, fullPage: true });
+      await page.screenshot({ path: `${SHOT}/team-invite-${width}.png`, fullPage: true });
     } else {
       rec(`22.6-invite@${width}`, 'FAIL', 'no "Invite artist" control on the Team screen');
     }
@@ -191,7 +200,7 @@ async function run(width) {
         `too narrow for "09:00 AM" (<${MIN_TIME_PX}px): ${narrow.length ? JSON.stringify(narrow) : 'none'}, ` +
         `spilling past their card: ${spill.length ? JSON.stringify(spill) + 'px' : 'none'}`);
     }
-    await page.screenshot({ path: `${process.env.SHOT}/my-hours-${width}.png`, fullPage: true });
+    await page.screenshot({ path: `${SHOT}/my-hours-${width}.png`, fullPage: true });
 
     // ── Nav ────────────────────────────────────────────────────────────
     const navText = await page.locator('nav, aside, [role="dialog"]').allTextContents();
@@ -225,7 +234,7 @@ async function run(width) {
     // same thing twice and testing the copy besides.
     rec(`22.6-join@${width}`, (saysInvalid && ovJoin === 0) ? 'PASS' : 'FAIL',
       `invalid link: renders the generic refusal=${saysInvalid} overflow=${ovJoin}px`);
-    await anonPage.screenshot({ path: `${process.env.SHOT}/join-invalid-${width}.png`, fullPage: true });
+    await anonPage.screenshot({ path: `${SHOT}/join-invalid-${width}.png`, fullPage: true });
     await anon.close();
 
     if (consoleErrors.length) {
