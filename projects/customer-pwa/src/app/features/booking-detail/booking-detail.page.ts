@@ -56,6 +56,8 @@ export class BookingDetailPage implements OnInit {
   private readonly router = inject(Router);
 
   readonly id = input.required<string>();
+  /** ?moved=1 - set by the move screen after a successful move. */
+  readonly moved = input<string | undefined>(undefined);
 
   readonly loading = signal(true);
   readonly errorMessage = signal<string | null>(null);
@@ -76,6 +78,16 @@ export class BookingDetailPage implements OnInit {
 
   canCancel(b: EnrichedBooking): boolean {
     return canCancelBooking(b.status);
+  }
+
+  /** Both moves used on a booking that is otherwise still live - worth one
+   *  line of explanation, unlike a cancelled booking that was never movable. */
+  movesUsedUp(b: EnrichedBooking): boolean {
+    return !b.can_reschedule && b.reschedules_left === 0 && canCancelBooking(b.status);
+  }
+
+  changeTime(b: EnrichedBooking): void {
+    this.router.navigate(['/my-bookings', b.id, 'move']);
   }
 
   /** Best-effort preview of whether a refund would apply - see the const's

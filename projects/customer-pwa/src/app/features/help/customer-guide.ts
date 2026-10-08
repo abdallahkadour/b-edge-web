@@ -116,6 +116,22 @@ export const CUSTOMER_GUIDE: Guide = {
           ],
         },
         {
+          id: 'move',
+          title: 'Change the time of a booking',
+          summary: 'Instead of cancelling, move it to another time.',
+          steps: [
+            'Open the booking from **My Bookings**.',
+            'Choose **Change time**.',
+            'Pick a day and a time, then tap **Move to**.',
+            'You are back on your booking, which says **Moved.** with the new time.',
+          ],
+          notes: [
+            'You can move a booking twice. After that, to change it again, cancel it and book again.',
+            'The price and the deposit stay the same, and the artist is told the new time.',
+            'Only the time changes - the service, the artist and the location stay as booked.',
+          ],
+        },
+        {
           id: 'cancel',
           title: 'Cancel a booking',
           summary: 'And what happens to your deposit.',

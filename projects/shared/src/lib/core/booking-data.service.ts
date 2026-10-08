@@ -83,6 +83,22 @@ export class BookingDataService {
     );
   }
 
+  /**
+   * GET /bookings/:id/reschedule-slots - the times her booking can move to
+   * on one day: exactly what `reschedule` accepts. Not /bookings/slots, which
+   * counts the booking being moved as busy and so hides every time that
+   * overlaps it. Only the booking's own customer; 404 for anyone else.
+   */
+  getRescheduleSlots(id: string, date: string): Observable<TimeSlot[]> {
+    return this.api.getArray<TimeSlot>(`/bookings/${id}/reschedule-slots`, { date });
+  }
+
+  /** PATCH /bookings/:id/reschedule - the customer moves her booking. Only the
+   *  time changes; price, deposit and status travel with it. */
+  reschedule(id: string, startTime: string): Observable<Booking> {
+    return this.api.patch<Booking>(`/bookings/${id}/reschedule`, { start_time: startTime });
+  }
+
   /** POST /bookings - create a booking and hold the slot (authenticated customer). */
   createBooking(req: CreateBookingRequest): Observable<Booking> {
     return this.api.post<Booking>('/bookings', req);

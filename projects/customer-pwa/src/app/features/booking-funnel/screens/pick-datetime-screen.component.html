@@ -7,11 +7,17 @@
     >
       <lucide-icon name="arrow-left" [size]="20" [strokeWidth]="2" />
     </button>
-    <span class="text-base font-semibold leading-[24px] tracking-[-0.01em]">Choose a date &amp; time</span>
+    <span class="text-base font-semibold leading-[24px] tracking-[-0.01em]">{{ mode() === 'move' ? 'Choose a new time' : 'Choose a date &amp; time' }}</span>
     <div class="w-6"></div>
   </div>
 
   <div class="px-6 pt-6 flex flex-col gap-6">
+    @if (note(); as n) {
+      <p class="text-sm text-gray-500 leading-[20px] bg-white border border-gray-200 rounded-lg px-4 py-3">{{ n }}</p>
+    }
+    @if (problem(); as p) {
+      <p role="alert" class="text-sm text-danger-dark leading-[20px] bg-danger-light border border-danger/30 rounded-lg px-4 py-3">{{ p }}</p>
+    }
     @if (stores().length > 1) {
       <div class="flex flex-col gap-3">
         <h2 class="text-xs font-bold leading-[16px] tracking-[0.05em] uppercase text-gray-500">Select location</h2>
@@ -78,7 +84,9 @@
       } @else if (slotsError()) {
         <p class="text-sm text-gray-400 leading-[20px] pt-4">Couldn't load times. Try another date.</p>
       } @else if (slots().length === 0) {
-        @if (waitlistJoined()) {
+        @if (mode() === 'move') {
+          <p class="text-sm text-gray-400 leading-[20px] pt-4">No free times on this date. Try another day.</p>
+        } @else if (waitlistJoined()) {
           <div class="flex items-center gap-2 pt-4 text-sm text-success">
             <lucide-icon name="check" [size]="16" [strokeWidth]="2" />
             You're on the waitlist. We'll message you on WhatsApp if a spot opens up.
@@ -107,11 +115,11 @@
                   class="h-[44px] rounded border text-sm font-medium leading-[20px] flex items-center justify-center gap-1 transition-all cursor-pointer"
                   [class]="isSelected
                     ? 'bg-ink border-ink text-white'
-                    : slot.is_early_bird && (slot.early_bird_fee ?? '0') !== '0'
+                    : mode() === 'book' && slot.is_early_bird && (slot.early_bird_fee ?? '0') !== '0'
                       ? 'bg-warning-light border-warning-light text-warning-dark hover:border-warning'
                       : 'bg-white border-gray-200 text-ink hover:border-gray-400'"
                 >
-                  @if (slot.is_early_bird && (slot.early_bird_fee ?? '0') !== '0' && !isSelected) {
+                  @if (mode() === 'book' && slot.is_early_bird && (slot.early_bird_fee ?? '0') !== '0' && !isSelected) {
                     <lucide-icon name="zap" [size]="14" class="fill-warning text-warning shrink-0" />
                   }
                   {{ formatTime(slot.start_time) }}
@@ -152,7 +160,7 @@
       >
         @if (holding()) {
           <lucide-icon name="loader-2" [size]="18" [strokeWidth]="2" class="animate-spin" />
-          Holding your slot…
+          {{ mode() === 'move' ? 'Moving your booking…' : 'Holding your slot…' }}
         } @else {
           {{ ctaLabel() }}
         }

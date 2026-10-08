@@ -55,6 +55,32 @@
         </div>
       </div>
 
+      @if (moved() === '1') {
+        <div role="status" class="mt-4 rounded-lg bg-success-light border border-success/30 px-4 py-3 text-sm text-success-dark">
+          Moved. Your new time is {{ formatDateTime(b.start_time) }}.
+        </div>
+      }
+
+      <!-- Offered exactly when the server says the booking can still move
+           (can_reschedule): status, at most two moves, a start still ahead. -->
+      @if (b.can_reschedule) {
+        <bedge-button
+          variant="secondary"
+          size="sm"
+          [fullWidth]="true"
+          class="block mt-4"
+          (click)="changeTime(b)"
+        >Change time</bedge-button>
+        <p class="text-xs text-gray-500 mt-1.5 text-center">
+          You can move it {{ b.reschedules_left }} more {{ b.reschedules_left === 1 ? 'time' : 'times' }}.
+          The price and deposit stay the same.
+        </p>
+      } @else if (movesUsedUp(b)) {
+        <p class="text-xs text-gray-500 mt-4">
+          This booking has been moved twice, the most allowed. To change it again, cancel it and book again.
+        </p>
+      }
+
       @if (canCancel(b)) {
         <bedge-button
           variant="danger"

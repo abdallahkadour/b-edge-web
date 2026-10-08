@@ -56,6 +56,12 @@ export interface EnrichedBooking {
    *  for the same reason as review_token above: until WhatsApp delivery is
    *  live, the artist sending it by hand is the only way it reaches anyone. */
   readonly calendar_token?: string;
+  /** Whether its customer may still move it, and how many moves are left -
+   *  derived by the API from the same rules the move enforces (status, at
+   *  most 2 moves, a start still ahead), so the screen never offers a move
+   *  the server would refuse. */
+  readonly can_reschedule?: boolean;
+  readonly reschedules_left?: number;
   readonly channel: BookingChannel;
   readonly special_requests?: string;
   readonly cancellation_reason?: string;

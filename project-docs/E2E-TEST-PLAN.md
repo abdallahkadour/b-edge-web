@@ -355,7 +355,8 @@ Every real route in the codebase, and exactly what on screen triggers it. Use th
 | `PATCH /bookings/:id/cancel` | dashboard Bookings **and** customer-pwa My Bookings, both have a **Cancel** action |
 | `PATCH /bookings/:id/complete` | dashboard Calendar/Bookings → **Mark complete** (fires the review-request WhatsApp message) |
 | `PATCH /bookings/:id/no-show` | dashboard Bookings → **No-show** |
-| `PATCH /bookings/:id/reschedule` | ⚠️ **NO UI PATH** (found 2026-10-08). The customer's own move to a new time works through the API (14.4) but no screen in either app calls it, so a customer who cannot make it can only cancel. Suite 28.10. |
+| `PATCH /bookings/:id/reschedule` | customer-pwa My Bookings → a booking → **Change time** → pick a time → **Move to: …** (since 2026-10-09; it was ⚠️ NO UI PATH, found 2026-10-08). Suite 28.10. |
+| `GET /bookings/:id/reschedule-slots` | the **Change time** screen's times — the artist's availability with this booking left out, so a time overlapping it is offered. Added 2026-10-09. |
 | `GET /bookings/artist/:id` | dashboard Bookings list load |
 | `GET /bookings/artist/:id/calendar` | dashboard Calendar load |
 | `GET /bookings/artist/:id/waitlist` | dashboard Waitlist load |
@@ -3208,10 +3209,20 @@ refused with an error naming the field — the screen and the server agree.
 `VALIDATION_ERROR`; the price answers **400** `INVALID_SERVICE_PRICE` (the
 money parser's status, not the validator's) — noted, not a failure.
 
-**28.10 — A customer can move her own appointment from the app ⚠️ GAP — NO UI PATH**
+**28.10 — A customer can move her own appointment from the app ✅ PASS (built 2026-10-09)**
 `PATCH /bookings/:id/reschedule` exists and works (14.4), but no screen in
 either app calls it: a customer who cannot make it can only cancel. Expected
 for now: recorded as a gap, the API path still working.
+*Built 2026-10-09:* **Change time** on the booking (offered when the API's
+`can_reschedule` says so, with how many moves are left) opens the funnel's
+own time picker in a "move" mode, fed by the new
+`GET /bookings/:id/reschedule-slots` — the public slots endpoint counts the
+booking as busy and so hid every time overlapping it. *Measured:* the public
+list hides a time 15 minutes after her appointment starts, her
+reschedule-slots offers it, another customer gets 404; the move goes through
+and leaves `reschedules_left` 1. In the browser at 390px she signs in, taps
+**Change time**, picks a time, taps **Move to: …**, and lands back on her
+booking reading **Moved.**, with the booking at the new instant.
 
 **28.11 — A freed slot alerts the waitlist for the right day (Go test) ✅ FIXED**
 A booking at 01:30 Beirut on day D is 22:30 UTC on D−1. Cancel it with

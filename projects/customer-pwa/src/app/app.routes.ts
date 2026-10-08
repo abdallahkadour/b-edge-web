@@ -77,6 +77,14 @@ export const routes: Routes = [
       import('./features/my-orders/my-orders.page').then((m) => m.MyOrdersPage),
   },
   {
+    // Change the time of an existing booking (E2E 28.10). Before :id alone
+    // so the router never reads "move" as part of an id.
+    path: 'my-bookings/:id/move',
+    canActivate: [customerAuthGuard],
+    loadComponent: () =>
+      import('./features/booking-detail/move-booking.page').then((m) => m.MoveBookingPage),
+  },
+  {
     path: 'my-bookings/:id',
     canActivate: [customerAuthGuard],
     loadComponent: () =>

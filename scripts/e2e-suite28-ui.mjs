@@ -11,6 +11,9 @@
  *         invitation was sent to someone else, and change nothing
  *   28.3  the invitee declines: she leaves the page, the invitation is
  *         declined, and the link then says it is not valid
+ *   28.10 (added with the reschedule screen, 2026-10-09) a signed-in customer
+ *         opens her booking, taps Change time, picks a new time, and is
+ *         back on her booking with it moved
  *   28.8  (screens, added with the AUTH-22 fix) an artist suspended while
  *         signed in is sent to sign-in on her next click, not left on a
  *         dashboard where every call answers 403 ACCOUNT_SUSPENDED
@@ -27,10 +30,12 @@ import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 
 const DASH = 'http://localhost:4300';
+const PWA = 'http://localhost:4200';
 const API = 'http://localhost:3000/api/v1';
 const TAG = 's28u';
 const PW = 'password123';
 const ADMIN = 'abdallah.kadour@b-edge.com';
+const CUSTOMER_PHONE = '+96176365210';
 const API_DIR = new URL('../../b-edge-api/', import.meta.url).pathname;
 
 const results = [];
@@ -79,11 +84,12 @@ async function setup() {
   }, tok);
   if (st >= 400) throw new Error(`onboard owner: ${st} ${errCode(r)}`);
   const ownerId = r.data.artist_id;
+  const salonId = sql(`SELECT salon_id FROM artists WHERE id='${ownerId}'`);
   await api('POST', `/admin/artists/${ownerId}/approve`, {}, await login(ADMIN));
   sql(`UPDATE subscriptions SET plan_code='multi' WHERE artist_id='${ownerId}'`);
   const invitee = await artist('a', '76365201');
   const other = await artist('x', '76365202');
-  return { ownerTok: await login(owner), owner, invitee, other };
+  return { ownerTok: await login(owner), owner, ownerId, salonId, invitee, other };
 }
 
 async function invite(ownerTok) {
@@ -109,7 +115,7 @@ const text = async (page) => (await page.locator('body').innerText()).replace(/\
 const buttons = async (page) => (await page.getByRole('button').allInnerTexts()).map((b) => b.trim());
 
 async function run(browser) {
-  const { ownerTok, owner, invitee, other } = await setup();
+  const { ownerTok, owner, ownerId, salonId, invitee, other } = await setup();
   const token = await invite(ownerTok);
   const ctx = () => browser.newContext({ viewport: { width: 390, height: 844 } });
 
@@ -182,6 +188,65 @@ async function run(browser) {
     await c.close();
   }
 
+  // 28.10 — a customer moves her booking (before 28.8, which suspends the owner)
+  {
+    const store = sql(`SELECT id FROM stores WHERE salon_id='${salonId}' LIMIT 1`);
+    const service = sql(`SELECT id FROM services WHERE salon_id='${salonId}' LIMIT 1`);
+    let times = [];
+    for (let d = 2; d < 12 && times.length < 4; d++) {
+      const day = new Date(Date.now() + d * 86_400_000).toISOString().slice(0, 10);
+      const [, sr] = await api('GET', `/bookings/slots?artist_id=${ownerId}&store_id=${store}&service_id=${service}&date=${day}`);
+      times = (Array.isArray(sr?.data) ? sr.data : []).map((x) => x.start_time);
+    }
+    await api('POST', '/customer-auth/verify-otp', { phone: CUSTOMER_PHONE, code: '000000' });
+    const cust = sql(`SELECT id FROM users WHERE phone='${CUSTOMER_PHONE}' AND deleted_at IS NULL`);
+    const start = times[1];
+    const booking = sql(`INSERT INTO bookings (salon_id,store_id,artist_id,customer_id,service_id,start_time,end_time,
+      blocked_until,original_price,final_price,deposit_amount,status,special_requests) VALUES ('${salonId}','${store}','${ownerId}',
+      '${cust}','${service}','${start}','${start}'::timestamptz + interval '1 hour','${start}'::timestamptz + interval '1 hour',
+      150,150,30,'confirmed','${TAG} move') RETURNING id`);
+    const target = times[3];
+    const label = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Beirut', hour: 'numeric', minute: '2-digit', hour12: true })
+      .format(new Date(target));
+
+    const c = await ctx();
+    const page = await c.newPage();
+    await page.route('**/api/v1/customer-auth/request-otp', (route) => route.fulfill({ status: 200, contentType: 'application/json',
+      body: JSON.stringify({ data: { message: 'Verification code sent', delivery_looks_broken: false }, error: null, meta: null }) }));
+    await page.goto(`${PWA}/login`);
+    await settle(page);
+    await page.locator('input[type="tel"]').first().fill(CUSTOMER_PHONE.slice(4));
+    await page.getByRole('button', { name: 'Send code' }).click();
+    await page.fill('#login-code', '000000');
+    await page.getByRole('button', { name: 'Verify' }).click();
+    await settle(page);
+    await page.goto(`${PWA}/my-bookings/${booking}`);
+    await settle(page);
+    const offered = await page.getByRole('button', { name: 'Change time' }).count();
+    if (!offered) {
+      rec('28.10', 'FAIL', `no Change time on her booking. Page says: ${(await text(page)).slice(0, 160)}`);
+    } else {
+      await page.getByRole('button', { name: 'Change time' }).click();
+      await settle(page);
+      const onMove = new URL(page.url()).pathname.endsWith('/move');
+      await page.getByRole('button', { name: label, exact: true }).click();
+      await page.getByRole('button', { name: /^Move to:/ }).click();
+      await page.waitForURL((u) => u.searchParams.get('moved') === '1', { timeout: 10000 }).catch(() => {});
+      await settle(page);
+      const said = /Moved\./.test(await text(page));
+      const now = sql(`SELECT to_char(start_time AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI') FROM bookings WHERE id='${booking}'`);
+      // Slot times carry the store's offset (+03:00), so compare instants:
+      // the first run compared the local digits with UTC and failed a move
+      // that had gone exactly right.
+      const wanted = new Date(target).toISOString().slice(0, 16);
+      const ok = onMove && said && now === wanted;
+      rec('28.10', ok ? 'PASS' : 'FAIL',
+        `Change time -> move screen ${onMove}; picked ${label} and moved; back on her booking saying "Moved." ${said}; ` +
+        `booking now at ${now}Z (wanted ${wanted}Z)`);
+    }
+    await c.close();
+  }
+
   // 28.8 — suspended mid-session (last: it suspends the owner)
   {
     const c = await browser.newContext({ viewport: { width: 1280, height: 900 } });
@@ -206,6 +271,18 @@ async function run(browser) {
 }
 
 function cleanup() {
+  // The customer 28.10 signs in as is not tagged by email, so chaos cleanup
+  // cannot see her; her booking goes with the salon's.
+  for (const q of [
+    `DELETE FROM notifications WHERE user_id IN (SELECT id FROM users WHERE phone='${CUSTOMER_PHONE}')`,
+    `DELETE FROM notifications WHERE booking_id IN (SELECT id FROM bookings WHERE special_requests='${TAG} move')`,
+    `DELETE FROM bookings WHERE special_requests='${TAG} move'`,
+    `DELETE FROM refresh_tokens WHERE user_id IN (SELECT id FROM users WHERE phone='${CUSTOMER_PHONE}')`,
+    `DELETE FROM customer_otps WHERE phone='${CUSTOMER_PHONE}'`,
+    `DELETE FROM users WHERE phone='${CUSTOMER_PHONE}'`,
+  ]) {
+    try { sql(q); } catch (e) { console.log('  cleanup:', e.message.split('\n')[0]); }
+  }
   const py = `
 import importlib.util
 spec = importlib.util.spec_from_file_location("chaos", "scripts/chaos-booking.py")

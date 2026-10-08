@@ -6,12 +6,14 @@ import {
   ElementRef,
   inject,
   input,
+  linkedSignal,
   output,
   signal,
   viewChild,
 } from '@angular/core';
 import { LucideAngularModule } from 'lucide-angular';
 import { A11yModule } from '@angular/cdk/a11y';
+import type { Observable } from 'rxjs';
 
 import {
   BookingDataService,
@@ -126,7 +128,9 @@ export class PickDatetimeScreenComponent {
 
   readonly artistId = input.required<string>();
   readonly serviceId = input.required<string>();
-  readonly stores = input.required<Store[]>();
+  /** Only id and name are read, so a move can pass the booking's one store
+   *  without inventing the rest of a Store. */
+  readonly stores = input.required<readonly Pick<Store, 'id' | 'name'>[]>();
   /**
    * True while the container's POST /bookings/guest/hold request is in
    * flight, after Continue is tapped and before the screen switches to
@@ -134,6 +138,24 @@ export class PickDatetimeScreenComponent {
    * round trip and a second tap could fire a duplicate hold request.
    */
   readonly holding = input<boolean>(false);
+
+  /**
+   * 'move' is the customer changing the time of a booking she already has
+   * (booking-detail -> Change time, E2E 28.10). The store, service and price
+   * are fixed, so the screen offers no waitlist, marks no early-bird
+   * surcharge (a move is never re-priced), and says "Move to".
+   */
+  readonly mode = input<'book' | 'move'>('book');
+  /** Where times come from. Defaults to the public slots endpoint; a move
+   *  passes the booking's own reschedule-slots, which leaves the booking
+   *  being moved out of the artist's occupancy. */
+  readonly loadSlots = input<((storeId: string, date: string) => Observable<TimeSlot[]>) | null>(null);
+  /** The day the strip opens on (YYYY-MM-DD); today when not given. */
+  readonly initialDate = input<string | null>(null);
+  /** A line under the header - a move shows the current time and moves left. */
+  readonly note = input<string | null>(null);
+  /** A refusal to show above the times, e.g. a time taken a moment ago. */
+  readonly problem = input<string | null>(null);
 
   readonly back = output<void>();
   /** Emits the chosen store and slot start time (ISO 8601) on Continue. */
@@ -206,7 +228,7 @@ export class PickDatetimeScreenComponent {
   }
 
   protected readonly selectedStoreId = signal<string | null>(null);
-  protected readonly selectedDate = signal<string>(toIsoDate(new Date()));
+  protected readonly selectedDate = linkedSignal<string>(() => this.initialDate() ?? toIsoDate(new Date()));
   protected readonly selectedSlot = signal<string | null>(null);
 
   protected readonly slots = signal<TimeSlot[]>([]);
@@ -299,10 +321,11 @@ export class PickDatetimeScreenComponent {
 
   protected readonly ctaLabel = computed(() => {
     const slot = this.selectedSlot();
-    if (!slot) return 'Continue';
+    const verb = this.mode() === 'move' ? 'Move to' : 'Continue';
+    if (!slot) return verb;
 
     const part = storeParts(slot);
-    return `Continue: ${part['weekday']} ${part['day']} ${part['month']}, ${this.formatTime(slot)}`;
+    return `${verb}: ${part['weekday']} ${part['day']} ${part['month']}, ${this.formatTime(slot)}`;
   });
 
   constructor() {
@@ -323,24 +346,26 @@ export class PickDatetimeScreenComponent {
       this.slotsLoading.set(true);
       this.slotsError.set(false);
 
-      this.bookingApi
-        .getAvailableSlots({
-          artist_id: this.artistId(),
-          store_id: storeId,
-          service_id: this.serviceId(),
-          date,
-        })
-        .subscribe({
-          next: (slots) => {
-            this.slots.set(slots);
-            this.slotsLoading.set(false);
-          },
-          error: () => {
-            this.slots.set([]);
-            this.slotsError.set(true);
-            this.slotsLoading.set(false);
-          },
-        });
+      const source = this.loadSlots();
+      const request = source
+        ? source(storeId, date)
+        : this.bookingApi.getAvailableSlots({
+            artist_id: this.artistId(),
+            store_id: storeId,
+            service_id: this.serviceId(),
+            date,
+          });
+      request.subscribe({
+        next: (slots) => {
+          this.slots.set(slots);
+          this.slotsLoading.set(false);
+        },
+        error: () => {
+          this.slots.set([]);
+          this.slotsError.set(true);
+          this.slotsLoading.set(false);
+        },
+      });
     });
   }
 
