@@ -3,6 +3,7 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 
+import { endsTheSession } from './auth-error.interceptor';
 import { CustomerAuthStore } from './customer-auth.store';
 
 /**
@@ -50,7 +51,7 @@ export const customerAuthErrorInterceptor: HttpInterceptorFn = (req, next) => {
       const isAuthEndpoint =
         SKIP_REDIRECT_PATHS.some((p) => req.url.includes(p)) || ORDER_BY_ID_PATTERN.test(req.url);
 
-      if (err.status === 401 && !isAuthEndpoint) {
+      if (endsTheSession(err) && !isAuthEndpoint) {
         const returnUrl = router.url;
         auth.clearSession();
         router.navigate(['/login'], { queryParams: { returnUrl } });
