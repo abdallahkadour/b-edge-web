@@ -1977,8 +1977,10 @@ expensive bugs will be if they exist.
 > **Everything executed 2026-10-08, with Suite 28 added.** Every executable
 > suite in both repos, then the new Suite 28 (API `make e2e-suite28`,
 > screens `node scripts/e2e-suite28-ui.mjs`, Go tests for 28.11–28.13).
-> **333 live checks pass, 8 fail** — all 8 in Suite 28 and recorded as
-> security defects AUTH-22, AUTH-14b and AUTH-20, not fixed. 28.11 (the
+> **333 live checks pass, 8 fail** — all 8 in Suite 28: security defects
+> AUTH-22, AUTH-14b and AUTH-20, **fixed the same day** and re-run green,
+> together with every other suite (the fix changes what every signed-in
+> request does). 28.11 (the
 > waitlist told the wrong day on a UTC server) was fixed in the run. 28.10
 > is a missing screen. Two UI scripts failed straight after the API suites
 > and passed alone. Full record:
@@ -3106,9 +3108,10 @@ the roster is never touched.
 
 **Executed 2026-10-08** (three runs of the API half, identical results;
 residual 0 every time): by case, **9 pass, 1 fixed, 3 fail, 1 gap**. The three
-failures are security defects, recorded in the security plan §3.4f as
-AUTH-14b, AUTH-20 and AUTH-22 and not fixed in this run. One defect was
-fixed (28.11). Full record: `b-edge-api/project-docs/B-Edge-Test-Execution-2026-10-08.md`.
+failures were security defects (security plan §3.4f: AUTH-14b, AUTH-20,
+AUTH-22), **all fixed later the same day** — re-run: **every case passes**
+(API half 28 pass, 0 fail; the screens 4 pass, including 28.8 below), 28.10 still a gap. One
+defect was fixed during the run itself (28.11). Full record: `b-edge-api/project-docs/B-Edge-Test-Execution-2026-10-08.md`.
 
 **28.1 — Logged out, the join page offers only signing in ✅ PASS (browser, 390px)**
 Open `/join/<token>` with no session. Expected: the salon and inviter are
@@ -3137,7 +3140,7 @@ A fresh invitation, accepted by the invitee. Expected: she is a member;
 accepting the same link again is refused; the owner's invitation list shows
 it accepted.
 
-**28.5 — An invitation that names two different people ❌ FAIL (security AUTH-20)**
+**28.5 — An invitation that names two different people ✅ FIXED (security AUTH-20)**
 Invite with the **phone of artist A and the email of artist B**. Expected:
 refused when it is sent, because nobody can say who it is for. If it is
 sent, record which of A and B can accept — the invite and accept lookups
@@ -3145,8 +3148,10 @@ both take "the first account matching either", with no order.
 *Measured:* the invitation is **sent (201)**. The email's owner is refused
 (403 `INVITATION_NOT_FOR_YOU`) and the phone's owner joins (201): the lookup
 chose one of them by row order, not by anything the owner said.
+*Fixed 2026-10-08:* refused at invite, **409 `CONTACTS_DISAGREE`**, when the
+phone and the email are not one account (or one of them belongs to nobody).
 
-**28.6 — Everything a removed member's old login can still change ❌ FAIL (security AUTH-14b)**
+**28.6 — Everything a removed member's old login can still change ✅ FIXED (security AUTH-14b)**
 A member signs in; the owner removes her; with her old access token, try
 every write a member may make: ship and deliver an order, switch her own
 services on and set her price, set her own hours, tag a portfolio photo,
@@ -3162,15 +3167,19 @@ ownership from the database: client notes, switching services on, her
 hours, photo tags, and approving or cancelling a colleague's booking.
 Clients are listed per artist, so that read returns nothing of the salon's
 to either token.
+*Fixed 2026-10-08 (decision D28):* every signed-in request re-reads the
+account, so the salon a handler sees is the database's, not the token's.
+Re-run: **0 of 14** get through; the old token answers exactly as a fresh
+login does (403 `NO_SALON` on the five that leaked).
 
 **28.7 — Deleting your account ends your sessions ✅ PASS (security AUTH-21)**
 Sign in (keep the refresh token), delete the account, then refresh.
 Expected: refused; the new access token never issued. Also: the old access
 token after deletion.
-*Measured:* refresh 401, login 401. The old access token still answers for
-the rest of its 15 minutes (informational; same mechanism as AUTH-14).
+*Measured:* refresh 401, login 401. The old access token still answered for
+the rest of its 15 minutes; since D28 it is refused at once (401).
 
-**28.8 — A frozen or suspended account cannot keep itself signed in ❌ FAIL (security AUTH-22)**
+**28.8 — A suspended account cannot keep itself signed in; a frozen one keeps its session ✅ FIXED (security AUTH-22)**
 Freeze the account (self-service), then refresh. Then set
 `users.status = 'suspended'` the way an operator would, and refresh.
 Expected: both refused.
@@ -3179,6 +3188,16 @@ the positive control — but **refresh succeeds for both** and issues a new
 session that works; the suspended one renewed three more times in a row.
 A refresh token lives 7 days and rotates, so an account suspended while
 signed in stays signed in for as long as it keeps using the app.
+*Fixed 2026-10-08:* a **suspended** account gets 403 `ACCOUNT_SUSPENDED` at
+refresh, and the access token it already had is refused on its next request;
+both apps then send her to the sign-in screen. A **frozen** account keeps
+its session on purpose (decision D27): the freeze screen promises "you can
+undo this right here", and unfreezing needs that session. This case first
+expected "refused" for frozen too; the product said otherwise. Re-run: the
+frozen session refreshes, reads and unfreezes itself; the suspended one is
+refused on both. In the browser (`e2e-suite28-ui.mjs`, case 28.8): an owner
+working in the dashboard is suspended, and her next click lands on
+`/login`.
 
 **28.9 — The API refuses what the onboarding screen now explains ✅ PASS**
 Since 1.3's fix the form says duration is 15–480 minutes, price is a plain

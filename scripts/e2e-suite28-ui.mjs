@@ -11,6 +11,9 @@
  *         invitation was sent to someone else, and change nothing
  *   28.3  the invitee declines: she leaves the page, the invitation is
  *         declined, and the link then says it is not valid
+ *   28.8  (screens, added with the AUTH-22 fix) an artist suspended while
+ *         signed in is sent to sign-in on her next click, not left on a
+ *         dashboard where every call answers 403 ACCOUNT_SUSPENDED
  *
  * Chromium, for the same reason as e2e-journeys-ui.mjs: it keeps the Secure
  * refresh cookie on http://localhost, so page.goto() works after signing in.
@@ -80,7 +83,7 @@ async function setup() {
   sql(`UPDATE subscriptions SET plan_code='multi' WHERE artist_id='${ownerId}'`);
   const invitee = await artist('a', '76365201');
   const other = await artist('x', '76365202');
-  return { ownerTok: await login(owner), invitee, other };
+  return { ownerTok: await login(owner), owner, invitee, other };
 }
 
 async function invite(ownerTok) {
@@ -106,7 +109,7 @@ const text = async (page) => (await page.locator('body').innerText()).replace(/\
 const buttons = async (page) => (await page.getByRole('button').allInnerTexts()).map((b) => b.trim());
 
 async function run(browser) {
-  const { ownerTok, invitee, other } = await setup();
+  const { ownerTok, owner, invitee, other } = await setup();
   const token = await invite(ownerTok);
   const ctx = () => browser.newContext({ viewport: { width: 390, height: 844 } });
 
@@ -175,6 +178,28 @@ async function run(browser) {
       const invalid = /This link is not valid/.test(await text(page));
       rec('28.3', !where.startsWith('/join/') && st === 'declined' && invalid ? 'PASS' : 'FAIL',
         `after Decline: on ${where}; invitation ${st}; reopening the link says "not valid": ${invalid}`);
+    }
+    await c.close();
+  }
+
+  // 28.8 — suspended mid-session (last: it suspends the owner)
+  {
+    const c = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    const page = await c.newPage();
+    await signIn(page, owner);
+    await settle(page);
+    await page.getByRole('link', { name: 'Clients' }).first().click();
+    await settle(page);
+    const before = new URL(page.url()).pathname;
+    if (!before.startsWith('/dashboard/clients')) {
+      rec('28.8', 'FAIL', `positive control: the owner could not open Clients before suspension (on ${before})`);
+    } else {
+      sql(`UPDATE users SET status='suspended' WHERE email='${owner}'`);
+      await page.getByRole('link', { name: 'Orders' }).first().click();
+      await page.waitForURL((u) => u.pathname.startsWith('/login'), { timeout: 10000 }).catch(() => {});
+      const after = new URL(page.url()).pathname;
+      rec('28.8', after.startsWith('/login') ? 'PASS' : 'FAIL',
+        `signed in and working (${before}); suspended, then one click -> ${after}`);
     }
     await c.close();
   }
