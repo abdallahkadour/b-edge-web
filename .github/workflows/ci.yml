@@ -1,0 +1,46 @@
+# Builds the shared library and both apps and runs every unit test, on every
+# push to main and every pull request.
+#
+# Until 2026-10-09 this repository had no CI at all. The browser scripts in
+# scripts/ need the API, a seeded database and both dev servers, so they stay
+# local; this is everything that needs only the code.
+#
+# Order matters: @bedge/shared resolves to dist/shared, not to source, so the
+# library is built first or every app compiles against a library that does
+# not exist. Verified before it was committed by running exactly these steps
+# in a fresh git worktree (no node_modules, no dist, no private
+# environment.share.ts - the default builds use environment.prod.ts).
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci --no-audit --no-fund
+
+      - name: Build the shared library
+        run: npx ng build shared
+
+      - name: Unit tests
+        run: |
+          npx ng test shared --watch=false
+          npx ng test customer-pwa --watch=false
+          npx ng test artist-dashboard --watch=false
+
+      - name: Build both apps
+        run: |
+          npx ng build customer-pwa
+          npx ng build artist-dashboard
