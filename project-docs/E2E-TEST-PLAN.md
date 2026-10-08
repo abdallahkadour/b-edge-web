@@ -355,6 +355,7 @@ Every real route in the codebase, and exactly what on screen triggers it. Use th
 | `PATCH /bookings/:id/cancel` | dashboard Bookings **and** customer-pwa My Bookings, both have a **Cancel** action |
 | `PATCH /bookings/:id/complete` | dashboard Calendar/Bookings → **Mark complete** (fires the review-request WhatsApp message) |
 | `PATCH /bookings/:id/no-show` | dashboard Bookings → **No-show** |
+| `PATCH /bookings/:id/reschedule` | ⚠️ **NO UI PATH** (found 2026-10-08). The customer's own move to a new time works through the API (14.4) but no screen in either app calls it, so a customer who cannot make it can only cancel. Suite 28.10. |
 | `GET /bookings/artist/:id` | dashboard Bookings list load |
 | `GET /bookings/artist/:id/calendar` | dashboard Calendar load |
 | `GET /bookings/artist/:id/waitlist` | dashboard Waitlist load |
@@ -1973,6 +1974,16 @@ expensive bugs will be if they exist.
 
 ## 5. Sign-off
 
+> **Everything executed 2026-10-08, with Suite 28 added.** Every executable
+> suite in both repos, then the new Suite 28 (API `make e2e-suite28`,
+> screens `node scripts/e2e-suite28-ui.mjs`, Go tests for 28.11–28.13).
+> **333 live checks pass, 8 fail** — all 8 in Suite 28 and recorded as
+> security defects AUTH-22, AUTH-14b and AUTH-20, not fixed. 28.11 (the
+> waitlist told the wrong day on a UTC server) was fixed in the run. 28.10
+> is a missing screen. Two UI scripts failed straight after the API suites
+> and passed alone. Full record:
+> `b-edge-api/project-docs/B-Edge-Test-Execution-2026-10-08.md`.
+>
 > **Suites 1-16 executed 2026-09-29, and now executable.** Behaviour:
 > `make e2e-journeys` (`b-edge-api/scripts/e2e-journeys.py`) — **93 pass, 0
 > fail**. Screens: `node scripts/e2e-journeys-ui.mjs` (this repo, Chromium at
@@ -3067,3 +3078,145 @@ absent. `rate-limit.interceptor.spec.ts`, `booking-funnel.page.spec.ts`.
 - Releasing a booking that has been SUBMITTED → **404**, status unchanged;
   an unknown id → the same **404**, so the public release route cannot be
   used to learn whether a booking exists (security FRAUD-22).
+
+### Suite 28 — Who an invitation is for, and when a login should stop working
+
+Added 2026-10-08, from the changes of 28–29 September and the gaps the
+2026-10-08 status review found. Four things changed or were found that no
+suite drives end to end:
+
+- **D26 (2026-09-29):** only the account an invitation names may accept or
+  decline it, and declining needs a login. The join page changed with it.
+  The API is covered (security AUTH-16, FRAUD-11; E2E 23.7d); **the screens
+  are covered only by unit tests**, never in a browser.
+- **AUTH-14 was measured as worse than recorded:** a removed member's
+  still-valid login marked an order shipped. Only two routes were tried.
+- **Refreshing a login never re-reads the account.** `Refresh` checks the
+  refresh token and fetches the user, but not `users.status`, and neither
+  freezing nor deleting an account revokes refresh tokens. Found by reading
+  the code; this suite measures it.
+- **Three behaviours have no automated test:** the alert when a message
+  fails for good (13.5), inbox bundling (13.1), and the waitlist's choice of
+  day for a freed slot.
+
+**Executable: `make e2e-suite28`** (API, `b-edge-api/scripts/e2e-suite28.py`)
+and `node scripts/e2e-suite28-ui.mjs` (screens, this repo). 28.11–28.13 are
+Go tests. Every case builds its own salon and accounts and tears them down;
+the roster is never touched.
+
+**Executed 2026-10-08** (three runs of the API half, identical results;
+residual 0 every time): by case, **9 pass, 1 fixed, 3 fail, 1 gap**. The three
+failures are security defects, recorded in the security plan §3.4f as
+AUTH-14b, AUTH-20 and AUTH-22 and not fixed in this run. One defect was
+fixed (28.11). Full record: `b-edge-api/project-docs/B-Edge-Test-Execution-2026-10-08.md`.
+
+**28.1 — Logged out, the join page offers only signing in ✅ PASS (browser, 390px)**
+Open `/join/<token>` with no session. Expected: the salon and inviter are
+shown, one **Sign in** button, the line "Sign in with the account this
+invitation was sent to, to accept or decline it", and **no Decline**.
+
+**28.2 — Signed in as someone else, the page says so and changes nothing ✅ PASS (browser + API)**
+Sign in as a different artist and open the same link. Press **Decline**,
+then **Accept**. Expected: each shows "This invitation was sent to someone
+else…" on the page (not a redirect to login); the invitation is still
+`pending`.
+*Measured:* ✅ PASS — both buttons answer "sent to someone else" on the
+page, the page stays put, the invitation stays `pending`. API: no login
+→ 401, another account → 403 `INVITATION_NOT_FOR_YOU` on both.
+
+**28.3 — The invitee declines from the page ✅ PASS**
+Sign in as the invited artist, open the link, press **Decline**. Expected:
+lands on the dashboard; the invitation is `declined`; opening the link again
+says it is no longer valid; accepting it through the API is refused.
+*Measured:* she lands on `/onboarding` (the dashboard guard's next stop for
+an artist with no salon of her own), the invitation is `declined`, the link
+then shows "This link is not valid", and accept answers 404.
+
+**28.4 — The invitee accepts, once ✅ PASS**
+A fresh invitation, accepted by the invitee. Expected: she is a member;
+accepting the same link again is refused; the owner's invitation list shows
+it accepted.
+
+**28.5 — An invitation that names two different people ❌ FAIL (security AUTH-20)**
+Invite with the **phone of artist A and the email of artist B**. Expected:
+refused when it is sent, because nobody can say who it is for. If it is
+sent, record which of A and B can accept — the invite and accept lookups
+both take "the first account matching either", with no order.
+*Measured:* the invitation is **sent (201)**. The email's owner is refused
+(403 `INVITATION_NOT_FOR_YOU`) and the phone's owner joins (201): the lookup
+chose one of them by row order, not by anything the owner said.
+
+**28.6 — Everything a removed member's old login can still change ❌ FAIL (security AUTH-14b)**
+A member signs in; the owner removes her; with her old access token, try
+every write a member may make: ship and deliver an order, switch her own
+services on and set her price, set her own hours, tag a portfolio photo,
+leave the salon, and read the salon's orders and clients. Expected (the
+right answer): each refused. Known to fail for at least ship (AUTH-14);
+this case measures the whole list.
+*Measured:* **5 of 14 get through** with the old token while a fresh login
+is refused (403 `NO_SALON`): reading the salon's **orders** (customer names,
+phones, delivery pins), its **service menu** and its **team**, and
+**shipping** and **delivering** an order — both writes changed the order.
+The other 9 are refused, because those routes re-read her membership or
+ownership from the database: client notes, switching services on, her
+hours, photo tags, and approving or cancelling a colleague's booking.
+Clients are listed per artist, so that read returns nothing of the salon's
+to either token.
+
+**28.7 — Deleting your account ends your sessions ✅ PASS (security AUTH-21)**
+Sign in (keep the refresh token), delete the account, then refresh.
+Expected: refused; the new access token never issued. Also: the old access
+token after deletion.
+*Measured:* refresh 401, login 401. The old access token still answers for
+the rest of its 15 minutes (informational; same mechanism as AUTH-14).
+
+**28.8 — A frozen or suspended account cannot keep itself signed in ❌ FAIL (security AUTH-22)**
+Freeze the account (self-service), then refresh. Then set
+`users.status = 'suspended'` the way an operator would, and refresh.
+Expected: both refused.
+*Measured:* login refuses both (`ACCOUNT_FROZEN`, `ACCOUNT_SUSPENDED`) —
+the positive control — but **refresh succeeds for both** and issues a new
+session that works; the suspended one renewed three more times in a row.
+A refresh token lives 7 days and rotates, so an account suspended while
+signed in stays signed in for as long as it keeps using the app.
+
+**28.9 — The API refuses what the onboarding screen now explains ✅ PASS**
+Since 1.3's fix the form says duration is 15–480 minutes, price is a plain
+amount, handle is 3+ characters. Submit onboarding straight to the API with
+duration 10 and 481, price `-5` and `50.999`, handle `ab`. Expected: each
+refused with an error naming the field — the screen and the server agree.
+*Measured:* all five refused and named. Duration and handle answer 422
+`VALIDATION_ERROR`; the price answers **400** `INVALID_SERVICE_PRICE` (the
+money parser's status, not the validator's) — noted, not a failure.
+
+**28.10 — A customer can move her own appointment from the app ⚠️ GAP — NO UI PATH**
+`PATCH /bookings/:id/reschedule` exists and works (14.4), but no screen in
+either app calls it: a customer who cannot make it can only cancel. Expected
+for now: recorded as a gap, the API path still working.
+
+**28.11 — A freed slot alerts the waitlist for the right day (Go test) ✅ FIXED**
+A booking at 01:30 Beirut on day D is 22:30 UTC on D−1. Cancel it with
+someone waiting for D. Expected: the person waiting for **D** is notified,
+whatever time zone the server runs in.
+*Measured:* live on this machine (Beirut time) the right queue was told —
+pgx returns times in the process's zone. Handed a UTC instant, as a UTC
+server would, the cascade told **D−1**: the test failed with that before
+the fix. Fixed in `internal/booking/waitlist.go` — the day is now taken in
+the store's time zone; `TestCancelBooking_WaitlistDay_IsTheStoresDay_OnAUTCServer`.
+
+**28.12 — A message that fails for good tells the artist (Go test) ✅ PASS**
+A notification whose final retry fails. Expected: marked `dead`, and the
+artist gets one in-app alert naming the booking. (Replaces 13.5's manual
+check.)
+*Measured:* `internal/notification/worker_db_test.go`, 3 tests: the final
+failure marks `dead` and files one alert naming the customer; an earlier
+failure files none; two deaths bundle into one alert counting 2. Watched
+failing with the alert call removed.
+
+**28.13 — Notifications bundle instead of piling up (Go database test) ✅ PASS**
+The inbox's insert run 100 times, and 20 at once, for one user and one
+group. Expected: one row, counting every event.
+*Measured:* `internal/inbox/repository_db_test.go`, 3 tests: 100 → one row
+counting 100; 20 concurrent → one row counting 20, no collision; after the
+row is read, the next event starts a fresh one. Watched failing with the
+count increment removed.
