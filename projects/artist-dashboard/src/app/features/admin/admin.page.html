@@ -51,6 +51,16 @@
       </button>
       <button
         type="button"
+        (click)="selectTab('bookings')"
+        class="py-3 text-sm font-bold border-b-2 -mb-px transition-colors"
+        [class]="activeTab() === 'bookings'
+          ? 'border-ink text-ink'
+          : 'border-transparent text-gray-400 hover:text-gray-600'"
+      >
+        Bookings
+      </button>
+      <button
+        type="button"
         (click)="selectTab('plans')"
         class="py-3 text-sm font-bold border-b-2 -mb-px transition-colors"
         [class]="activeTab() === 'plans'
@@ -849,6 +859,12 @@
   </div>
   }
 </div>
+
+  @if (activeTab() === 'bookings') {
+    <!-- Every salon's bookings, read-only (2026-10-09). Its own component:
+         this page is already the longest template in the app. -->
+    <app-admin-bookings />
+  }
 
   @if (activeTab() === 'reports') {
   <div class="max-w-2xl mx-auto px-4 py-6">

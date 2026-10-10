@@ -10,6 +10,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 
+import { AdminBookingsComponent } from './admin-bookings.component';
+
 import {
   AdminDataService,
   AuthStore,
@@ -34,7 +36,7 @@ import type {
   SubscriptionOverviewRow,
 } from '@bedge/shared';
 
-type AdminTab = 'approvals' | 'billing' | 'plans' | 'artists' | 'reports';
+type AdminTab = 'approvals' | 'billing' | 'bookings' | 'plans' | 'artists' | 'reports';
 
 /**
  * Admin console - the only screens an admin account sees.
@@ -54,7 +56,7 @@ type AdminTab = 'approvals' | 'billing' | 'plans' | 'artists' | 'reports';
   selector: 'app-admin-page',
   standalone: true,
   imports: [LucideAngularModule, ButtonComponent, InputDirective, BadgeComponent,
-    SkeletonComponent,
+    SkeletonComponent, AdminBookingsComponent,
   ],
   templateUrl: './admin.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

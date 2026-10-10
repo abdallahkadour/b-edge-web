@@ -298,6 +298,8 @@ Every real route in the codebase, and exactly what on screen triggers it. Use th
 | `GET /admin/artists/pending` | artist-dashboard `/admin` page load (Approvals tab) |
 | `POST /admin/artists/:id/approve` | **Approve** button on a pending-artist card |
 | `POST /admin/artists/:id/reject` | **Reject** → confirm reason → **Reject** (two-tap, inline) |
+| `GET /admin/bookings/summary` | `/admin` → **Bookings** tab load: **refunds owed** (count and amount), **awaiting approval**, **deposits to check** (added 2026-10-09) |
+| `GET /admin/bookings` | same tab: the list, filtered by a status pill or by tapping a figure; **Load more** pages on `next_cursor`. Read-only (added 2026-10-09) |
 
 ### `billing` — artist-facing (3 endpoints)
 
@@ -3250,3 +3252,19 @@ group. Expected: one row, counting every event.
 counting 100; 20 concurrent → one row counting 20, no collision; after the
 row is read, the next event starts a fresh one. Watched failing with the
 count increment removed.
+
+### Suite 29 — The features built on 2026-10-09
+
+Built one by one after the 2026-10-08 status review listed what needed no
+founder decision and no procurement. The reschedule screen is tested in
+28.10 and CI is not an E2E concern, so this suite holds the rest.
+**Executable:** `node scripts/e2e-suite29-ui.mjs` (screens).
+
+**29.1 — The admin sees every salon's bookings, led by the refunds owed ✅ PASS (2026-10-09)**
+Sign in as the admin at 1280px, open **Bookings**. Expected: the **refunds
+owed** figure equals the database (count of `refund_due`, sum of their
+deposits); the list names each booking's salon; tapping the figure leaves
+only **Refund due** rows. Read-only: there is nothing on the tab that
+changes a booking. *Measured:* **$130 across 2 refunds owed**, matching the
+database; Rania Studio listed; after the tap, 2 rows, both Refund due. API:
+an artist gets 403 on both routes; an unknown status 400 `INVALID_STATUS`.

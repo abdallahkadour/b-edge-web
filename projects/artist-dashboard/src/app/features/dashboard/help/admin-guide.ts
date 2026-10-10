@@ -62,6 +62,27 @@ export const ADMIN_GUIDE: Guide = {
       ],
     },
     {
+      id: 'bookings',
+      title: 'Bookings',
+      blurb: "Every salon's bookings, and the refunds owed.",
+      topics: [
+        {
+          id: 'see-bookings',
+          title: "See every salon's bookings",
+          summary: 'Refunds owed first, then everything else, read-only.',
+          steps: [
+            'Open the **Bookings** tab.',
+            'The figures at the top say what is waiting on someone: **refunds owed** (and how much), **awaiting approval**, and **deposits to check**. Tap one to see those bookings.',
+            'Or choose a status: **All**, **Refund due**, **Pending**, **Approved**, **Deposit paid**, **Confirmed**, **Completed**, **Cancelled**.',
+            'Each booking shows the salon, the artist, the customer and their phone, the time, the price and the deposit. Tap **Load more** for older ones.',
+          ],
+          notes: [
+            "This view is read-only. A refund is the salon's to send - B-Edge never holds deposits - so the way to act on one is to contact the artist.",
+          ],
+        },
+      ],
+    },
+    {
       id: 'plans',
       title: 'Plans',
       blurb: 'What artists can subscribe to.',

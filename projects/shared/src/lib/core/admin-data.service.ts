@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { ApiService } from './api.service';
-import type { PendingArtist, DecisionRequest } from '../models';
+import { ApiService, ListResult } from './api.service';
+import type { AdminBooking, AdminBookingSummary, PendingArtist, DecisionRequest } from '../models';
 
 /** Data-access for the admin review queue. Every endpoint here requires
  *  role='admin' server-side - there is no client-side enforcement to rely
@@ -42,5 +42,19 @@ export class AdminDataService {
 
   rejectArtist(artistId: string, req: DecisionRequest = {}): Observable<void> {
     return this.api.command(`/admin/artists/${artistId}/reject`, 'POST', req);
+  }
+
+  /** GET /admin/bookings - every salon's bookings, newest first; optionally
+   *  one status and/or one salon. Page with meta.next_cursor. Read-only. */
+  listBookings(params: { status?: string; salon_id?: string; cursor?: string; limit?: number } = {}): Observable<ListResult<AdminBooking>> {
+    const q: Record<string, string | number> = {};
+    for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== '') q[k] = v;
+    return this.api.getList<AdminBooking>('/admin/bookings', q);
+  }
+
+  /** GET /admin/bookings/summary - refunds owed, requests to approve,
+   *  deposits to check, across every salon. */
+  getBookingSummary(): Observable<AdminBookingSummary> {
+    return this.api.get<AdminBookingSummary>('/admin/bookings/summary');
   }
 }
