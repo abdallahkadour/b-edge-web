@@ -133,11 +133,18 @@ export class BookingFunnelPage implements OnInit {
   protected readonly heldUntil = signal<string | null>(null);
   protected readonly holdingSlot = signal(false);
   /**
-   * Set when a hold is refused because this network already holds the
-   * limit of unfinished slots with this artist (TOO_MANY_HOLDS). Shown on
-   * the picker instead of "someone took your time", which it is not.
+   * Why a hold was refused, shown on the picker - for every refusal that is
+   * not "the time is gone": this network already holds the limit with this
+   * artist (TOO_MANY_HOLDS), a lost connection or server fault, or any other
+   * reason the server gave. Named for the first of those; since 2026-10-10
+   * it carries all of them.
    */
   protected readonly holdLimitMessage = signal<string | null>(null);
+
+  /** What the "not yours" screen says, and whether it may promise her details
+   *  are kept - only true once she reached the details step. */
+  protected readonly unavailableReason = signal<'taken' | 'expired'>('taken');
+  protected readonly detailsSaved = signal(false);
 
   // ── Guest contact details - lifted so they survive a re-hold cycle ────────
   protected readonly customerName = signal('');
@@ -382,16 +389,31 @@ export class BookingFunnelPage implements OnInit {
               "You're already holding 2 times with this artist. Finish one of those bookings, or wait a few minutes."));
             return;
           }
-          // SLOT_UNAVAILABLE (409, someone else took it in the last few
-          // seconds) and any other hold failure: the customer's only useful
-          // next action is picking a different time.
-          this.step.set('slot-unavailable');
+          // Only a time that is genuinely gone sends her to "choose another
+          // time" (409 SLOT_UNAVAILABLE: taken, or - since 2026-10-10 the
+          // server re-checks - inside the artist's travel, outside hours).
+          // A lost connection or a server fault is not the time's fault; any
+          // other refusal says what the server said. Both keep her on the
+          // picker with her choice.
+          if (err.status === 409 && code === 'SLOT_UNAVAILABLE') {
+            this.unavailableReason.set('taken');
+            this.detailsSaved.set(false);
+            this.step.set('slot-unavailable');
+            return;
+          }
+          if (err.status === 0 || err.status >= 500) {
+            this.holdLimitMessage.set("We couldn't reach the salon. Check your connection and try again.");
+            return;
+          }
+          this.holdLimitMessage.set(extractApiErrorMessage(err, "That time can't be booked. Please choose another."));
         },
       });
   }
 
   /** The local countdown reached zero before the customer submitted. */
   protected onHoldExpired(): void {
+    this.unavailableReason.set('expired');
+    this.detailsSaved.set(true);
     this.step.set('slot-unavailable');
   }
 
@@ -460,6 +482,8 @@ export class BookingFunnelPage implements OnInit {
           const code = (err.error as { error?: { code?: string } })?.error?.code;
 
           if (code === 'HOLD_EXPIRED') {
+            this.unavailableReason.set('expired');
+            this.detailsSaved.set(true);
             this.step.set('slot-unavailable');
             return;
           }

@@ -43,6 +43,7 @@ export const CUSTOMER_GUIDE: Guide = {
             'Only times the artist is genuinely free are offered, so anything you can pick is really available.',
             'The time you pick is held for you for 10 minutes while you fill in your details. Going back to choose another time lets it go straight away.',
             'You can hold at most 2 times with the same artist at once. If you reach that, finish one of those bookings, or wait a few minutes for the others to be released.',
+            'If a time is no longer free when you pick it, you are asked to choose another. If your 10 minutes run out, the time is released - it may still be free, so you can pick it again.',
             'The total on the summary is the price your booking is made at. It is this artist\'s own price - two artists in the same salon can charge differently - and early slots can add an early-bird fee, shown as **includes $X early-bird fee** under the total.',
           ],
         },

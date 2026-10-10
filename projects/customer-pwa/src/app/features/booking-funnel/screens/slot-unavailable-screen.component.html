@@ -5,18 +5,24 @@
     </div>
 
     <h1 class="text-[22px] font-bold leading-[28px] tracking-[-0.02em] text-ink">
-      This slot was just taken
+      {{ reason() === 'expired' ? 'Your hold ran out' : 'That time is no longer available' }}
     </h1>
     <p class="text-[15px] text-gray-500 leading-[22px] mt-3">
-      Someone else booked this time while you were filling in your details. Please pick another slot.
+      @if (reason() === 'expired') {
+        We keep a time for you for 10 minutes while you fill in your details. It has been released and may still be free - pick it again or choose another.
+      } @else {
+        It was booked or stopped being free while you were choosing. Please pick another time.
+      }
     </p>
   </div>
 
   <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-50 flex justify-center">
     <div class="w-full max-w-[390px] px-2 flex flex-col items-center gap-3">
-      <span class="text-[13px] text-gray-400 text-center">
-        Your details have been saved — you won't need to re-enter them.
-      </span>
+      @if (detailsSaved()) {
+        <span class="text-[13px] text-gray-400 text-center">
+          Your details have been saved — you won't need to re-enter them.
+        </span>
+      }
       <button
         (click)="chooseAnotherTime.emit()"
         class="w-full h-[52px] rounded bg-ink text-white text-[15px] font-medium leading-[20px] flex items-center justify-center hover:opacity-90 active:opacity-[85%] transition-all cursor-pointer"

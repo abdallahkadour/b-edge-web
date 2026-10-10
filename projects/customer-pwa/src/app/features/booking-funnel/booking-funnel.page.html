@@ -98,6 +98,8 @@
     }
     @case ('slot-unavailable') {
       <app-slot-unavailable-screen
+        [reason]="unavailableReason()"
+        [detailsSaved]="detailsSaved()"
         (chooseAnotherTime)="onChooseAnotherTime()"
         (backToProfile)="onSlotUnavailableBackToProfile()"
       />

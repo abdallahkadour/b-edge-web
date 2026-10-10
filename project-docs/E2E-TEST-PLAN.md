@@ -540,6 +540,10 @@ Given/When/Then, numbered, each ending in a concrete pass/fail check against the
 - When a guest tries to book Store B for a time inside the travel-buffer window after 10:00 (150min weekday / 90min weekend by default)
 - Then that slot must not appear as available at Store B
 - And a slot *outside* the buffer window must appear normally
+- **3.5b** And a hold sent straight to the API at a time inside the window is
+  refused **409 `SLOT_UNAVAILABLE`** — not appearing in the list is not enough
+  (added 2026-10-10: it was 201 until the hold asked the slot list and the
+  transaction re-checked travel; audit T1)
 
 **3.6 — Complete the booking and leave a review**
 - Dashboard → **Mark complete**

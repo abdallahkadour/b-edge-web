@@ -125,6 +125,49 @@ describe('BookingFunnelPage - a refused hold', () => {
     page.onSlotChosen({ storeId: 'store-1', startTime: '2026-10-05T09:00:00Z' });
 
     expect(page.step()).toBe('slot-unavailable');
+    expect(page.unavailableReason()).toBe('taken');
+    expect(page.detailsSaved()).toBe(false);
+  });
+
+  // Until 2026-10-10 every other failure went to the same screen, which told
+  // her someone else had booked the time while she filled in her details -
+  // after a lost connection, before she had typed anything.
+  it('a lost connection keeps her on the picker and says so', () => {
+    const page = pickerWith(new HttpErrorResponse({ status: 0 }));
+
+    page.onSlotChosen({ storeId: 'store-1', startTime: '2026-10-05T09:00:00Z' });
+
+    expect(page.step()).toBe('pick-datetime');
+    expect(page.holdLimitMessage()).toContain("couldn't reach");
+  });
+
+  it('a server fault keeps her on the picker too', () => {
+    const page = pickerWith(apiError(500, 'INTERNAL_ERROR', 'Something went wrong'));
+
+    page.onSlotChosen({ storeId: 'store-1', startTime: '2026-10-05T09:00:00Z' });
+
+    expect(page.step()).toBe('pick-datetime');
+    expect(page.holdLimitMessage()).toContain("couldn't reach");
+  });
+
+  it('any other refusal says what the server said, on the picker', () => {
+    const page = pickerWith(apiError(403, 'ARTIST_NOT_ACCEPTING_BOOKINGS', 'This artist is not taking new bookings right now.'));
+
+    page.onSlotChosen({ storeId: 'store-1', startTime: '2026-10-05T09:00:00Z' });
+
+    expect(page.step()).toBe('pick-datetime');
+    expect(page.holdLimitMessage()).toBe('This artist is not taking new bookings right now.');
+  });
+
+  it('a hold that runs out on the details screen says so, and that her details are kept', () => {
+    const page = pickerWith(apiError(409, 'SLOT_UNAVAILABLE', 'x'));
+    page.step.set('details');
+
+    page.onHoldExpired();
+
+    expect(page.step()).toBe('slot-unavailable');
+    expect(page.unavailableReason()).toBe('expired');
+    expect(page.detailsSaved()).toBe(true);
   });
 });
 
