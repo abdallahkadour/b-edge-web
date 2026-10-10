@@ -71,6 +71,13 @@ export const routes: Routes = [
       import('./features/my-bookings/my-bookings.page').then((m) => m.MyBookingsPage),
   },
   {
+    // Her saved artists (2026-10-09).
+    path: 'favourites',
+    canActivate: [customerAuthGuard],
+    loadComponent: () =>
+      import('./features/favourites/favourites.page').then((m) => m.FavouritesPage),
+  },
+  {
     path: 'my-orders',
     canActivate: [customerAuthGuard],
     loadComponent: () =>

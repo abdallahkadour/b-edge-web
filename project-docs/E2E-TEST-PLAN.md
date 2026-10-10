@@ -429,6 +429,9 @@ Every real route in the codebase, and exactly what on screen triggers it. Use th
 |---|---|
 | `GET /discovery/artists` | customer-pwa Discover page load, search/filter |
 | `GET /discovery/artists/:id` | Discover → tap an artist card |
+| `GET /customers/me/favourites` | customer-pwa **My Bookings** → **Favourites** (added 2026-10-09) |
+| `PUT /customers/me/favourites/:artistId` | the heart on an artist's page, signed in (**Save to favourites**) |
+| `DELETE /customers/me/favourites/:artistId` | the same heart again, or the heart on a card under **Favourites** |
 | `GET /clients` | dashboard Clients list load |
 | `GET /clients/:customer_id` | Clients → tap a client |
 | `PUT /clients/:customer_id/notes` | Client detail → notes field → **Save** |
@@ -3304,3 +3307,15 @@ pinned by unit and database tests, each watched failing. *Harness note:*
 the first run, straight after editing both apps, timed out on two clicks
 while the dev servers were most likely still recompiling; an immediate
 rerun passed all five. The cause was not established.
+
+**29.3 — A customer saves artists she likes ✅ PASS (2026-10-09)**
+At 390px. Signed out, the heart on Rania's page sends her to sign in with
+`returnUrl=/book/rania`, and signing in brings her back there. Signed in,
+the heart goes from not pressed to pressed and the row is stored; **My
+Bookings → Favourites** lists Rania; the heart there forgets her, the page
+says "No favourites yet", and no row is left. *Measured:* exactly that.
+API: saving and removing are repeatable (204), an unknown artist is 404
+`ARTIST_NOT_FOUND`, an artist account is refused (403). Go: the join reads
+Discover's own query, so a hidden artist is hidden from favourites too and
+kept to reappear (database test, watched failing with the join ignoring the
+customer).

@@ -42,6 +42,8 @@
         (openShop)="onOpenShop()"
         (openReviews)="onOpenReviews()"
         (goHome)="goToDiscover()"
+        [favourite]="isFavourite()"
+        (toggleFavourite)="onToggleFavourite()"
       />
     }
     @case ('select-service') {

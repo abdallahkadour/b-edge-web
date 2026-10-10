@@ -156,9 +156,10 @@ export class ApiService {
     return this.http.delete<void>(this.url(path));
   }
 
-  /** PATCH/POST endpoints that return 204 No Content. */
-  command(path: string, method: 'POST' | 'PATCH', body?: unknown): Observable<void> {
+  /** POST/PATCH/PUT endpoints that return 204 No Content. */
+  command(path: string, method: 'POST' | 'PATCH' | 'PUT', body?: unknown): Observable<void> {
     const url = this.url(path);
+    if (method === 'PUT') return this.http.put<void>(url, body ?? {});
     return method === 'POST'
       ? this.http.post<void>(url, body ?? {})
       : this.http.patch<void>(url, body ?? {});

@@ -106,6 +106,20 @@ export const CUSTOMER_GUIDE: Guide = {
           ],
         },
         {
+          id: 'favourites',
+          title: 'Save artists you like',
+          summary: 'Keep a list instead of searching again.',
+          steps: [
+            'Sign in first - favourites belong to your account.',
+            "On an artist's page, tap the heart at the top right. Tap it again to remove her.",
+            'See them all under **My Bookings** → **Favourites**. Tap an artist to book again.',
+          ],
+          notes: [
+            "If an artist stops taking bookings on B-Edge, she disappears from your favourites, and comes back if she returns.",
+            'If you are not signed in, the heart takes you to sign in and then back to the artist.',
+          ],
+        },
+        {
           id: 'view',
           title: 'See your bookings',
           summary: 'Upcoming and past, in one place.',

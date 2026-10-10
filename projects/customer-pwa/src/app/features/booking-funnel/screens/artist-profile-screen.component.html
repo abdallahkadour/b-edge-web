@@ -13,6 +13,18 @@
     <lucide-icon name="arrow-left" [size]="18" [strokeWidth]="2.5" />
   </button>
 
+  <!-- Save this artist (2026-10-09). Mirrors the back button, top right.
+       Signed out, it asks her to sign in rather than doing nothing. -->
+  <button
+    type="button"
+    (click)="toggleFavourite.emit()"
+    class="fixed top-4 right-4 z-20 w-9 h-9 rounded-full bg-ink/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-ink/70 transition-colors"
+    [attr.aria-label]="favourite() ? 'Remove from favourites' : 'Save to favourites'"
+    [attr.aria-pressed]="favourite() === true"
+  >
+    <lucide-icon name="heart" [size]="18" [strokeWidth]="2.5" [class.fill-white]="favourite() === true" />
+  </button>
+
   <!-- Hero - omitted entirely when the artist has no avatar, rather than
        leaving a 300px empty grey block. -->
   @if (artist().avatar_url) {

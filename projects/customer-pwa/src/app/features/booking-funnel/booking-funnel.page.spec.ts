@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -10,10 +11,12 @@ import {
   DiscountDataService,
   DiscoveryDataService,
   MediaDataService,
+  CustomerAuthStore,
 } from '@bedge/shared';
 import type { HoldGuestSlotResponse } from '@bedge/shared';
 
 import { BookingFunnelPage } from './booking-funnel.page';
+import { FavouritesStore } from '../../shared/favourites.store';
 
 const quote: HoldGuestSlotResponse = {
   booking_id: 'bk-1',
@@ -34,6 +37,10 @@ function pageWith(release: (id: string) => ReturnType<BookingDataService['releas
       { provide: DiscountDataService, useValue: {} },
       { provide: DiscoveryDataService, useValue: {} },
       { provide: Router, useValue: {} },
+      // The page reads the customer's session for the profile's heart
+      // (favourites, 2026-10-09); a signed-out visitor is the funnel's norm.
+      { provide: CustomerAuthStore, useValue: { isAuthenticated: signal(false) } },
+      { provide: FavouritesStore, useValue: { has: () => false, load: () => undefined, toggle: () => undefined } },
     ],
   });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -83,6 +90,10 @@ function pickerWith(holdError: HttpErrorResponse) {
       { provide: DiscountDataService, useValue: {} },
       { provide: DiscoveryDataService, useValue: {} },
       { provide: Router, useValue: {} },
+      // The page reads the customer's session for the profile's heart
+      // (favourites, 2026-10-09); a signed-out visitor is the funnel's norm.
+      { provide: CustomerAuthStore, useValue: { isAuthenticated: signal(false) } },
+      { provide: FavouritesStore, useValue: { has: () => false, load: () => undefined, toggle: () => undefined } },
     ],
   });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -129,6 +140,10 @@ function pageWithPreview(preview: () => ReturnType<DiscountDataService['previewF
       { provide: DiscountDataService, useValue: { previewForBooking: preview } },
       { provide: DiscoveryDataService, useValue: {} },
       { provide: Router, useValue: {} },
+      // The page reads the customer's session for the profile's heart
+      // (favourites, 2026-10-09); a signed-out visitor is the funnel's norm.
+      { provide: CustomerAuthStore, useValue: { isAuthenticated: signal(false) } },
+      { provide: FavouritesStore, useValue: { has: () => false, load: () => undefined, toggle: () => undefined } },
     ],
   });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

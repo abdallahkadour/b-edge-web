@@ -57,6 +57,14 @@ export class ArtistProfileScreenComponent {
    */
   readonly goHome = output<void>();
 
+  /**
+   * Whether she has saved this artist: true/false when signed in, null when
+   * signed out (the heart then asks her to sign in). The container owns the
+   * store and the navigation, as for goHome and openShop.
+   */
+  readonly favourite = input<boolean | null>(null);
+  readonly toggleFavourite = output<void>();
+
   // ── Portfolio filtering ────────────────────────────────────────────────────
   //
   // "Browse the look, book the look": a customer who likes a photo can tap

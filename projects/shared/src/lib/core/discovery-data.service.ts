@@ -37,4 +37,21 @@ export class DiscoveryDataService {
   getArtistProfile(id: string): Observable<PublicArtistProfile> {
     return this.api.get<PublicArtistProfile>(`/discovery/artists/${id}`);
   }
+
+  /** GET /customers/me/favourites - the signed-in customer's saved artists,
+   *  as Discover cards, one per artist. An artist Discover would hide (a
+   *  lapsed plan, say) is hidden here too, and comes back if she returns. */
+  getFavourites(): Observable<ArtistCard[]> {
+    return this.api.getArray<ArtistCard>('/customers/me/favourites');
+  }
+
+  /** PUT /customers/me/favourites/:artistId - save one; saving twice is fine. */
+  addFavourite(artistId: string): Observable<void> {
+    return this.api.command(`/customers/me/favourites/${artistId}`, 'PUT');
+  }
+
+  /** DELETE /customers/me/favourites/:artistId - forget one. */
+  removeFavourite(artistId: string): Observable<void> {
+    return this.api.delete(`/customers/me/favourites/${artistId}`);
+  }
 }

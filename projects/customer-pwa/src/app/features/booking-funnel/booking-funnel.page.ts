@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { LucideAngularModule } from 'lucide-angular';
@@ -6,6 +6,7 @@ import { LucideAngularModule } from 'lucide-angular';
 import {
   ArtistDataService,
   BookingDataService,
+  CustomerAuthStore,
   DiscountDataService,
   DiscoveryDataService,
   MediaDataService,
@@ -23,6 +24,7 @@ import type {
   HoldGuestSlotResponse,
 } from '@bedge/shared';
 
+import { FavouritesStore } from '../../shared/favourites.store';
 import { ArtistProfileScreenComponent } from './screens/artist-profile-screen.component';
 import { SelectServiceScreenComponent } from './screens/select-service-screen.component';
 import { PickDatetimeScreenComponent } from './screens/pick-datetime-screen.component';
@@ -75,6 +77,21 @@ export class BookingFunnelPage implements OnInit {
   private readonly discountApi = inject(DiscountDataService);
   private readonly discoveryApi = inject(DiscoveryDataService);
   private readonly router = inject(Router);
+  private readonly customerAuth = inject(CustomerAuthStore);
+  private readonly favourites = inject(FavouritesStore);
+
+  /** The profile's heart: saved or not when signed in, null when signed out. */
+  protected readonly isFavourite = computed(() => {
+    const id = this.resolvedArtistId();
+    if (!id || !this.customerAuth.isAuthenticated()) return null;
+    return this.favourites.has(id);
+  });
+
+  // The session is restored after the app starts, so a visitor who IS signed
+  // in reads as signed out for a moment; load her favourites when that flips.
+  private readonly loadFavourites = effect(() => {
+    if (this.customerAuth.isAuthenticated()) untracked(() => this.favourites.load());
+  });
 
   readonly artistId = input.required<string>();
 
@@ -278,6 +295,18 @@ export class BookingFunnelPage implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  /** The profile's heart. Signed out, it asks her to sign in and brings her
+   *  back here; signed in, it saves or forgets the artist. */
+  protected onToggleFavourite(): void {
+    const id = this.resolvedArtistId();
+    if (!id) return;
+    if (!this.customerAuth.isAuthenticated()) {
+      this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.url } });
+      return;
+    }
+    this.favourites.toggle(id);
   }
 
   /** "Browse other artists" action on the not-found state. */

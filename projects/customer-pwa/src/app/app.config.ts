@@ -32,6 +32,7 @@ import {
   BadgeCheck,
   Sparkles,
   User,
+  Heart,
 } from 'lucide-angular';
 
 import {
@@ -104,6 +105,7 @@ export const appConfig: ApplicationConfig = {
         BadgeCheck,
         Sparkles,
         User,
+        Heart,
       }),
     ),
 

@@ -19,6 +19,9 @@
              screen; this is its only account surface, so the control lives
              here rather than nowhere. -->
         <bedge-theme-toggle [compact]="true" />
+        <button type="button" (click)="goToFavourites()" class="text-xs text-ink font-semibold underline">
+          Favourites
+        </button>
         <button type="button" (click)="goToOrders()" class="text-xs text-ink font-semibold underline">
           My orders
         </button>

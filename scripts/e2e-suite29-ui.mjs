@@ -7,7 +7,9 @@
  *         price as a deposit for a no-deposit service; one -> none; another
  *         salon's -> none; turned off -> none. The owner changes the setting
  *         in Profile; the artist's card and the customer's booking say why
- *   29.3  (added with favourites)
+ *   29.3  favourites: signed out, the heart asks her to sign in and brings her
+ *         back; signed in, it saves the artist, who is then under My
+ *         Bookings -> Favourites, where the heart forgets her again
  *
  * Chromium, for the same reason as e2e-journeys-ui.mjs: it keeps the Secure
  * refresh cookie on http://localhost. Cases that create data tag it and tear
@@ -231,8 +233,61 @@ async function noShowRule(browser) {
   await cc.close();
 }
 
+// ── 29.3 favourites ─────────────────────────────────────────────────────────
+
+const FAV_PHONE = '+96176365430';
+
+async function favourites(browser) {
+  const rania = sql(`SELECT id FROM artists WHERE handle = 'rania'`);
+  const c = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await c.newPage();
+  await page.route('**/api/v1/customer-auth/request-otp', (route) => route.fulfill({ status: 200, contentType: 'application/json',
+    body: JSON.stringify({ data: { message: 'Verification code sent', delivery_looks_broken: false }, error: null, meta: null }) }));
+
+  // Signed out: the heart is a way to sign in, and back.
+  await page.goto(`${PWA}/book/rania`);
+  await settle(page);
+  await page.getByRole('button', { name: 'Save to favourites' }).click();
+  await settle(page);
+  const toLogin = new URL(page.url());
+  const asked = toLogin.pathname === '/login' && (toLogin.searchParams.get('returnUrl') ?? '').startsWith('/book/rania');
+  await page.locator('input[type="tel"]').first().fill(FAV_PHONE.slice(4));
+  await page.getByRole('button', { name: 'Send code' }).click();
+  await page.fill('#login-code', '000000');
+  await page.getByRole('button', { name: 'Verify' }).click();
+  await settle(page);
+  const back = new URL(page.url()).pathname === '/book/rania';
+  rec('29.3 signed out', asked && back ? 'PASS' : 'FAIL',
+    `heart -> ${toLogin.pathname}?returnUrl=${toLogin.searchParams.get('returnUrl')}; after signing in, back on ${new URL(page.url()).pathname}`);
+
+  // Signed in: save, see, forget.
+  const heart = page.getByRole('button', { name: /favourites$/ });
+  const before = await heart.getAttribute('aria-pressed');
+  await page.getByRole('button', { name: 'Save to favourites' }).click();
+  await settle(page);
+  const after = await page.getByRole('button', { name: 'Remove from favourites' }).getAttribute('aria-pressed');
+  const cust = sql(`SELECT id FROM users WHERE phone='${FAV_PHONE}' AND deleted_at IS NULL`);
+  const stored = sql(`SELECT count(*) FROM customer_favourite_artists WHERE customer_id='${cust}' AND artist_id='${rania}'`);
+  await page.goto(`${PWA}/my-bookings`);
+  await settle(page);
+  await page.getByRole('button', { name: 'Favourites' }).click();
+  await settle(page);
+  const listed = new URL(page.url()).pathname === '/favourites' && /Rania/.test(await text(page));
+  await page.getByRole('button', { name: 'Remove Rania from favourites' }).click();
+  await settle(page);
+  const gone = /No favourites yet/.test(await text(page));
+  const left = sql(`SELECT count(*) FROM customer_favourite_artists WHERE customer_id='${cust}'`);
+  rec('29.3 signed in', before === 'false' && after === 'true' && stored === '1' && listed && gone && left === '0' ? 'PASS' : 'FAIL',
+    `heart ${before} -> ${after}, stored ${stored}; My Bookings -> Favourites lists Rania: ${listed}; ` +
+    `removed there -> "No favourites yet" ${gone}, rows left ${left}`);
+  await c.close();
+}
+
 function cleanup() {
   for (const q of [
+    `DELETE FROM refresh_tokens WHERE user_id IN (SELECT id FROM users WHERE phone='${FAV_PHONE}')`,
+    `DELETE FROM customer_otps WHERE phone='${FAV_PHONE}'`,
+    `DELETE FROM users WHERE phone='${FAV_PHONE}'`,
     `DELETE FROM notifications WHERE booking_id IN (SELECT id FROM bookings WHERE salon_id IN (SELECT id FROM salons WHERE name LIKE '${TAG}%'))`,
     `DELETE FROM bookings WHERE salon_id IN (SELECT id FROM salons WHERE name LIKE '${TAG}%')`,
     `DELETE FROM refresh_tokens WHERE user_id IN (SELECT id FROM users WHERE phone LIKE '+9617636541%')`,
@@ -256,7 +311,7 @@ c.cleanup()`;
 console.log('\n  E2E suite 29 — the 2026-10-09 features\n');
 const browser = await chromium.launch();
 try {
-  for (const run of [adminBookings, noShowRule]) {
+  for (const run of [adminBookings, noShowRule, favourites]) {
     try { await run(browser); } catch (e) { rec(run.name, 'FAIL', `harness: ${e.message.split('\n')[0]}`); }
   }
 } finally {

@@ -103,6 +103,10 @@ export class MyBookingsPage implements OnInit {
   // which is a real privacy decision, not something to add silently as a
   // side effect of building this screen. Revisit as its own decision.
 
+  goToFavourites(): void {
+    this.router.navigateByUrl('/favourites');
+  }
+
   goToOrders(): void {
     this.router.navigateByUrl('/my-orders');
   }
