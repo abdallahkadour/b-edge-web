@@ -5,7 +5,9 @@
   <div class="mb-6 flex items-center justify-between">
     <div>
       <h1 class="text-xl font-semibold text-ink">Bookings</h1>
-      <p class="text-sm text-gray-500 mt-0.5">Your upcoming and past appointments.</p>
+      <p class="text-sm text-gray-500 mt-0.5">
+        {{ team() === 'mine' ? 'Your upcoming and past appointments.' : 'Your team\'s appointments. You can act on any of them; each action is recorded in Activity.' }}
+      </p>
     </div>
     @if (pendingCount() > 0) {
       <span class="inline-flex items-center rounded-full bg-warning-light px-2.5 py-1
@@ -22,6 +24,11 @@
       {{ msg }}
     </div>
   }
+
+  <!-- Whose bookings - the owner's choice only; renders nothing otherwise -->
+  <div class="mb-3">
+    <bedge-team-filter [value]="team()" (changed)="selectTeam($event)" />
+  </div>
 
   <!-- Status filter tabs -->
   <div class="flex gap-2 overflow-x-auto pb-1 mb-5 scrollbar-none">
@@ -68,6 +75,9 @@
           <div class="flex items-start justify-between mb-3">
             <div>
               <p class="text-sm font-semibold text-ink">{{ booking.customer_name }}</p>
+              @if (team() !== 'mine') {
+                <p class="text-xs text-gray-500" data-artist-name>with {{ booking.artist_name }}</p>
+              }
               @if (booking.customer_phone) {
                 <p class="text-xs text-gray-400 mt-0.5">{{ booking.customer_phone }}</p>
               }

@@ -21,3 +21,4 @@ export * from './media.model';
 export * from './billing.model';
 export * from './notification.model';
 export * from './membership.model';
+export * from './activity.model';

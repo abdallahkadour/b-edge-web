@@ -15,6 +15,7 @@ import { ArtistDataService, BadgeComponent, BookingDataService,
 } from '@bedge/shared';
 import type { EnrichedBooking } from '@bedge/shared';
 import { environment } from '../../../environments/environment';
+import { TeamFilterComponent, type TeamView } from './team-filter.component';
 
 /** The store's timezone - every appointment is positioned on the grid in
  * this zone, not the browser's local zone. Matches the exact convention
@@ -44,6 +45,10 @@ interface PositionedBooking {
   booking: EnrichedBooking;
   topPx: number;
   heightPx: number;
+  /** Side-by-side lane when appointments overlap - only possible when the
+   *  owner is looking at more than one artist's day. */
+  lane: number;
+  lanes: number;
   /** True when the block is too short to show the full four-line layout. */
   compact: boolean;
   startLabel: string;
@@ -54,7 +59,7 @@ interface PositionedBooking {
   selector: 'bedge-calendar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [LucideAngularModule, A11yModule, BadgeComponent,
+  imports: [LucideAngularModule, A11yModule, BadgeComponent, TeamFilterComponent,
     SkeletonComponent,
   ],
   templateUrl: './calendar.component.html',
@@ -68,6 +73,8 @@ export class CalendarComponent implements OnInit {
 
   private readonly artistId = signal<string | null>(null);
   private readonly weekBookings = signal<EnrichedBooking[]>([]);
+  /** Whose week: hers, or - for a salon owner - everyone's or one member's. */
+  readonly team = signal<TeamView>('mine');
   /** Monday of the currently-viewed week, Beirut-local, YYYY-MM-DD. */
   private readonly weekStart = signal<string>(mondayOf(beirutToday()));
 
@@ -120,9 +127,10 @@ export class CalendarComponent implements OnInit {
     const selectedDate = days[this.selectedDayIndex()]?.dateStr;
     if (!selectedDate) return [];
 
-    return this.weekBookings()
-      .filter((b) => beirutDateStr(b.start_time) === selectedDate)
-      .map((b) => {
+    const day = this.weekBookings().filter((b) => beirutDateStr(b.start_time) === selectedDate);
+    const lanes = assignLanes(day.map((b) => ({ start: Date.parse(b.start_time), end: Date.parse(b.end_time) })));
+    return day
+      .map((b, i) => {
         const startHour = beirutHourDecimal(b.start_time);
         const endHour = beirutHourDecimal(b.end_time);
         const clampedStart = Math.max(startHour, GRID_START_HOUR);
@@ -143,6 +151,8 @@ export class CalendarComponent implements OnInit {
           // customer and status are one tap away in the detail sheet, and
           // the block's POSITION already says when it is.
           compact: heightPx < FULL_BLOCK_MIN_PX,
+          lane: lanes[i].lane,
+          lanes: lanes[i].lanes,
           startLabel: formatBeirutTime(b.start_time),
           endLabel: formatBeirutTime(b.end_time),
         };
@@ -177,6 +187,24 @@ export class CalendarComponent implements OnInit {
 
   closeDetail(): void {
     this.selectedBooking.set(null);
+  }
+
+  /** Switch whose week is shown. */
+  selectTeam(view: TeamView): void {
+    if (this.team() === view) return;
+    this.team.set(view);
+    this.selectedBooking.set(null);
+    this.loadWeek();
+  }
+
+  /** Left edge and width of a block in its lane. One lane is the full
+   *  width it always had (left-6 right-2). */
+  laneLeft(item: PositionedBooking): string {
+    return `calc(1.5rem + (100% - 2rem) * ${item.lane} / ${item.lanes})`;
+  }
+
+  laneWidth(item: PositionedBooking): string {
+    return item.lanes > 1 ? `calc((100% - 2rem) / ${item.lanes} - 4px)` : 'calc(100% - 2rem)';
   }
 
   previousWeek(): void {
@@ -289,7 +317,11 @@ export class CalendarComponent implements OnInit {
     this.loading.set(true);
     this.errorMessage.set(null);
 
-    this.bookingSvc.getArtistCalendar(id, this.weekStart()).subscribe({
+    const team = this.team();
+    const week$ = team === 'mine'
+      ? this.bookingSvc.getArtistCalendar(id, this.weekStart())
+      : this.bookingSvc.getSalonCalendar(this.weekStart(), team === 'all' ? undefined : team);
+    week$.subscribe({
       next: (result) => {
         this.weekBookings.set(result.items ?? []);
         this.loading.set(false);
@@ -302,6 +334,42 @@ export class CalendarComponent implements OnInit {
       },
     });
   }
+}
+
+/**
+ * Lays overlapping appointments side by side. Appointments that overlap,
+ * directly or through a chain, form one group; each gets the first lane free
+ * at its start, and every member of a group is told the group's lane count
+ * so they share the width evenly. A day with no overlaps - every artist's
+ * own day, always - is one lane per block, the layout it has always had.
+ */
+export function assignLanes(items: { start: number; end: number }[]): { lane: number; lanes: number }[] {
+  const order = items.map((_, i) => i).sort((a, b) => items[a].start - items[b].start || items[a].end - items[b].end);
+  const out: { lane: number; lanes: number }[] = items.map(() => ({ lane: 0, lanes: 1 }));
+  let group: number[] = [];
+  let laneEnds: number[] = [];
+  let groupEnd = -Infinity;
+  const close = () => {
+    for (const i of group) out[i].lanes = laneEnds.length;
+    group = [];
+    laneEnds = [];
+  };
+  for (const i of order) {
+    const { start, end } = items[i];
+    if (start >= groupEnd) close();
+    let lane = laneEnds.findIndex((e) => e <= start);
+    if (lane === -1) {
+      lane = laneEnds.length;
+      laneEnds.push(end);
+    } else {
+      laneEnds[lane] = end;
+    }
+    out[i].lane = lane;
+    group.push(i);
+    groupEnd = Math.max(groupEnd === -Infinity ? end : groupEnd, end);
+  }
+  close();
+  return out;
 }
 
 // ── Beirut-local date/time helpers ──────────────────────────────────────────

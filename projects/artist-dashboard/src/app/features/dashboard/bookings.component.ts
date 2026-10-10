@@ -7,6 +7,7 @@ import {
   computed,
 } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
+import { ActivatedRoute } from '@angular/router';
 
 import {
   AuthStore,
@@ -22,6 +23,8 @@ import {
   EmptyStateComponent,
 } from '@bedge/shared';
 import type { EnrichedBooking, BookingStatus } from '@bedge/shared';
+
+import { TeamFilterComponent, type TeamView } from './team-filter.component';
 
 
 /** Status filter tab shown in the UI. '' means all statuses. */
@@ -45,7 +48,7 @@ interface StatusTab {
   selector: 'bedge-bookings',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BadgeComponent, ButtonComponent, InputDirective,
+  imports: [BadgeComponent, ButtonComponent, InputDirective, TeamFilterComponent,
     SkeletonComponent,
     EmptyStateComponent,
   ],
@@ -59,6 +62,7 @@ export class BookingsComponent implements OnInit {
   private readonly auth = inject(AuthStore);
   private readonly artistSvc = inject(ArtistDataService);
   private readonly bookingSvc = inject(BookingDataService);
+  private readonly route = inject(ActivatedRoute);
 
   // ── State ────────────────────────────────────────────────────────────────
 
@@ -82,6 +86,10 @@ export class BookingsComponent implements OnInit {
 
   /** Currently active status filter. '' = all. */
   readonly activeStatus = signal<string>('');
+
+  /** Whose bookings: the caller's own (everyone's default), or - for a
+   *  salon owner - everyone's or one member's (TeamFilterComponent). */
+  readonly team = signal<TeamView>('mine');
 
   /** True when there are more pages to load. */
   readonly hasMore = signal(false);
@@ -150,7 +158,22 @@ export class BookingsComponent implements OnInit {
   // ── Lifecycle ─────────────────────────────────────────────────────────────
 
   ngOnInit(): void {
+    // The Salon screen links here with ?status=pending&team=all ("requests
+    // to approve") and ?status=refund_due&team=all ("refunds owed").
+    const q = this.route.snapshot.queryParamMap;
+    const status = q.get('status');
+    if (status && this.tabs.some((t) => t.value === status)) this.activeStatus.set(status);
+    const team = q.get('team');
+    if (team) this.team.set(team);
     this.loadArtistThenBookings();
+  }
+
+  /** Switch whose bookings are shown and reload from the first page. */
+  selectTeam(view: TeamView): void {
+    if (this.team() === view) return;
+    this.team.set(view);
+    this.nextCursor.set(undefined);
+    this.loadBookings();
   }
 
   // ── Actions ───────────────────────────────────────────────────────────────
@@ -315,7 +338,13 @@ export class BookingsComponent implements OnInit {
     const cursor = append ? this.nextCursor() : undefined;
     const status = this.activeStatus() || undefined;
 
-    this.bookingSvc.getArtistBookings(id, cursor, 20, status).subscribe({
+    // Her own bookings, or the salon's (owner only - the API refuses a
+    // member with 403 SALON_ROLE_FORBIDDEN).
+    const team = this.team();
+    const page$ = team === 'mine'
+      ? this.bookingSvc.getArtistBookings(id, cursor, 20, status)
+      : this.bookingSvc.getSalonBookings({ artistId: team === 'all' ? undefined : team, status, cursor });
+    page$.subscribe({
       next: (result) => {
         const incoming = result.items as unknown as EnrichedBooking[];
         this.bookings.update((prev) =>

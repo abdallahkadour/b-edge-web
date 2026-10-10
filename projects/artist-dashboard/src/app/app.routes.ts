@@ -105,6 +105,16 @@ export const routes: Routes = [
           ),
       },
       {
+        // The salon's activity log - who did what. Owner only; the API
+        // refuses a member with 403 SALON_ROLE_FORBIDDEN.
+        path: 'activity',
+        canActivate: [salonOwnerGuard()],
+        loadComponent: () =>
+          import('./features/dashboard/activity.page').then(
+            (m) => m.ActivityPage,
+          ),
+      },
+      {
         path: 'bookings',
         loadComponent: () =>
           import('./features/dashboard/bookings.component').then(

@@ -109,7 +109,7 @@ export function noShowRate(t: SalonTotals): number | null {
 
       @if (data(); as d) {
         <section data-waiting aria-label="Waiting now" class="grid grid-cols-3 gap-2 mb-5">
-          <a routerLink="/dashboard/bookings" [queryParams]="{ status: 'pending' }"
+          <a routerLink="/dashboard/bookings" [queryParams]="{ status: 'pending', team: 'all' }"
             class="rounded-xl border p-3 bg-white" [class]="d.waiting.awaiting_approval > 0 ? 'border-warning/50' : 'border-gray-200'">
             <span class="block text-lg font-bold text-ink tabular-nums">{{ d.waiting.awaiting_approval }}</span>
             <span class="block text-xs text-gray-500">{{ d.waiting.awaiting_approval === 1 ? 'request' : 'requests' }} to approve</span>
@@ -119,7 +119,7 @@ export function noShowRate(t: SalonTotals): number | null {
             <span class="block text-lg font-bold text-ink tabular-nums">{{ d.waiting.deposits_to_check }}</span>
             <span class="block text-xs text-gray-500">{{ d.waiting.deposits_to_check === 1 ? 'deposit' : 'deposits' }} to check</span>
           </a>
-          <a routerLink="/dashboard/bookings" [queryParams]="{ status: 'refund_due' }"
+          <a routerLink="/dashboard/bookings" [queryParams]="{ status: 'refund_due', team: 'all' }"
             class="rounded-xl border p-3" [class]="d.waiting.refunds_owed > 0 ? 'border-danger/40 bg-danger-light' : 'border-gray-200 bg-white'">
             <span class="block text-lg font-bold text-ink tabular-nums">\${{ money(d.waiting.refunds_owed_amount) }}</span>
             <span class="block text-xs text-gray-500">{{ d.waiting.refunds_owed }} {{ d.waiting.refunds_owed === 1 ? 'refund' : 'refunds' }} owed</span>

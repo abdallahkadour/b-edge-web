@@ -6,7 +6,7 @@
     <div class="flex items-center justify-between">
       <div>
         <h1 class="text-xl font-semibold text-ink">Calendar</h1>
-        <p class="text-sm text-gray-500 mt-0.5">Your weekly schedule.</p>
+        <p class="text-sm text-gray-500 mt-0.5">{{ team() === 'mine' ? 'Your weekly schedule.' : 'Your team\'s week.' }}</p>
       </div>
       <div class="flex items-center gap-1">
         <button
@@ -27,6 +27,10 @@
           <lucide-icon name="chevron-right" [size]="18" [strokeWidth]="2" />
         </button>
       </div>
+    </div>
+
+    <div class="mt-2">
+      <bedge-team-filter [value]="team()" (changed)="selectTeam($event)" />
     </div>
 
     <!-- Week day strip -->
@@ -98,9 +102,12 @@
           (click)="openDetail(item.booking)"
           [style.top.px]="item.topPx"
           [style.height.px]="item.heightPx"
+          [style.left]="laneLeft(item)"
+          [style.width]="laneWidth(item)"
+          [attr.title]="team() === 'mine' ? null : item.booking.artist_name"
           [class]="item.compact
-            ? 'absolute left-6 right-2 bg-ink text-white hover:opacity-90 rounded-lg px-2.5 py-1.5 text-left shadow-sm border-l-4 border-success flex items-center justify-between gap-2 overflow-hidden transition-opacity'
-            : 'absolute left-6 right-2 bg-ink text-white hover:opacity-90 rounded-lg p-3 text-left shadow-sm border-l-4 border-success flex flex-col justify-between overflow-hidden transition-opacity'"
+            ? 'absolute bg-ink text-white hover:opacity-90 rounded-lg px-2.5 py-1.5 text-left shadow-sm border-l-4 border-success flex items-center justify-between gap-2 overflow-hidden transition-opacity'
+            : 'absolute bg-ink text-white hover:opacity-90 rounded-lg p-3 text-left shadow-sm border-l-4 border-success flex flex-col justify-between overflow-hidden transition-opacity'"
         >
           @if (item.compact) {
             <!-- Two lines, because anything more clips. Service and time are
@@ -118,7 +125,7 @@
                   {{ statusLabel(item.booking.status) }}
                 </span>
               </div>
-              <p class="text-xs text-gray-300 font-medium mt-0.5 truncate">{{ item.booking.customer_name }}</p>
+              <p class="text-xs text-gray-300 font-medium mt-0.5 truncate">{{ item.booking.customer_name }}@if (team() !== 'mine') { · {{ item.booking.artist_name }}}</p>
             </div>
             <span class="text-xs font-mono text-gray-400 font-medium">
               {{ item.startLabel }} – {{ item.endLabel }}
@@ -181,6 +188,12 @@
         </div>
 
         <div class="space-y-3 border-t border-gray-100 pt-3.5 text-xs text-gray-600">
+          @if (team() !== 'mine') {
+            <div class="flex justify-between py-1 border-b border-gray-50">
+              <span class="font-semibold text-gray-400">Artist</span>
+              <span class="font-bold text-ink">{{ b.artist_name }}</span>
+            </div>
+          }
           <div class="flex justify-between py-1 border-b border-gray-50">
             <span class="font-semibold text-gray-400">Client name</span>
             <span class="font-bold text-ink">{{ b.customer_name }}</span>

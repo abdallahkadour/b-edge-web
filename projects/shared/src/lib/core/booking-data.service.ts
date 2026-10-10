@@ -155,6 +155,25 @@ export class BookingDataService {
     });
   }
 
+  /**
+   * GET /bookings/salon - every booking made at the caller's salon, newest
+   * first, optionally one artist's (artists.id). Owner only.
+   */
+  getSalonBookings(opts: { artistId?: string; status?: string; cursor?: string; limit?: number } = {}): Observable<ListResult<EnrichedBooking>> {
+    const params: Record<string, string | number> = { limit: opts.limit ?? 20 };
+    if (opts.artistId) params['artist_id'] = opts.artistId;
+    if (opts.status) params['status'] = opts.status;
+    if (opts.cursor) params['cursor'] = opts.cursor;
+    return this.api.getList<EnrichedBooking>('/bookings/salon', params);
+  }
+
+  /** GET /bookings/salon/calendar - the salon's committed week, every artist or one. Owner only. */
+  getSalonCalendar(weekStart: string, artistId?: string): Observable<ListResult<EnrichedBooking>> {
+    const params: Record<string, string> = { week_start: weekStart };
+    if (artistId) params['artist_id'] = artistId;
+    return this.api.getList<EnrichedBooking>('/bookings/salon/calendar', params);
+  }
+
   /** PATCH /bookings/:id/deposit-received - mark deposit received. */
   markDepositReceived(id: string): Observable<Booking> {
     return this.api.patch<Booking>(`/bookings/${id}/deposit-received`);

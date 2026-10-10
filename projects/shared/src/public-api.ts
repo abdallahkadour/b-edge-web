@@ -51,6 +51,7 @@ export * from './lib/core/report-data.service';
 export * from './lib/core/discovery-data.service';
 export * from './lib/core/review-data.service';
 export * from './lib/core/earnings-data.service';
+export * from './lib/core/activity-data.service';
 export * from './lib/core/client-data.service';
 export * from './lib/core/media-data.service';
 export * from './lib/core/cloudinary-upload.service';

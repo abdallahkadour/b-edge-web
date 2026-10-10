@@ -50,6 +50,7 @@ import {
   Inbox,
   CircleHelp,
   LayoutDashboard,
+  History,
 } from 'lucide-angular';
 
 import {
@@ -135,6 +136,7 @@ export const appConfig: ApplicationConfig = {
         Inbox,
         CircleHelp,
         LayoutDashboard,
+        History,
       }),
     ),
 

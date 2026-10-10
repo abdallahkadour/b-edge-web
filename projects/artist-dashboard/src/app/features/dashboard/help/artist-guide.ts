@@ -364,6 +364,60 @@ export const ARTIST_GUIDE: Guide = {
       ],
     },
     {
+      id: 'owner',
+      title: 'Running a salon',
+      blurb: 'For the salon owner: everyone\'s numbers, bookings and changes in one place.',
+      topics: [
+        {
+          id: 'salon-overview',
+          title: 'See how the whole salon is doing',
+          summary: 'Everyone\'s appointments and money for a period, and what is waiting on you.',
+          steps: [
+            'Go to **Salon**.',
+            'Pick **Today**, **This week**, **This month** or **Last month**.',
+            'The top row is what is waiting right now - requests to approve, deposits to check, refunds owed. Tap one to open those bookings.',
+            '**Earned** is the booked value of completed and no-show appointments, compared with the same point in the period before.',
+            'Under **Team**, each artist\'s figures sit side by side, with their rating.',
+          ],
+          notes: [
+            'Only the salon owner sees this screen. Team members see their own figures on **Earnings** and nobody else\'s.',
+            'B-Edge never holds money, so these are the amounts recorded in the app, not what reached your account.',
+            'An artist who has left still appears, marked **Left the salon**, for the period she worked with you.',
+          ],
+        },
+        {
+          id: 'team-bookings',
+          title: 'See and handle your team\'s bookings',
+          summary: 'Everyone\'s bookings and calendar, and acting on them for a team member.',
+          steps: [
+            'Go to **Bookings** or **Calendar**.',
+            'Next to **Showing**, choose **Everyone**, or one artist. **My bookings** takes you back to your own.',
+            'Each booking says whose it is. Approve, confirm a deposit, cancel, complete or mark a no-show as you would your own.',
+          ],
+          notes: [
+            '**Showing** only appears when your salon has more than one artist.',
+            'Whatever you do on a team member\'s booking is recorded in **Activity** under your name.',
+            'When two artists have appointments at the same time, the calendar shows them side by side.',
+          ],
+        },
+        {
+          id: 'activity',
+          title: 'See who did what',
+          summary: 'Every approval, refund, price change and payment account change, with who made it.',
+          steps: [
+            'Go to **Activity**.',
+            'Narrow it with **Bookings**, **Payments**, **Menu**, **Shop** or **Team**, or choose one person.',
+            'Each line says who did what, and underneath what it was about or what it changed from and to.',
+          ],
+          notes: [
+            'A change to a payment account is highlighted. Clients send deposits to that account - if you did not make the change, check it straight away.',
+            'Nothing in the log can be edited or deleted, by anyone.',
+            'Bookings, payment accounts, prices, opening hours, discount codes and shop orders are recorded from 10 October 2026.',
+          ],
+        },
+      ],
+    },
+    {
       id: 'money',
       title: 'Money and promotions',
       blurb: 'What you earned, and how to bring people in.',
