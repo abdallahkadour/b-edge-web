@@ -287,11 +287,13 @@ function cleanup() {
   for (const q of [
     `DELETE FROM refresh_tokens WHERE user_id IN (SELECT id FROM users WHERE phone='${FAV_PHONE}')`,
     `DELETE FROM customer_otps WHERE phone='${FAV_PHONE}'`,
+    `DELETE FROM audit_events WHERE actor_id IN (SELECT id FROM users WHERE phone='${FAV_PHONE}')`,
     `DELETE FROM users WHERE phone='${FAV_PHONE}'`,
     `DELETE FROM notifications WHERE booking_id IN (SELECT id FROM bookings WHERE salon_id IN (SELECT id FROM salons WHERE name LIKE '${TAG}%'))`,
     `DELETE FROM bookings WHERE salon_id IN (SELECT id FROM salons WHERE name LIKE '${TAG}%')`,
     `DELETE FROM refresh_tokens WHERE user_id IN (SELECT id FROM users WHERE phone LIKE '+9617636541%')`,
     `DELETE FROM customer_otps WHERE phone LIKE '+9617636541%'`,
+    `DELETE FROM audit_events WHERE actor_id IN (SELECT id FROM users WHERE phone LIKE '+9617636541%')`,
     `DELETE FROM users WHERE phone LIKE '+9617636541%'`,
   ]) {
     try { sql(q); } catch (e) { console.log('  cleanup:', e.message.split('\n')[0]); }

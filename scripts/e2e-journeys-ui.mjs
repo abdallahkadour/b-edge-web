@@ -341,6 +341,10 @@ async function suite5(browser) {
   sql(`DELETE FROM notifications WHERE booking_id IN ('${pastPending}','${upcoming}') OR user_id='${cid}'`);
   sql(`DELETE FROM bookings WHERE id IN ('${pastPending}','${upcoming}')`);
   sql(`DELETE FROM refresh_tokens WHERE user_id='${cid}'`);
+  // Since 2026-10-10 her order cancellation is in the salon's activity log,
+  // which names her (audit_events.actor_id -> users). Test rows only: the
+  // product never hard-deletes a user.
+  sql(`DELETE FROM audit_events WHERE actor_id='${cid}'`);
   sql(`DELETE FROM users WHERE id='${cid}'`);
   void liveOrder;
 }
@@ -500,6 +504,22 @@ async function suiteScreens(browser) {
 const SUITES = { 1: suite1, 5: suite5, 99: suiteScreens };
 
 function cleanup() {
+  // Shop rows first: chaos cleanup() knows nothing of orders or products, so
+  // a suite that aborts before its own teardown (Suite 5 did on 2026-10-10)
+  // used to leave orders that pinned its salon, and with it every salon of
+  // the run. Then the test customers it made, activity rows and all.
+  const salons = `SELECT id FROM salons WHERE name LIKE '${TAG}%'`;
+  for (const q of [
+    `DELETE FROM order_items WHERE order_id IN (SELECT id FROM orders WHERE salon_id IN (${salons}))`,
+    `DELETE FROM orders WHERE salon_id IN (${salons})`,
+    `DELETE FROM products WHERE salon_id IN (${salons})`,
+    `DELETE FROM audit_events WHERE actor_id IN (SELECT id FROM users WHERE phone LIKE '+961763698%' AND role = 'customer')`,
+    `DELETE FROM notifications WHERE user_id IN (SELECT id FROM users WHERE phone LIKE '+961763698%' AND role = 'customer')`,
+    `DELETE FROM refresh_tokens WHERE user_id IN (SELECT id FROM users WHERE phone LIKE '+961763698%' AND role = 'customer')`,
+    `DELETE FROM users WHERE phone LIKE '+961763698%' AND role = 'customer'`,
+  ]) {
+    try { sql(q); } catch (e) { console.log('  cleanup:', e.message.split('\n')[0]); }
+  }
   // chaos-booking.py's cleanup(), keyed on this TAG: one teardown for every harness.
   const py = `
 import importlib.util

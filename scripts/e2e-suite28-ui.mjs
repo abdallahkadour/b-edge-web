@@ -279,6 +279,8 @@ function cleanup() {
     `DELETE FROM bookings WHERE special_requests='${TAG} move'`,
     `DELETE FROM refresh_tokens WHERE user_id IN (SELECT id FROM users WHERE phone='${CUSTOMER_PHONE}')`,
     `DELETE FROM customer_otps WHERE phone='${CUSTOMER_PHONE}'`,
+    // The activity log names her (her reschedule, 2026-10-10); test rows only.
+    `DELETE FROM audit_events WHERE actor_id IN (SELECT id FROM users WHERE phone='${CUSTOMER_PHONE}')`,
     `DELETE FROM users WHERE phone='${CUSTOMER_PHONE}'`,
   ]) {
     try { sql(q); } catch (e) { console.log('  cleanup:', e.message.split('\n')[0]); }
