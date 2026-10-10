@@ -49,6 +49,7 @@ import {
   Search,
   Inbox,
   CircleHelp,
+  LayoutDashboard,
 } from 'lucide-angular';
 
 import {
@@ -133,6 +134,7 @@ export const appConfig: ApplicationConfig = {
         Search,
         Inbox,
         CircleHelp,
+        LayoutDashboard,
       }),
     ),
 

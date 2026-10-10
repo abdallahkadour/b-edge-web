@@ -94,6 +94,17 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'bookings', pathMatch: 'full' },
       {
+        // The owner's overview of the whole salon: everyone's figures, the
+        // team breakdown, what is waiting. A member's own figures stay on
+        // Earnings; the API refuses her here with 403 SALON_ROLE_FORBIDDEN.
+        path: 'salon',
+        canActivate: [salonOwnerGuard()],
+        loadComponent: () =>
+          import('./features/dashboard/salon-overview.page').then(
+            (m) => m.SalonOverviewPage,
+          ),
+      },
+      {
         path: 'bookings',
         loadComponent: () =>
           import('./features/dashboard/bookings.component').then(

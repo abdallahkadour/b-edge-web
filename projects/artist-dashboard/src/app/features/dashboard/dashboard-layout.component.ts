@@ -170,6 +170,7 @@ export class DashboardLayoutComponent {
 
   /** The full nav list, when a profile is reviewed and active. */
   private readonly allNavItems: NavItem[] = [
+    { path: '/dashboard/salon',    label: 'Salon',    icon: 'layout-dashboard' },
     { path: '/dashboard/bookings', label: 'Bookings', icon: 'calendar-days' },
     { path: '/dashboard/calendar', label: 'Calendar', icon: 'calendar' },
     { path: '/dashboard/waitlist', label: 'Waitlist', icon: 'bell' },
@@ -209,6 +210,7 @@ export class DashboardLayoutComponent {
    * filter removes nothing from anyone currently using the product.
    */
   private static readonly OWNER_ONLY_PATHS = [
+    '/dashboard/salon',
     '/dashboard/team',
     '/dashboard/services',
     '/dashboard/hours',

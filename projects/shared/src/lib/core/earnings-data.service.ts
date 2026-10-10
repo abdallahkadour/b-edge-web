@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { ApiService } from './api.service';
-import type { EarningsSummary } from '../models';
+import type { EarningsSummary, SalonOverview } from '../models';
 
 /**
  * Data-access service for the earnings domain.
@@ -21,5 +21,17 @@ export class EarningsDataService {
     if (from) params['from'] = from;
     if (to) params['to'] = to;
     return this.api.get<EarningsSummary>('/earnings/summary', params);
+  }
+
+  /**
+   * GET /earnings/salon - the owner's overview of the whole salon. `to` is
+   * inclusive; both or neither (the API defaults to the current month).
+   * A member gets 403 SALON_ROLE_FORBIDDEN.
+   */
+  getSalonOverview(from?: string, to?: string): Observable<SalonOverview> {
+    const params: Record<string, string> = {};
+    if (from) params['from'] = from;
+    if (to) params['to'] = to;
+    return this.api.get<SalonOverview>('/earnings/salon', params);
   }
 }
