@@ -497,6 +497,24 @@ export const ARTIST_GUIDE: Guide = {
           ],
         },
         {
+          id: 'no-show-deposit',
+          title: 'Ask for a deposit after missed appointments',
+          summary: 'Protect your time from customers who keep not turning up.',
+          steps: [
+            'Go to **Profile**, find **Getting paid**, then **Missed appointments**.',
+            'Under **Ask for a deposit after**, choose how many missed appointments it takes, or **Never (off)**. It saves as soon as you choose.',
+            'From then on, a customer who has missed that many appointments at your salon in the last 12 months pays a deposit of half the price to book a service that has no deposit.',
+            'Her booking card says why: **asked for: this customer has missed appointments here before**.',
+          ],
+          notes: [
+            'It starts at 2: one miss can be an accident.',
+            'Only no-shows at your salon count - another salon\'s history is theirs - and anything older than 12 months is forgotten.',
+            'Services that already take a deposit are not changed, and free services are never given one.',
+            'The customer is told "This salon asks for a deposit to hold this booking" - nothing about why.',
+            'Only the salon owner can change this.',
+          ],
+        },
+        {
           id: 'payment-safety',
           title: 'Deposits and payment safety',
           summary: 'What to check before you treat a deposit as received.',

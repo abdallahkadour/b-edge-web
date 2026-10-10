@@ -39,6 +39,13 @@
     <!-- Before the WhatsApp line, because paying the deposit is the next thing
          the client has to do and the destination is what they need for it. -->
     <div class="w-full mb-6">
+      @if (booking().no_show_deposit) {
+        <!-- D29. Neutral on purpose: she knows her own history, and the
+             screen's job is to say what to pay, not to scold. -->
+        <p class="text-sm text-gray-500 mb-3 leading-relaxed">
+          This salon asks for a deposit to hold this booking.
+        </p>
+      }
       <app-deposit-instructions
         [salonId]="salonId()"
         [depositAmount]="booking().deposit_amount"

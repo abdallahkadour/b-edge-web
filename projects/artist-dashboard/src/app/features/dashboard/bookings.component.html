@@ -88,6 +88,13 @@
               · {{ formatTime(booking.start_time) }}–{{ formatTime(booking.end_time) }}
             </p>
             <p class="font-medium text-ink">${{ booking.final_price }}</p>
+            <!-- D29: the deposit was asked for by the no-show rule, not by the
+                 service - so she knows why a "no deposit" service has one. -->
+            @if (booking.no_show_deposit) {
+              <p class="text-warning-dark">
+                Deposit ${{ booking.deposit_amount }} asked for: this customer has missed appointments here before.
+              </p>
+            }
           </div>
 
           <!-- Special requests - allergies, access notes, preferences the

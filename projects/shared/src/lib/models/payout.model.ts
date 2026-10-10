@@ -33,3 +33,10 @@ export interface UpsertPaymentMethodRequest {
   readonly account_name: string;
   readonly account_ref: string;
 }
+
+/** GET/PUT /artists/salon/no-show-policy (decision D29): after how many missed
+ *  appointments at this salon in the last 12 months a customer pays half the
+ *  price as a deposit for a service that takes none. 0 is off. */
+export interface NoShowPolicy {
+  readonly after: number;
+}

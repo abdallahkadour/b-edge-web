@@ -73,7 +73,7 @@ export const CUSTOMER_GUIDE: Guide = {
           ],
           notes: [
             'The deposit goes directly to the artist. B-Edge never holds your money.',
-            'Services marked **No deposit required** need nothing up front.',
+            'Services marked **No deposit required** need nothing up front - unless you have missed appointments at that salon. Then it may ask for a deposit of half the price, shown on the confirmation as **This salon asks for a deposit to hold this booking**.',
           ],
         },
         {

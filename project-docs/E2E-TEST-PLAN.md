@@ -291,6 +291,19 @@ Every real route in the codebase, and exactly what on screen triggers it. Use th
 | `POST /onboarding/complete` | artist-dashboard `/onboarding` — the one-page form's **submit** |
 | `GET /onboarding/status` | automatic, on every dashboard load (redirects to pending/rejected state or `/onboarding` itself) |
 
+### `payout` — getting paid (6 endpoints)
+
+*Added 2026-10-09: the map had no rows for this domain at all.*
+
+| Endpoint | UI trigger |
+|---|---|
+| `GET /salons/:salon_id/payment-methods` | customer-pwa booking confirmation and order confirmation → the deposit instructions (where to pay) |
+| `GET /artists/salon/payment-methods` | dashboard **Profile** → **Getting paid** load |
+| `PUT /artists/salon/payment-methods` | **Getting paid** → **Add** / **Change** next to Whish or OMT → save (owner only) |
+| `PATCH /artists/salon/payment-methods/:id` | **Getting paid** → **Stop using** / **Use again** (owner only) |
+| `GET /artists/salon/no-show-policy` | **Getting paid** → **Missed appointments** load (D29) |
+| `PUT /artists/salon/no-show-policy` | **Missed appointments** → **Ask for a deposit after** → choose; saves at once (owner only) |
+
 ### `admin` — artist approvals (3 endpoints)
 
 | Endpoint | UI trigger |
@@ -1218,7 +1231,12 @@ Fixing it would mean OAuth into the customer's Google account.
   and store names. Inert everywhere.
 - A booking whose `end_time` precedes its `start_time` (if the data ever
   allows it) — the file must not claim a negative duration.
-- 50 concurrent fetches of the same token → identical bytes, no errors.
+- 50 concurrent fetches of the same token → the same event in every one
+  (UID, SEQUENCE, start, end, summary, status), no errors. *Not* identical
+  bytes: the file carries `METHOD`, so RFC 5545 makes `DTSTAMP` the time each
+  copy was generated, and fifty fetches that straddle a second differ there
+  and only there. Corrected 2026-10-10, when the harness's "identical bytes"
+  failed a correct product.
 
 ### Suite 15 — Service buffer / cleanup time
 
@@ -3268,3 +3286,21 @@ only **Refund due** rows. Read-only: there is nothing on the tab that
 changes a booking. *Measured:* **$130 across 2 refunds owed**, matching the
 database; Rania Studio listed; after the tap, 2 rows, both Refund due. API:
 an artist gets 403 on both routes; an unknown status 400 `INVALID_STATUS`.
+
+**29.2 — A deposit after repeat no-shows (decision D29) ✅ PASS (2026-10-09)**
+Two throwaway salons, each with a no-deposit service; customers given
+no-shows months ago by SQL; guests book through the real hold and submit.
+Expected: two no-shows at salon A → the submit asks for **half the price**
+($75 of $150) and flags it; one no-show → no deposit; the same customer at
+salon B, where she has none → no deposit; salon A's rule turned off → no
+deposit. The owner's **Missed appointments** setting shows 2 and saves a
+change at once; her booking card says why the deposit was asked; the
+customer's booking shows the deposit and "This salon asks for a deposit to
+hold this booking", without mentioning her misses. *Measured:* exactly that
+($75 flagged; $0, $0, $0; setting 2 → 3 saved; both explanations shown, the
+customer's free of any mention of no-shows). Go: the rule, both submits,
+the 12-month window, the per-salon scope and the never-replace guard are
+pinned by unit and database tests, each watched failing. *Harness note:*
+the first run, straight after editing both apps, timed out on two clicks
+while the dev servers were most likely still recompiling; an immediate
+rerun passed all five. The cause was not established.

@@ -51,6 +51,9 @@
               <span class="text-gray-400">Deposit</span>
               <span class="font-medium">${{ b.deposit_amount }}</span>
             </div>
+            @if (b.no_show_deposit) {
+              <p class="text-xs text-gray-400">This salon asks for a deposit to hold this booking.</p>
+            }
           }
         </div>
       </div>

@@ -62,6 +62,8 @@ export interface EnrichedBooking {
    *  the server would refuse. */
   readonly can_reschedule?: boolean;
   readonly reschedules_left?: number;
+  /** See Booking.no_show_deposit (D29). */
+  readonly no_show_deposit?: boolean;
   readonly channel: BookingChannel;
   readonly special_requests?: string;
   readonly cancellation_reason?: string;

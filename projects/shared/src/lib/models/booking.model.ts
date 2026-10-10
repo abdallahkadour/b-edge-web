@@ -95,6 +95,9 @@ export interface Booking {
   readonly discount_amount: string;
   readonly final_price: string;
   readonly deposit_amount: string;
+  /** The deposit is asked for because of earlier missed appointments at this
+   *  salon (decision D29) - the screens say so, neutrally. */
+  readonly no_show_deposit?: boolean;
   readonly deposit_deadline?: string;  // ISO 8601, present once approved
   readonly deposit_paid_at?: string;   // ISO 8601, present once deposit paid
   readonly deposit_reference?: string; // optional artist-entered note, e.g. a transaction code

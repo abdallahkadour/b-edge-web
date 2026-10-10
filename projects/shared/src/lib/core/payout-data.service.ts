@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 
 import { ApiService } from './api.service';
 import type {
+  NoShowPolicy,
   PublicPaymentMethod,
   SalonPaymentMethod,
   UpsertPaymentMethodRequest,
@@ -48,5 +49,15 @@ export class PayoutDataService {
   /** GET /salons/:id/payment-methods - what a paying client is shown. */
   listForSalon(salonId: string): Observable<PublicPaymentMethod[]> {
     return this.api.getArray<PublicPaymentMethod>(`/salons/${salonId}/payment-methods`);
+  }
+
+  /** GET /artists/salon/no-show-policy - the salon's no-show deposit rule (D29). */
+  getNoShowPolicy(): Observable<NoShowPolicy> {
+    return this.api.get<NoShowPolicy>('/artists/salon/no-show-policy');
+  }
+
+  /** PUT /artists/salon/no-show-policy - owner only; 0 (off) to 10. */
+  setNoShowPolicy(after: number): Observable<NoShowPolicy> {
+    return this.api.put<NoShowPolicy>('/artists/salon/no-show-policy', { after });
   }
 }

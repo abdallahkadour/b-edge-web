@@ -10,6 +10,8 @@ import {
 } from '@bedge/shared';
 import type { PaymentMethodKind, SalonPaymentMethod } from '@bedge/shared';
 
+import { NoShowPolicyComponent } from './no-show-policy.component';
+
 interface Draft {
   method: PaymentMethodKind;
   account_name: string;
@@ -35,7 +37,7 @@ interface Draft {
 @Component({
   selector: 'bedge-payment-methods',
   standalone: true,
-  imports: [ButtonComponent, InputDirective, SkeletonComponent],
+  imports: [ButtonComponent, InputDirective, SkeletonComponent, NoShowPolicyComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './payment-methods.component.html',
 })
