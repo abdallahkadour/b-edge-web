@@ -144,7 +144,10 @@ export function describeEntry(e: ActivityEntry): EntryText {
     case 'transfer_ownership':
       return { text: 'handed the salon over to a new owner' };
     case 'offering.update':
-      return { text: `changed ${possessive(s.artist_name || 'an artist')} ${s.service_name || 'service'}`, detail: changes(o, n, ['artist_id', 'service_id']) };
+      return {
+        text: `updated the ${s.service_name || 'service'} offer${s.artist_name ? ` for ${s.artist_name}` : ''}`,
+        detail: changes(o, n, ['artist_id', 'service_id']),
+      };
     case 'offering.off':
       return { text: `stopped ${s.artist_name || 'an artist'} offering ${s.service_name || 'a service'}` };
   }
@@ -183,7 +186,7 @@ function sameValue(a: unknown, b: unknown): boolean {
 
 function fmt(key: string, v: unknown): string {
   if (v === undefined || v === null || v === '') return '–';
-  if (typeof v === 'boolean') return v ? 'on' : 'off';
+  if (typeof v === 'boolean') return key === 'offered' || key === 'first_time_only' ? (v ? 'yes' : 'no') : v ? 'on' : 'off';
   if (MONEY_KEYS.has(key)) return money(v);
   if (MINUTE_KEYS.has(key)) return `${v} min`;
   if (key === 'ends_at' && typeof v === 'string') return day(v);

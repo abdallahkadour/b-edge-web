@@ -114,6 +114,20 @@ describe('describeEntry - shop and team, and anything unknown', () => {
     expect(describeEntry(entry('accept', { entity_type: 'salon_invitation', subject: {} })).text).toBe('joined the salon');
   });
 
+  it('an artist\'s own offer reads as an offer, with yes and no', () => {
+    const d = describeEntry(entry('offering.update', {
+      entity_type: 'artist_service', subject: { service_name: 'Nails', artist_name: 'Maya' },
+      old: { offered: false, price: null }, new: { offered: true, price: '45' },
+    }));
+    expect(d.text).toBe('updated the Nails offer for Maya');
+    expect(d.detail).toBe('offered no → yes, price – → $45');
+  });
+
+  it('an offer whose artist has gone still reads', () => {
+    expect(describeEntry(entry('offering.update', { entity_type: 'artist_service', subject: { service_name: 'Nails' }, new: { offered: true } })).text)
+      .toBe('updated the Nails offer');
+  });
+
   it('an action it does not know is shown as recorded, not hidden', () => {
     expect(describeEntry(entry('something.new')).text).toBe('something.new');
   });
