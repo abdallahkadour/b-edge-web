@@ -375,6 +375,8 @@ Every real route in the codebase, and exactly what on screen triggers it. Use th
 | `GET /bookings/artist/:id` | dashboard Bookings list load |
 | `GET /bookings/artist/:id/calendar` | dashboard Calendar load |
 | `GET /bookings/artist/:id/waitlist` | dashboard Waitlist load |
+| `GET /bookings/salon` | dashboard Bookings → **Showing** → **Everyone** or one artist (owner only; added 2026-10-10) |
+| `GET /bookings/salon/calendar` | dashboard Calendar → **Showing** → **Everyone** or one artist (owner only) |
 | `GET /bookings/customer/me` | customer-pwa My Bookings load (requires login) |
 
 ### `product` (12 endpoints)
@@ -436,6 +438,8 @@ Every real route in the codebase, and exactly what on screen triggers it. Use th
 | `GET /clients/:customer_id` | Clients → tap a client |
 | `PUT /clients/:customer_id/notes` | Client detail → notes field → **Save** |
 | `GET /earnings/summary` | dashboard Earnings load |
+| `GET /earnings/salon` | dashboard **Salon** load and its period tabs (owner only; added 2026-10-10) |
+| `GET /salon/activity` | dashboard **Activity** load, its kind tabs, the person select and **Load more** (owner only; added 2026-10-10) |
 | `POST /customer-auth/request-otp` | customer-pwa Login → **Send code** |
 | `POST /customer-auth/verify-otp` | Login → code entry → **Verify** |
 | `POST /customer-auth/refresh` | automatic on app load |
@@ -3319,3 +3323,62 @@ API: saving and removing are repeatable (204), an unknown artist is 404
 Discover's own query, so a hidden artist is hidden from favourites too and
 kept to reappear (database test, watched failing with the join ignoring the
 customer).
+
+### Suite 30 — The owner's dashboard (2026-10-10)
+
+The salon owner asked to see, in one place, everyone's actions, everyone's
+bookings and the money. Three parts, each usable alone: **Salon** (the
+overview), **Showing** on Bookings and Calendar (the team's bookings, which
+the owner can now act on), and **Activity** (who did what). Decision D30.
+**Executable:** `python3 scripts/e2e-suite30.py` (API, in b-edge-api) and
+`node scripts/e2e-suite30-ui.mjs` (screens). Both build a throwaway salon of
+two artists and tear it down; neither touches Rania's salon.
+
+**30.1 — The overview's figures are the database's ✅ PASS (2026-10-10)**
+`GET /earnings/salon` for last month, as the owner: **earned** equals the
+database's sum of `final_price` over completed and no-show bookings at the
+salon in that window ($260: 120 + 80 + 60), no-shows 1, cancelled 1, both
+artists listed, the owner's row `is_you`, the member's earned $140. A db
+test proves the salon total equals the sum of every artist's own
+`/earnings/summary`. Screen (30u.1): **Salon** and **Activity** in the
+owner's nav; **Last month** shows $200 on the UI suite's data with both
+artists in **Team**, hers marked **You**.
+
+**30.2 — A member keeps her own figures and nobody else's ✅ PASS (2026-10-10)**
+The member: `GET /earnings/salon` → 403 `SALON_ROLE_FORBIDDEN`; her own
+`/earnings/summary` → $140, hers only. Screen (30u.2): no **Salon**, no
+**Activity**, no **Showing**; typing `/dashboard/salon` turns her back to
+Bookings.
+
+**30.3 / 30.4 — The team's bookings and week ✅ PASS (2026-10-10)**
+`GET /bookings/salon` lists both artists' bookings; `?artist_id=` narrows to
+one; a member gets 403. `GET /bookings/salon/calendar` shows the member's
+confirmed booking and not her pending request. Db test: another salon's
+artist id finds nothing. Screen (30u.3, 30u.5): **Showing → Everyone** on
+Bookings shows "with s30u Member" on her card; on Calendar, two artists at
+the same hour sit side by side (452px each) instead of one painted over the
+other.
+
+**30.5–30.7 — Acting on a member's booking, and who is named ✅ PASS (2026-10-10)**
+The owner approves the member's pending booking: 200, the database says
+approved, and the activity row names the **owner**. The member approving
+the owner's booking: 404 `BOOKING_NOT_FOUND`, still pending, nothing
+recorded. The member confirming her own deposit is recorded under her
+name. Screen (30u.3): the owner approves from the card in the team view.
+
+**30.8–30.12 — The activity log ✅ PASS (2026-10-10)**
+A payment account saved twice: the feed shows `payment_method.save` with
+the old account (71000001) beside the new (71000002), by **you**; on screen
+(30u.4) that row is highlighted. Every row returned belongs to this salon
+(checked against `audit_events.salon_id`), names are joined (service,
+client, artist), no IP address is exposed. A member gets 403
+`SALON_ROLE_FORBIDDEN`, a customer 403 `FORBIDDEN`. `?actor=` and `?kind=`
+narrow it; an unknown kind is 400 `INVALID_KIND`. A menu price change
+(150.00 → 175.00) appears under **Menu** with both prices. Go: every
+recording domain has tests that a refused or failed change records
+nothing and that a save which changed nothing records nothing.
+
+**30u.6 — Phone width ✅ PASS (2026-10-10)** Salon and Activity at 390px:
+no sideways scroll.
+
+*Measured:* API 12/12, UI 6/6, 0 residual rows after each run.
