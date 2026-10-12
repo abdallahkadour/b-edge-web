@@ -8,10 +8,12 @@ import {
 } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
+import { A11yModule } from '@angular/cdk/a11y';
 
 import {
   AuthStore,
   ArtistDataService,
+  MembershipDataService,
   BookingDataService,
   BadgeComponent,
   ButtonComponent,
@@ -25,6 +27,7 @@ import {
 import type { EnrichedBooking, BookingStatus } from '@bedge/shared';
 
 import { TeamFilterComponent, type TeamView } from './team-filter.component';
+import { ReassignSheetComponent } from './reassign-sheet.component';
 
 
 /** Status filter tab shown in the UI. '' means all statuses. */
@@ -48,7 +51,7 @@ interface StatusTab {
   selector: 'bedge-bookings',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BadgeComponent, ButtonComponent, InputDirective, TeamFilterComponent,
+  imports: [BadgeComponent, ButtonComponent, InputDirective, TeamFilterComponent, ReassignSheetComponent, A11yModule,
     SkeletonComponent,
     EmptyStateComponent,
   ],
@@ -63,6 +66,15 @@ export class BookingsComponent implements OnInit {
   private readonly artistSvc = inject(ArtistDataService);
   private readonly bookingSvc = inject(BookingDataService);
   private readonly route = inject(ActivatedRoute);
+  private readonly members = inject(MembershipDataService);
+
+  /** An owner whose salon has someone else in it - who can take a booking
+   *  over. Moving one needs both (2026-10-10). */
+  private readonly hasTeam = signal(false);
+  /** The booking whose "Move to another artist" sheet is open. */
+  readonly reassigning = signal<EnrichedBooking | null>(null);
+  /** "Moved to Maya." after a move, until the next action. */
+  readonly movedMessage = signal<string | null>(null);
 
   // ── State ────────────────────────────────────────────────────────────────
 
@@ -165,7 +177,32 @@ export class BookingsComponent implements OnInit {
     if (status && this.tabs.some((t) => t.value === status)) this.activeStatus.set(status);
     const team = q.get('team');
     if (team) this.team.set(team);
+    if (this.auth.isSalonOwner()) {
+      this.members.listMembers().subscribe({
+        next: (ms) => this.hasTeam.set(ms.length > 1),
+        error: () => this.hasTeam.set(false),
+      });
+    }
     this.loadArtistThenBookings();
+  }
+
+  /** Still to happen, and there is someone to give it to - owner only. The
+   *  server decides who can actually take it (the sheet lists why not). */
+  canReassign(booking: EnrichedBooking): boolean {
+    return this.auth.isSalonOwner() && this.hasTeam()
+      && ['pending', 'approved', 'deposit_paid', 'confirmed'].includes(booking.status)
+      && new Date(booking.start_time).getTime() > Date.now();
+  }
+
+  openReassign(booking: EnrichedBooking): void {
+    this.movedMessage.set(null);
+    this.reassigning.set(booking);
+  }
+
+  onReassigned(name: string): void {
+    this.reassigning.set(null);
+    this.movedMessage.set(name ? `Moved to ${name}. The client and both artists have been sent a message.` : 'Moved.');
+    this.loadBookings();
   }
 
   /** Switch whose bookings are shown and reload from the first page. */

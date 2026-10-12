@@ -49,6 +49,14 @@ describe('describeEntry - bookings', () => {
     expect(d.detail).toBe('Sun 18 Oct, 10:00 → Mon 19 Oct, 11:00');
   });
 
+  it('a booking moved to another artist names both', () => {
+    const d = describeEntry(entry('booking.reassign', {
+      old: { artist_id: 'a1', artist_name: 'Lina' }, new: { artist_id: 'a2', artist_name: 'Maya', status: 'confirmed' },
+    }));
+    expect(d.text).toBe("moved Sara's Bridal makeup from Lina to Maya");
+    expect(d.detail).toContain('Sun 18 Oct');
+  });
+
   it('a day shift is one line', () => {
     const d = describeEntry(entry('booking.shift_day', { entity_type: 'artist', subject: { artist_name: 'Maya' }, new: { date: '2026-10-18', minutes: 30, moved: 3 } }));
     expect(d.text).toBe("shifted Maya's day by 30 min later");

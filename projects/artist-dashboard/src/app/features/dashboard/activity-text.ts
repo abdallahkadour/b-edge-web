@@ -63,6 +63,11 @@ export function describeEntry(e: ActivityEntry): EntryText {
       return { text: `marked ${client} a no-show for ${service}`, detail: whoseWhen };
     case 'booking.reschedule':
       return { text: `moved ${booking}`, detail: `${when(String(o['start_time']))} → ${when(String(n['start_time']))}` };
+    case 'booking.reassign':
+      return {
+        text: `moved ${booking} from ${o['artist_name'] || 'an artist'} to ${n['artist_name'] || s.artist_name || 'another artist'}`,
+        detail: s.start_time ? when(s.start_time) : undefined,
+      };
     case 'booking.shift_day': {
       const mins = Number(n['minutes']) || 0;
       const moved = Number(n['moved']) || 0;

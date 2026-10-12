@@ -440,6 +440,8 @@ Every real route in the codebase, and exactly what on screen triggers it. Use th
 | `GET /earnings/summary` | dashboard Earnings load |
 | `GET /earnings/salon` | dashboard **Salon** load and its period tabs (owner only; added 2026-10-10) |
 | `GET /salon/activity` | dashboard **Activity** load, its kind tabs, the person select and **Load more** (owner only; added 2026-10-10) |
+| `GET /bookings/:id/reassign-candidates` | dashboard Bookings → **Move to another artist** (owner; the sheet's list) |
+| `PATCH /bookings/:id/reassign` | the sheet → **Move booking** |
 | `POST /customer-auth/request-otp` | customer-pwa Login → **Send code** |
 | `POST /customer-auth/verify-otp` | Login → code entry → **Verify** |
 | `POST /customer-auth/refresh` | automatic on app load |
@@ -3386,3 +3388,23 @@ nothing and that a save which changed nothing records nothing.
 no sideways scroll.
 
 *Measured:* API 12/12, UI 6/6, 0 residual rows after each run.
+
+**30.13–30.17 — Moving a booking to another artist (decision D32) ✅ PASS (2026-10-10)**
+A member's 12:00 booking: the candidates list is the owner, eligible, with
+her own price ($175 after 30.12's menu change). The owner moves it to
+herself: 200, the database says the owner, **$150 and the $30 deposit
+unchanged** (the client keeps her price), `calendar_sequence` +1, the
+activity row "s30 Member > s30 Owner" by the owner, and the client and the
+member are messaged — not the owner. A member listing or moving: 404 on
+both, nothing moved. Into the owner's own 15:30: 409 `ARTIST_NOT_FREE`,
+nothing moved. A completed booking: 409 `BOOKING_NOT_REASSIGNABLE`.
+Screen (30u.7, 30u.7b): **Move to another artist** on the member's card
+opens the sheet listing the owner with her price beside the client's;
+**Move booking** shows "Moved to s30u Owner", the database agrees, and
+Activity reads "You moved s30u Sara's s30u Bridal from s30u Member to s30u
+Owner". *Harness note:* the first UI run picked the member's OTHER upcoming
+booking, at the very hour the owner is booked herself, and the sheet
+rightly said "not free" — the cards now carry `data-booking-id`. Go:
+service tests for every reason and refusal, database tests for the
+statement (GIST, travel, a stale move, a finished booking), each guard
+watched failing.

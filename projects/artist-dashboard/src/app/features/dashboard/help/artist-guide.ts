@@ -401,6 +401,22 @@ export const ARTIST_GUIDE: Guide = {
           ],
         },
         {
+          id: 'reassign',
+          title: 'Move a booking to another artist',
+          summary: 'When an artist is off, hand her clients to someone else in the salon.',
+          steps: [
+            'Go to **Bookings**. To see a team member\'s bookings, choose her next to **Showing**.',
+            'On an upcoming booking, tap **Move to another artist**.',
+            'Everyone else in the salon is listed. Pick someone who can take it, then **Move booking**.',
+          ],
+          notes: [
+            'An artist who cannot take it is listed with the reason - she doesn\'t offer the service, doesn\'t work at that location, or isn\'t free at that time (travel between branches counts).',
+            'The client keeps the price she agreed, even if the new artist charges more. Any deposit stays where it was paid.',
+            'The client and both artists are sent a message. Until WhatsApp delivery is switched on, call the client as well.',
+            'The move is recorded in **Activity** under your name.',
+          ],
+        },
+        {
           id: 'activity',
           title: 'See who did what',
           summary: 'Every approval, refund, price change and payment account change, with who made it.',

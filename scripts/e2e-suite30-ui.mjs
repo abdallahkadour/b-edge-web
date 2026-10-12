@@ -12,6 +12,9 @@
  *   30u.5  Calendar -> Everyone: two artists at the same hour sit side by
  *          side, not one on top of the other
  *   30u.6  Salon and Activity at phone width: no sideways scroll
+ *   30u.7  Bookings -> Move to another artist: the sheet lists the owner as
+ *          able to take the member's booking; Move booking moves it; the
+ *          screen says so and the database agrees; Activity words it
  *
  * Builds a salon of two (owner + member) with the API harness helpers and
  * tears it down. Chromium, for the Secure refresh cookie on localhost.
@@ -19,6 +22,7 @@
  *   node scripts/e2e-suite30-ui.mjs
  */
 import { chromium } from 'playwright';
+import { waitForBudget } from './api-budget.mjs';
 import { execFileSync } from 'node:child_process';
 
 const DASH = 'http://localhost:4300';
@@ -98,6 +102,11 @@ oe = artist("owner", 310)
 owner = c.onboard(oe, "${TAG} Salon", "${TAG}-owner")
 c.approve_artist(owner, admin)
 salon = c.sql(f"SELECT salon_id FROM artists WHERE id='{owner}'")
+otok = c.login(oe)
+store_id = c.sql(f"SELECT id FROM stores WHERE salon_id='{salon}' LIMIT 1")
+for dow in range(7):
+    c.call("POST", f"/artists/stores/{store_id}/hours",
+           {"day_of_week": dow, "open_time": "08:00:00", "close_time": "20:00:00", "is_open": True}, otok)
 if c.sql(f"SELECT count(*) FROM subscriptions WHERE artist_id='{owner}'") == "0":
     c.sql(f"INSERT INTO subscriptions (artist_id, plan_code, monthly_price) VALUES ('{owner}','multi',0)")
 c.seat_plan(salon, "multi")
@@ -168,6 +177,43 @@ async function ownerScreens(browser, w) {
     rec('30u.3', 'FAIL', `whose="${whose}" status=${status}`);
   }
 
+  // 30u.7 Move the member's (now approved) booking to the owner
+  await page.goto(`${DASH}/dashboard/bookings`);
+  await settle(page);
+  await page.getByLabel('Whose bookings').selectOption('all');
+  await settle(page);
+  // That exact booking: the member has two upcoming, and the other one is at
+  // the very hour the owner is booked herself (30u.5's side-by-side pair), so
+  // the owner is rightly "not free" for it. The first harness run picked it.
+  const moveCard = page.locator(`[data-booking-id="${w.memberPending}"]`);
+  await moveCard.getByRole('button', { name: 'Move to another artist' }).click().catch(() => {});
+  await page.waitForSelector('bedge-reassign-sheet input[type="radio"]', { timeout: 8000 }).catch(() => {});
+  const sheetText = (await page.locator('bedge-reassign-sheet').innerText().catch(() => '')).replace(/\s+/g, ' ');
+  // SHOT_DIR=/some/dir node scripts/e2e-suite30-ui.mjs keeps a picture of the sheet.
+  if (process.env.SHOT_DIR) await page.screenshot({ path: `${process.env.SHOT_DIR}/reassign-sheet.png` });
+  await page.locator(`bedge-reassign-sheet input[value="${w.owner}"]`).check().catch(() => {});
+  await page.getByRole('button', { name: 'Move booking' }).click().catch(() => {});
+  await settle(page);
+  const banner = await page.getByRole('status').innerText().catch(() => '');
+  const nowWith = sql(`SELECT artist_id FROM bookings WHERE id='${w.memberPending}'`);
+  if (sheetText.includes('s30u Owner') && /keeps her price/.test(sheetText) && /Moved to s30u Owner/.test(banner) && nowWith === w.owner) {
+    rec('30u.7', 'PASS', 'the sheet listed the owner; Move booking moved it; "Moved to s30u Owner" shown; the database agrees');
+  } else {
+    // Diagnosis, not a check: what the owner is actually offered that day,
+    // and the store's hours as stored.
+    const startUtc = sql(`SELECT to_char(start_time AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') FROM bookings WHERE id='${w.memberPending}'`);
+    const day = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Beirut' }).format(new Date(startUtc));
+    const [, sl] = await api('GET', `/bookings/slots?artist_id=${w.owner}&store_id=${w.store}&service_id=${w.service}&date=${day}`);
+    const hours = sql(`SELECT string_agg(day_of_week||':'||open_time||'-'||close_time||':'||is_open, ' ' ORDER BY day_of_week) FROM business_hours WHERE store_id='${w.store}'`);
+    const [, cand] = await api('GET', `/bookings/${w.memberPending}/reassign-candidates`, undefined, await login(w.owner_email));
+    const ownerDay = sql(`SELECT string_agg(status||'@'||to_char(start_time AT TIME ZONE 'UTC','MM-DD HH24:MI')||'-'||to_char(blocked_until AT TIME ZONE 'UTC','HH24:MI')||' store='||left(store_id::text,8), ', ')
+      FROM bookings WHERE artist_id='${w.owner}' AND start_time::date BETWEEN (SELECT start_time::date - 1 FROM bookings WHERE id='${w.memberPending}') AND (SELECT start_time::date + 1 FROM bookings WHERE id='${w.memberPending}')`);
+    console.log('    candidates API:', JSON.stringify(cand?.data ?? cand?.error), '\n    owner bookings around that day:', ownerDay, ' store', w.store.slice(0, 8));
+    rec('30u.7', 'FAIL', `sheet="${sheetText.slice(0, 120)}" banner="${banner}" artist now ${nowWith === w.owner ? 'owner' : nowWith}`
+      + ` | booking ${startUtc}; owner offered then: ${(sl?.data ?? []).some((x) => Date.parse(x.start_time) === Date.parse(startUtc))};`
+      + ` owner slots 08:45-09:30: ${JSON.stringify((sl?.data ?? []).map((x) => x.start_time.slice(11, 16)).filter((t) => t >= '08:45' && t <= '09:30'))}; hours ${hours}`);
+  }
+
   // 30u.4 Activity
   const tok = await login(w.owner_email);
   await api('PUT', '/artists/salon/payment-methods', { method: 'whish', account_name: 's30u Owner', account_ref: '71000001' }, tok);
@@ -176,6 +222,8 @@ async function ownerScreens(browser, w) {
   await settle(page);
   const act = await text(page);
   const flagged = await page.locator('[data-alert]').allInnerTexts();
+  rec('30u.7b', act.includes("You moved s30u Sara's s30u Bridal from s30u Member to s30u Owner") ? 'PASS' : 'FAIL',
+    'Activity says "You moved s30u Sara\'s s30u Bridal from s30u Member to s30u Owner"');
   if (act.includes("You approved s30u Sara's s30u Bridal") && flagged.length === 1 && flagged[0].includes('71000001') && flagged[0].includes('71000009')) {
     rec('30u.4', 'PASS', 'Activity: "You approved s30u Sara\'s s30u Bridal"; the Whish account change highlighted with old and new');
   } else {
@@ -254,6 +302,7 @@ function cleanup() {
 }
 
 console.log('\n  E2E suite 30 (UI) — the owner\'s dashboard\n');
+await waitForBudget(API);
 const browser = await chromium.launch();
 try {
   const w = setup();

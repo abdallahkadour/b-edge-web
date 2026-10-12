@@ -14,6 +14,7 @@ import type {
   SubmitGuestBookingRequest,
   JoinWaitlistRequest,
   WaitlistEntryResponse,
+  ReassignCandidate,
 } from '../models';
 
 /**
@@ -172,6 +173,16 @@ export class BookingDataService {
     const params: Record<string, string> = { week_start: weekStart };
     if (artistId) params['artist_id'] = artistId;
     return this.api.getList<EnrichedBooking>('/bookings/salon/calendar', params);
+  }
+
+  /** GET /bookings/:id/reassign-candidates - who could take it, or why not. Owner only. */
+  getReassignCandidates(id: string): Observable<ReassignCandidate[]> {
+    return this.api.getArray<ReassignCandidate>(`/bookings/${id}/reassign-candidates`);
+  }
+
+  /** PATCH /bookings/:id/reassign - move it to another artist of the salon. Owner only. */
+  reassign(id: string, artistId: string): Observable<Booking> {
+    return this.api.patch<Booking>(`/bookings/${id}/reassign`, { artist_id: artistId });
   }
 
   /** PATCH /bookings/:id/deposit-received - mark deposit received. */

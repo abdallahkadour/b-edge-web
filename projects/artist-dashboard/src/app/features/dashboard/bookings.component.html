@@ -17,6 +17,10 @@
     }
   </div>
 
+  @if (movedMessage(); as m) {
+    <div class="mb-5 rounded-lg bg-success-light border border-success/30 px-4 py-3 text-sm text-success-dark" role="status">{{ m }}</div>
+  }
+
   <!-- Error banner -->
   @if (errorMessage(); as msg) {
     <div class="mb-5 rounded-lg bg-danger-light border border-danger/30 px-4 py-3
@@ -69,7 +73,7 @@
   @if (bookings().length > 0) {
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
       @for (booking of bookings(); track booking.id) {
-        <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+        <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm" [attr.data-booking-id]="booking.id">
 
           <!-- Top row: customer name + status badge -->
           <div class="flex items-start justify-between mb-3">
@@ -304,6 +308,11 @@
             </div>
           }
 
+          @if (canReassign(booking)) {
+            <button type="button" (click)="openReassign(booking)"
+              class="mt-2 text-xs font-medium text-gray-500 underline underline-offset-2 hover:text-ink">Move to another artist</button>
+          }
+
         </div>
       }
     </div>
@@ -323,4 +332,14 @@
     </div>
   }
 
+
+  @if (reassigning(); as b) {
+    <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-ink/40 p-0 sm:p-4"
+      (click)="reassigning.set(null)" (keydown.escape)="reassigning.set(null)">
+      <div class="w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow-lg max-h-[90vh] overflow-y-auto"
+        cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (click)="$event.stopPropagation()">
+        <bedge-reassign-sheet [booking]="b" (moved)="onReassigned($event)" (closed)="reassigning.set(null)" />
+      </div>
+    </div>
+  }
 </div>

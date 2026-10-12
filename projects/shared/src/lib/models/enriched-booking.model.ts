@@ -76,3 +76,17 @@ export interface EnrichedBooking {
   readonly store_name: string;
   readonly store_city: string;
 }
+
+/**
+ * One artist the owner could move a booking to (GET /bookings/:id/reassign-
+ * candidates). Mirrors Go booking.ReassignCandidate.
+ */
+export interface ReassignCandidate {
+  readonly artist_id: string;
+  readonly name: string;
+  readonly eligible: boolean;
+  /** NOT_OFFERED | NOT_AT_STORE | NOT_ACCEPTING | NOT_FREE, when not eligible. */
+  readonly reason?: string;
+  /** Her price for the service; the client keeps hers either way. */
+  readonly price: string;
+}
