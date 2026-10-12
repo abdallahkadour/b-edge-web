@@ -26,6 +26,7 @@
  *   node scripts/e2e-suite28-ui.mjs
  */
 import { chromium } from 'playwright';
+import { waitForBudget } from './api-budget.mjs';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 
@@ -298,6 +299,7 @@ c.cleanup()`;
 }
 
 console.log('\n  E2E suite 28.1-28.3 — the join page\n');
+await waitForBudget(API);
 const browser = await chromium.launch();
 try {
   await run(browser);

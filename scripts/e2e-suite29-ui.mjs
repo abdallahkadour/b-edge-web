@@ -18,6 +18,7 @@
  *   node scripts/e2e-suite29-ui.mjs
  */
 import { chromium } from 'playwright';
+import { waitForBudget } from './api-budget.mjs';
 import { execFileSync } from 'node:child_process';
 
 const DASH = 'http://localhost:4300';
@@ -311,6 +312,7 @@ c.cleanup()`;
 }
 
 console.log('\n  E2E suite 29 — the 2026-10-09 features\n');
+await waitForBudget(API);
 const browser = await chromium.launch();
 try {
   for (const run of [adminBookings, noShowRule, favourites]) {

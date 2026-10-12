@@ -20,6 +20,7 @@
  *   node scripts/e2e-journeys-ui.mjs 1 3        # just suites 1 and 3
  */
 import { chromium } from 'playwright';
+import { waitForBudget } from './api-budget.mjs';
 import { execFileSync } from 'node:child_process';
 
 const DASH = 'http://localhost:4300';
@@ -251,16 +252,31 @@ async function suite1(browser) {
  *  real WhatsApp message to whatever number is typed, so that ONE request is
  *  answered here and never reaches the API; the code itself is the dev
  *  bypass, verified by the real API (-tags devbypass). */
+/** Runs one browser step; if it fails, says which step, where, and whether
+ *  the app was showing its rate-limit banner - "locator.click: Timeout"
+ *  alone cannot tell a broken screen from a throttled one, and Suite 5 died
+ *  that way twice in back-to-back batches on 2026-10-10/11 while passing
+ *  every time it ran alone. */
+async function step(page, name, fn) {
+  try {
+    return await fn();
+  } catch (e) {
+    const throttled = await page.getByText("You're making requests too quickly").count().catch(() => 0);
+    throw new Error(`${name} failed at ${new URL(page.url()).pathname}`
+      + (throttled ? ' - the app was showing its rate-limit banner (429)' : '') + `: ${e.message.split('\n')[0]}`);
+  }
+}
+
 async function customerSignIn(page, localDigits) {
   await page.route('**/api/v1/customer-auth/request-otp', (route) =>
     route.fulfill({ status: 200, contentType: 'application/json',
       body: JSON.stringify({ data: { message: 'Verification code sent', delivery_looks_broken: false }, error: null, meta: null }) }));
   await page.goto(`${PWA}/login`);
   await settle(page);
-  await page.locator('input[type="tel"]').first().fill(localDigits);
-  await page.getByRole('button', { name: 'Send code' }).click();
-  await page.fill('#login-code', '000000');
-  await page.getByRole('button', { name: 'Verify' }).click();
+  await step(page, 'sign-in: phone', () => page.locator('input[type="tel"]').first().fill(localDigits));
+  await step(page, 'sign-in: Send code', () => page.getByRole('button', { name: 'Send code' }).click());
+  await step(page, 'sign-in: code', () => page.fill('#login-code', '000000'));
+  await step(page, 'sign-in: Verify', () => page.getByRole('button', { name: 'Verify' }).click());
   await settle(page);
 }
 
@@ -327,7 +343,7 @@ async function suite5(browser) {
   rec('5.3 cancelled', cancelledText.includes(`${TAG} changed my mind`) ? 'PASS' : 'FAIL',
     `the cancelled order shows its reason: ${cancelledText.includes(`${TAG} changed my mind`)}`);
   // 5.4 sign out, back in, history intact
-  await page.getByRole('button', { name: 'Sign out' }).first().click();
+  await step(page, 'Sign out', () => page.getByRole('button', { name: 'Sign out' }).first().click());
   await settle(page);
   const afterOut = path(page);
   await customerSignIn(page, digits);
@@ -534,6 +550,7 @@ c.cleanup()`;
 }
 
 const wanted = process.argv.slice(2).map(Number).filter(Boolean);
+await waitForBudget(API);
 const browser = await chromium.launch();
 try {
   for (const [n, fn] of Object.entries(SUITES)) {
